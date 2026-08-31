@@ -204,12 +204,14 @@
       <div class="sidebar-nav">
         <div class="nav-section-label">PRINCIPAL</div>
         <button class="nav-item active" data-section="dashboard" onclick="navTo('dashboard')">Dashboard</button>
+        <button class="nav-item" data-section="live" onclick="navTo('live')">🎮 Control en Vivo</button>
         <button class="nav-item" data-section="games" onclick="navTo('games')">Partidas</button>
         <button class="nav-item" data-section="players" onclick="navTo('players')">Jugadores</button>
         <button class="nav-item" data-section="missions" onclick="navTo('missions')">Misiones</button>
-        <button class="nav-item" data-section="inventory" onclick="navTo('inventory')">Inventario</button>
+        <button class="nav-item" data-section="inv2" onclick="navTo('inv2')">📦 Inventario</button>
+        <button class="nav-item" data-section="inventory" onclick="navTo('inventory')">Inventario (v1)</button>
         <button class="nav-item" data-section="simulator" onclick="navTo('simulator')">Simulador</button>
-        
+
         <div class="nav-section-label" style="margin-top:24px">DATOS</div>
         <button class="nav-item" data-section="analytics" onclick="navTo('analytics')">Analítica</button>
       </div>
@@ -441,7 +443,87 @@
         </div>
       </section>
 
+      <!-- ════ SECTION: CONTROL EN VIVO (Kahoot) ════ -->
+      <section id="sec-live" class="sec-content">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-display" style="font-size:22px;font-weight:800">🎮 Control en Vivo</h2>
+        </div>
+
+        <!-- Game code input -->
+        <div class="card mb-4">
+          <div class="card-header">Partida a controlar</div>
+          <div class="flex gap-2 flex-wrap items-center" style="padding:12px 0 0">
+            <input type="text" id="live-code" placeholder="Código de partida" style="max-width:160px;text-transform:uppercase"
+              oninput="this.value=this.value.toUpperCase()">
+            <button class="btn btn-primary" onclick="liveStart()">Conectar</button>
+            <span id="live-status-badge" style="font-size:.8rem;color:var(--text-secondary)"></span>
+          </div>
+        </div>
+
+        <div id="live-panel" style="display:none">
+          <!-- KPIs -->
+          <div class="kpi-grid" id="live-kpis" style="margin-bottom:16px"></div>
+
+          <!-- Mission control -->
+          <div class="card mb-4">
+            <div class="card-header">⏱ Control de Misiones</div>
+            <div style="padding:14px 0">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+                <div>
+                  <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Duración por misión (seg)</label>
+                  <input type="number" id="live-duration" value="60" min="10" max="300" style="max-width:90px">
+                </div>
+                <div style="align-self:flex-end;display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-primary" onclick="liveStartMission()" id="btn-live-start-mission">🚀 INICIAR MISIÓN</button>
+                  <button class="btn btn-danger" onclick="liveLockMission()" id="btn-live-lock">⏹ BLOQUEAR AHORA</button>
+                  <button class="btn" onclick="liveNextMission()" id="btn-live-next">⏭ SIGUIENTE MISIÓN</button>
+                  <button class="btn btn-danger" onclick="liveEndGame()">🏁 TERMINAR PARTIDA</button>
+                </div>
+              </div>
+              <div id="live-timer-display" style="text-align:center;font-size:3rem;font-weight:900;color:#E62429;font-family:'Bangers',cursive;letter-spacing:4px;margin:8px 0">--</div>
+              <div id="live-mission-progress" style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+                <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#E62429,#2B5CE6);transition:width 1s linear;width:0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Player grid -->
+          <div class="card mb-4">
+            <div class="card-header">👥 Estado de Jugadores <span id="live-answered-badge" style="font-size:.8rem;font-weight:600;color:var(--text-secondary)"></span></div>
+            <div id="live-players-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:12px 0"></div>
+          </div>
+
+          <!-- Leaderboard -->
+          <div class="card">
+            <div class="card-header">🏆 Clasificación en Vivo</div>
+            <div id="live-leaderboard" style="padding:8px 0"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ SECTION: INVENTARIO v2 ════ -->
+      <section id="sec-inv2" class="sec-content">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-display" style="font-size:22px;font-weight:800">📦 Inventario</h2>
+          <button class="btn btn-primary btn-sm" onclick="loadInventory2()">↻ Actualizar</button>
+        </div>
+        <div class="table-responsive card" style="padding:0">
+          <table id="inv2-table">
+            <thead><tr>
+              <th>Premio</th>
+              <th>Stock Inicial</th>
+              <th>Stock Actual</th>
+              <th>Vendidos</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr></thead>
+            <tbody id="inv2-body"><tr><td colspan="6"><div class="skeleton"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
+
   </div>
 
   <!-- TOASTS -->
@@ -644,6 +726,8 @@
       else if (Admin.activeSection === 'inventory') loadInventory();
       else if (Admin.activeSection === 'simulator') loadSimulatorState();
       else if (Admin.activeSection === 'analytics') loadAnalytics();
+      else if (Admin.activeSection === 'live') { /* Live panel self-polls */ }
+      else if (Admin.activeSection === 'inv2') loadInventory2();
     }
 
     /* ==========================================================================
@@ -1234,8 +1318,164 @@
       Admin.pollInterval = null;
     }
 
+    // ════════════════════════════════════════════════
+    // LIVE CONTROL PANEL (Kahoot)
+    // ════════════════════════════════════════════════
+    let _liveInterval = null;
+    let _liveCode = '';
+    let _liveStartTs = null;
+    let _liveDuration = 60;
+    let _liveTimerInterval = null;
+
+    async function liveStart() {
+      _liveCode = (document.getElementById('live-code').value || '').trim().toUpperCase();
+      if (!_liveCode) { showToast('Ingresa el código de la partida', 'warning'); return; }
+      document.getElementById('live-panel').style.display = 'block';
+      document.getElementById('live-status-badge').textContent = 'Conectado: ' + _liveCode;
+
+      // Also set missions order from the quiz mission IDs
+      const missions = ['m1','m2','m3','m4','m5','m6'];
+      await api('POST', `/api/games/${_liveCode}/missions/order`, {
+        missions, mission_duration_sec: parseInt(document.getElementById('live-duration').value) || 60
+      });
+
+      livePoll();
+      if (_liveInterval) clearInterval(_liveInterval);
+      _liveInterval = setInterval(livePoll, 2000);
+    }
+
+    async function livePoll() {
+      if (!_liveCode) return;
+      const { data, ok } = await api('GET', `/api/admin/game/${_liveCode}/live`);
+      if (!ok || !data) return;
+      renderLivePanel(data);
+    }
+
+    function renderLivePanel(d) {
+      const round = d.round_status || {};
+      const answered = round.answered || 0;
+      const total    = round.total_players || 0;
+      const phase    = d.mission_phase || 'lobby';
+      const mIdx     = d.current_mission_index ?? -1;
+
+      // KPIs
+      document.getElementById('live-kpis').innerHTML = `
+        <div class="kpi-card"><div class="kpi-value">${mIdx >= 0 ? mIdx + 1 : '—'}</div><div class="kpi-sub">Misión actual / ${d.total_missions || '?'}</div></div>
+        <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-sub">Jugadores conectados</div></div>
+        <div class="kpi-card"><div class="kpi-value">${answered}/${total}</div><div class="kpi-sub">Respondieron</div></div>
+        <div class="kpi-card"><div class="kpi-value">${phase.toUpperCase()}</div><div class="kpi-sub">Fase</div></div>`;
+
+      // Timer display
+      const rem = d.mission_time_remaining || 0;
+      document.getElementById('live-timer-display').textContent = String(rem).padStart(2, '0') + 's';
+      const pct = _liveDuration > 0 ? ((1 - rem / _liveDuration) * 100) : 0;
+      document.getElementById('live-mission-bar').style.width = pct + '%';
+      if (d.mission_start_ts) {
+        _liveStartTs  = d.mission_start_ts;
+        _liveDuration = d.mission_duration_sec || 60;
+      }
+
+      // Players grid
+      document.getElementById('live-answered-badge').textContent = `(${answered}/${total} respondieron)`;
+      const players = round.player_statuses || [];
+      document.getElementById('live-players-grid').innerHTML = players.map(p => {
+        const icon = p.answered ? (p.correct ? '✅' : '❌') : '⏳';
+        const bg   = p.answered ? (p.correct ? 'rgba(0,230,118,.1)' : 'rgba(230,36,41,.08)') : 'rgba(255,255,255,.03)';
+        const border = p.answered ? (p.correct ? 'rgba(0,230,118,.4)' : 'rgba(230,36,41,.3)') : 'rgba(255,255,255,.08)';
+        return `<div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px">
+          <div style="width:34px;height:34px;border-radius:50%;background:${p.avatar_color || '#555'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">${p.avatar_initials || '?'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+            <div style="font-size:.75rem;color:rgba(240,244,255,.55)">⭐ ${p.points || 0} pts · Rank #${p.rank || '—'}</div>
+          </div>
+          <div style="font-size:1.3rem">${icon}</div>
+        </div>`;
+      }).join('');
+
+      // Leaderboard
+      const lb = (d.leaderboard || []).slice(0, 8);
+      document.getElementById('live-leaderboard').innerHTML = lb.map((p, i) => `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.05)">
+          <div style="font-weight:900;font-size:1.1rem;min-width:28px;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'rgba(240,244,255,.5)'}">${i+1}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:${p.avatar_color||'#555'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem">${p.avatar_initials||'?'}</div>
+          <div style="flex:1;font-weight:700">${p.name}</div>
+          <div style="font-weight:800;color:#FFD700">⭐ ${p.points||0}</div>
+        </div>`).join('');
+    }
+
+    async function liveStartMission() {
+      if (!_liveCode) return;
+      const dur = parseInt(document.getElementById('live-duration').value) || 60;
+      _liveDuration = dur;
+      const { ok } = await api('POST', `/api/games/${_liveCode}/mission/start`, { duration_sec: dur });
+      if (ok) showToast('¡Misión iniciada!', 'success');
+      else showToast('Error al iniciar misión', 'error');
+    }
+
+    async function liveLockMission() {
+      if (!_liveCode) return;
+      const { ok } = await api('POST', `/api/games/${_liveCode}/mission/lock`, {});
+      if (ok) showToast('Misión bloqueada', 'success');
+    }
+
+    async function liveNextMission() {
+      if (!_liveCode) return;
+      const dur = parseInt(document.getElementById('live-duration').value) || 60;
+      _liveDuration = dur;
+      // First lock current, then advance
+      await api('POST', `/api/games/${_liveCode}/mission/lock`, {});
+      await new Promise(r => setTimeout(r, 800));
+      const { data, ok } = await api('POST', `/api/games/${_liveCode}/mission/next`, {});
+      if (ok && !data?.game_ended) showToast('¡Siguiente misión iniciada!', 'success');
+      else if (data?.game_ended) showToast('¡Partida terminada!', 'success');
+    }
+
+    async function liveEndGame() {
+      if (!_liveCode || !confirm('¿Terminar la partida?')) return;
+      await api('POST', `/api/games/${_liveCode}/end`, {});
+      showToast('Partida terminada', 'success');
+    }
+
+    // ════════════════════════════════════════════════
+    // INVENTARIO v2
+    // ════════════════════════════════════════════════
+    async function loadInventory2() {
+      const { data, ok } = await api('GET', '/api/admin/inventory');
+      if (!ok || !data) return;
+      const tbody = document.getElementById('inv2-body');
+      if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sin premios</td></tr>'; return; }
+      tbody.innerHTML = data.map(r => `
+        <tr>
+          <td><strong>${r.emoji || ''} ${r.name}</strong>${r.description ? `<br><small class="text-muted">${r.description}</small>` : ''}</td>
+          <td class="text-center font-weight-600">${r.stock_initial}</td>
+          <td class="text-center">
+            <input type="number" id="inv2-curr-${r.id}" value="${r.stock_remaining}" min="0"
+              style="width:70px;text-align:center;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:inherit">
+          </td>
+          <td class="text-center" style="color:${r.sold > 0 ? '#E62429' : 'inherit'}">${r.sold}</td>
+          <td><span class="badge ${r.stock_remaining <= 0 ? 'badge-error' : 'badge-success'}">${r.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="saveInv2('${r.id}')">Guardar</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function saveInv2(id) {
+      const inp = document.getElementById('inv2-curr-' + id);
+      if (!inp) return;
+      const stock = parseInt(inp.value);
+      const { ok } = await api('POST', '/api/admin/inventory/update', { reward_id: id, stock_remaining: stock });
+      if (ok) showToast('Inventario actualizado', 'success');
+      else showToast('Error al guardar', 'error');
+      loadInventory2();
+    }
+
+    // Hook into navTo to load data when sections open
+    const _origNavTo = typeof navTo !== 'undefined' ? navTo : null;
+
     // Init App
     window.onload = init;
+
   </script>
 </body>
 </html>

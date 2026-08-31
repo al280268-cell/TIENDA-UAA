@@ -154,16 +154,35 @@ async def init_db():
         # Para bases de datos creadas con versiones anteriores del esquema:
         # añade columnas que falten sin borrar datos. Si ya existen, se ignora.
         migrations = [
-            ("players",        "finished_at",  "REAL"),
-            ("player_missions","status",        "TEXT DEFAULT 'available'"),
-            ("player_missions","started_at",    "REAL"),
-            ("rewards",        "disabled",      "INTEGER DEFAULT 0"),
-            ("rewards",        "description",   "TEXT DEFAULT ''"),
+            ("players",        "finished_at",       "REAL"),
+            ("player_missions","status",             "TEXT DEFAULT 'available'"),
+            ("player_missions","started_at",         "REAL"),
+            ("rewards",        "disabled",           "INTEGER DEFAULT 0"),
+            ("rewards",        "description",        "TEXT DEFAULT ''"),
+            # Kahoot sync columns
+            ("games",          "mission_duration_sec","INTEGER DEFAULT 60"),
+            ("games",          "missions_order",     "TEXT DEFAULT '[]'"),
         ]
         for table, col, coltype in migrations:
             try:
                 await db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}")
             except Exception:
                 pass  # La columna ya existe
+
+        # Tabla para resultados por ronda (Kahoot tracking)
+        await db.execute('''
+        CREATE TABLE IF NOT EXISTS mission_round_results (
+          id TEXT PRIMARY KEY,
+          game_code TEXT NOT NULL,
+          mission_index INTEGER NOT NULL,
+          mission_id TEXT,
+          player_id TEXT NOT NULL,
+          answered INTEGER DEFAULT 0,
+          correct INTEGER DEFAULT 0,
+          points_earned INTEGER DEFAULT 0,
+          time_taken_ms INTEGER,
+          created_at REAL
+        );
+        ''')
 
         await db.commit()

@@ -5,13 +5,15 @@ from fastapi.staticfiles import StaticFiles
 import httpx
 import base64
 import os
+import asyncio
+import time as _time
 
 from backend.core.config import settings
 from backend.core.database import init_db
 
 app = FastAPI(
-    title="Feria UAA — Reto E-Commerce",
-    version="1.0.0",
+    title="Feria UAA – Reto E-Commerce",
+    version="2.0.0",
     description="Backend multijugador para la Feria Universitaria UAA"
 )
 
@@ -28,12 +30,9 @@ async def publish_to_ably(channel: str, event: str, data: dict):
     """Publish a message to an Ably channel via REST API.
     Falls back to console log when ABLY_API_KEY is not configured (local dev).
     """
-    # Una API key real de Ably tiene el formato "xxxxx.yyyyy:zzzzz".
-    # Si está vacía o es un placeholder del .env.example, usamos modo DEV
-    # (el frontend cae a polling) en vez de spamear 403 contra rest.ably.io.
     key = (settings.ABLY_API_KEY or "").strip()
     if not key or ":" not in key or key.startswith("tu_"):
-        print(f"[Ably DEV] ch={channel} ev={event} data={data}")
+        print(f"[Ably DEV] ch={channel} ev={event} data={str(data)[:120]}")
         return
 
     url = f"https://rest.ably.io/channels/{channel}/messages"
@@ -47,6 +46,32 @@ async def publish_to_ably(channel: str, event: str, data: dict):
                 print(f"[Ably ERROR] {resp.status_code}: {resp.text}")
         except Exception as e:
             print(f"[Ably EXCEPTION] {e}")
+
+
+# ── BACKGROUND TIMER: auto-locks missions when time runs out ─────────────────
+async def _mission_timer_loop():
+    """Runs every second. Auto-locks active mission rounds when timer hits 0."""
+    await asyncio.sleep(3)  # Wait for app to fully start
+    while True:
+        try:
+            from backend.core.game_state import _games, lock_mission_round, get_leaderboard, get_mission_time_remaining
+            for code, gs in list(_games.items()):
+                if gs.mission_phase != "active" or gs.mission_locked:
+                    continue
+                remaining = get_mission_time_remaining(code)
+                if remaining <= 0:
+                    # Time is up — lock the round
+                    summary = lock_mission_round(code)
+                    leaderboard = [vars(p) for p in get_leaderboard(code)]
+                    print(f"[Timer] Mission {gs.current_mission_index} locked for game {code}")
+                    await publish_to_ably(f"game:{code}", "mission_locked", {
+                        "mission_index": gs.current_mission_index,
+                        "results": summary.get("results", []),
+                        "leaderboard": leaderboard,
+                    })
+        except Exception as e:
+            print(f"[Timer ERROR] {e}")
+        await asyncio.sleep(1)
 
 
 # Import routers AFTER defining publish_to_ably to avoid circular imports
@@ -67,16 +92,17 @@ app.include_router(quiz.router)
 async def startup_event():
     await init_db()
     print("Database initialized OK")
+    # Start the background mission timer
+    asyncio.create_task(_mission_timer_loop())
+    print("Mission timer loop started")
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": "2.0.0"}
 
 
-# ── Servir frontend estático ─────────────────────────────────────
-# IMPORTANTE: esto debe ir AL FINAL, después de todos los routers API
-# para que /api/* sea atendido por los routers y no por StaticFiles.
+# Servir frontend estático — MUST be at the end, after all API routers
 _frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 _frontend_dir = os.path.abspath(_frontend_dir)
 
@@ -89,5 +115,4 @@ if os.path.isdir(_frontend_dir):
     async def serve_admin():
         return FileResponse(os.path.join(_frontend_dir, "admin.html"))
 
-    # Archivos estáticos (CSS, JS, imágenes, etc.)
     app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")

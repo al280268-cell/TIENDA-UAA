@@ -17,12 +17,17 @@ class PlayerState:
     current_mission_type: Optional[str] = None
     status: str = "connected"
     last_action_at: float = field(default_factory=time.time)
+    # Per-round tracking
+    round_answered: bool = False      # Did player answer current round?
+    round_correct: Optional[bool] = None
+    round_points: int = 0
+    round_answer_ts: Optional[float] = None  # When they answered (for tiebreak)
 
 @dataclass
 class GameState:
     game_code: str
     name: str
-    status: str = "waiting"
+    status: str = "waiting"           # waiting | active | finished
     difficulty: str = "normal"
     players: Dict[str, PlayerState] = field(default_factory=dict)
     current_round: int = 0
@@ -32,6 +37,14 @@ class GameState:
     duration_seconds: int = 480
     active_global_events: list = field(default_factory=list)
     max_players: int = 20
+
+    # ── Kahoot-style mission sync ──────────────────────────────────────────
+    current_mission_index: int = -1          # -1 = lobby / not started
+    missions_order: List[str] = field(default_factory=list)  # ordered mission IDs
+    mission_start_ts: Optional[float] = None # Unix ts when round started
+    mission_duration_sec: int = 60           # seconds per round (admin-configurable)
+    mission_locked: bool = False             # True once time is up
+    mission_phase: str = "lobby"             # lobby|active|locked|results|finished
 
 _games: Dict[str, GameState] = {}
 
@@ -45,7 +58,8 @@ def create_game(code: str, config: dict) -> GameState:
         difficulty=config.get("difficulty", "normal"),
         duration_seconds=config.get("duration_seconds", 480),
         total_rounds=config.get("rounds", 5),
-        max_players=config.get("max_players", 20)
+        max_players=config.get("max_players", 20),
+        mission_duration_sec=config.get("mission_duration_sec", 60),
     )
     _games[code] = gs
     return gs
@@ -80,7 +94,11 @@ def recalculate_ranks(code: str):
     gs = get_game(code)
     if not gs:
         return
-    sorted_players = sorted(gs.players.values(), key=lambda p: (-p.points, p.last_action_at))
+    # Primary: points desc. Tiebreak: faster answer time (lower round_answer_ts wins)
+    sorted_players = sorted(
+        gs.players.values(),
+        key=lambda p: (-p.points, p.round_answer_ts or float('inf'), p.last_action_at)
+    )
     for idx, p in enumerate(sorted_players, start=1):
         p.rank = idx
 
@@ -88,7 +106,10 @@ def get_leaderboard(code: str) -> List[PlayerState]:
     gs = get_game(code)
     if not gs:
         return []
-    return sorted(gs.players.values(), key=lambda p: (-p.points, p.last_action_at))
+    return sorted(
+        gs.players.values(),
+        key=lambda p: (-p.points, p.round_answer_ts or float('inf'), p.last_action_at)
+    )
 
 def set_status(code: str, status: str):
     gs = get_game(code)
@@ -102,3 +123,100 @@ def tick(code: str) -> Optional[int]:
             gs.time_remaining -= 1
         return gs.time_remaining
     return None
+
+# ── Kahoot round helpers ─────────────────────────────────────────────────────
+
+def start_mission_round(code: str, mission_index: int, mission_id: str) -> bool:
+    """Start a new synchronized mission round. Returns True on success."""
+    gs = get_game(code)
+    if not gs:
+        return False
+    # Reset per-round player state
+    for p in gs.players.values():
+        p.round_answered = False
+        p.round_correct = None
+        p.round_points = 0
+        p.round_answer_ts = None
+    gs.current_mission_index = mission_index
+    gs.mission_start_ts = time.time()
+    gs.mission_locked = False
+    gs.mission_phase = "active"
+    return True
+
+def lock_mission_round(code: str) -> dict:
+    """Lock the current mission round (time up). Returns round summary."""
+    gs = get_game(code)
+    if not gs:
+        return {}
+    gs.mission_locked = True
+    gs.mission_phase = "locked"
+    recalculate_ranks(code)
+
+    results = []
+    for p in gs.players.values():
+        results.append({
+            "player_id": p.player_id,
+            "name": p.name,
+            "avatar_color": p.avatar_color,
+            "avatar_initials": p.avatar_initials,
+            "answered": p.round_answered,
+            "correct": p.round_correct,
+            "points_earned": p.round_points,
+            "total_points": p.points,
+            "rank": p.rank,
+        })
+    return {"results": results}
+
+def record_round_answer(code: str, player_id: str, correct: bool, points: int) -> bool:
+    """Record a player's answer for the current round. Returns False if locked."""
+    gs = get_game(code)
+    if not gs or gs.mission_locked:
+        return False
+    p = gs.players.get(player_id)
+    if not p:
+        return False
+    if p.round_answered:
+        return True  # Already answered, ignore duplicate
+    p.round_answered = True
+    p.round_correct = correct
+    p.round_points = points
+    p.round_answer_ts = time.time()
+    return True
+
+def get_mission_time_remaining(code: str) -> int:
+    """Returns seconds remaining in current mission round (authoritative)."""
+    gs = get_game(code)
+    if not gs or gs.mission_start_ts is None or gs.mission_locked:
+        return 0
+    elapsed = time.time() - gs.mission_start_ts
+    remaining = int(gs.mission_duration_sec - elapsed)
+    return max(0, remaining)
+
+def get_round_status(code: str) -> dict:
+    """Returns current round status for admin panel."""
+    gs = get_game(code)
+    if not gs:
+        return {}
+    answered = sum(1 for p in gs.players.values() if p.round_answered)
+    total = len(gs.players)
+    return {
+        "mission_index": gs.current_mission_index,
+        "mission_phase": gs.mission_phase,
+        "mission_locked": gs.mission_locked,
+        "time_remaining": get_mission_time_remaining(code),
+        "answered": answered,
+        "total_players": total,
+        "player_statuses": [
+            {
+                "player_id": p.player_id,
+                "name": p.name,
+                "avatar_color": p.avatar_color,
+                "avatar_initials": p.avatar_initials,
+                "answered": p.round_answered,
+                "correct": p.round_correct,
+                "points": p.points,
+                "rank": p.rank,
+            }
+            for p in gs.players.values()
+        ]
+    }

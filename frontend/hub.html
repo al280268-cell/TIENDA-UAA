@@ -2,612 +2,659 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>TIENDA UAA — Misiones</title>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --sp-red:    #E62429;
-      --sp-red2:   #FF3B40;
-      --sp-blue:   #1B2B8F;
-      --sp-blue2:  #2B5CE6;
-      --sp-dark:   #07070F;
-      --sp-surface:#0D0F1C;
-      --sp-card:   #111527;
-      --sp-border: rgba(230,36,41,0.18);
-      --sp-glow:   rgba(230,36,41,0.35);
-      --gold:      #FFD700;
-      --green:     #00E676;
-      --amber:     #F59E0B;
-      --text:      #F0F4FF;
-      --muted:     rgba(240,244,255,0.5);
-      --font:      'Space Grotesk', sans-serif;
-      --body:      'Inter', sans-serif;
-      --bang:      'Bangers', cursive;
+      --sp-red:#E62429; --sp-red2:#FF3B40; --sp-blue:#1B2B8F; --sp-blue2:#2B5CE6;
+      --sp-dark:#07070F; --sp-surface:#0D0F1C; --sp-card:#111527;
+      --gold:#FFD700; --green:#00E676; --amber:#F59E0B;
+      --muted:rgba(240,244,255,0.5); --text:#F0F4FF;
+      --line:rgba(230,36,41,0.18);
+      --font:'Space Grotesk',sans-serif; --body:'Inter',sans-serif; --bang:'Bangers',cursive;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-    /* ── WEB PATTERN BACKGROUND ── */
     body {
-      font-family: var(--body);
-      background: var(--sp-dark);
-      color: var(--text);
-      min-height: 100vh;
-      position: relative;
-      overflow-x: hidden;
+      font-family:var(--body); background:var(--sp-dark); color:var(--text);
+      min-height:100vh; position:relative; overflow-x:hidden;
     }
     body::before {
-      content: '';
-      position: fixed; inset: 0;
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
       background:
-        radial-gradient(ellipse 800px 500px at 0% 0%, rgba(230,36,41,0.18), transparent),
-        radial-gradient(ellipse 700px 500px at 100% 100%, rgba(27,43,143,0.22), transparent);
-      pointer-events: none; z-index: 0;
+        radial-gradient(ellipse 700px 400px at 0% 0%, rgba(230,36,41,.16), transparent),
+        radial-gradient(ellipse 600px 400px at 100% 100%, rgba(27,43,143,.2), transparent);
     }
-    /* SVG web pattern overlay */
     body::after {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0 L80 80 M80 0 L0 80 M40 0 L40 80 M0 40 L80 40' stroke='rgba(230,36,41,0.06)' stroke-width='1'/%3E%3Ccircle cx='0' cy='0' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3Ccircle cx='80' cy='80' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: 0.9;
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.6;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0 L80 80 M80 0 L0 80 M40 0 L40 80 M0 40 L80 40' stroke='rgba(230,36,41,0.06)' stroke-width='1'/%3E%3Ccircle cx='0' cy='0' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3C/svg%3E");
     }
 
-    /* ── HUD TOP BAR ── */
+    /* HUD */
     .hud {
-      position: sticky; top: 0; z-index: 200;
-      background: rgba(7,7,15,0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(230,36,41,0.3);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 20px; gap: 16px;
+      position:sticky; top:0; z-index:200;
+      background:rgba(7,7,15,0.94); backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(230,36,41,.3);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 16px; gap:12px;
     }
-    .hud-brand {
-      font-family: var(--bang);
-      font-size: 2rem; letter-spacing: 2px;
-      color: var(--sp-red);
-      text-shadow: 0 0 20px rgba(230,36,41,0.6);
-      display: flex; align-items: center; gap: 10px;
-      cursor: pointer;
-    }
-    .hud-brand span { color: var(--text); font-size: 1rem; font-family: var(--font); font-weight: 700; letter-spacing: 0.5px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 10px; }
-    .hud-center {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-    }
-    .hud-center-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-    .hud-timer {
-      font-family: var(--bang); font-size: 1.8rem; letter-spacing: 3px;
-      color: var(--text);
-      transition: color 0.3s;
-    }
-    .hud-timer.warn { color: var(--amber); animation: timerPulse 1s infinite; }
-    .hud-timer.critical { color: var(--sp-red); animation: timerPulse 0.5s infinite; }
-    @keyframes timerPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-    .hud-right {
-      display: flex; align-items: center; gap: 12px;
-    }
-    .hud-name {
-      font-weight: 700; font-size: 0.95rem;
-      color: var(--text);
-    }
-    .hud-rank {
-      background: var(--sp-red);
-      border-radius: 999px; padding: 4px 10px;
-      font-weight: 800; font-size: 0.8rem; font-family: var(--font);
-    }
-    .hud-pts {
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(255,215,0,0.1);
-      border: 1px solid rgba(255,215,0,0.3);
-      border-radius: 999px; padding: 6px 14px;
-      font-weight: 800; color: var(--gold);
-      font-family: var(--font); font-size: 1rem;
-    }
+    .hud-brand { font-family:var(--bang); font-size:1.7rem; color:var(--sp-red); letter-spacing:2px; text-shadow:0 0 16px rgba(230,36,41,.5); }
+    .hud-code { font-family:var(--font); font-weight:800; font-size:.8rem; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:4px 10px; }
+    .hud-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .hud-name { font-weight:700; font-size:.9rem; }
+    .hud-pts { display:flex; align-items:center; gap:5px; background:rgba(255,215,0,.1); border:1px solid rgba(255,215,0,.3); border-radius:999px; padding:5px 12px; font-weight:800; color:var(--gold); font-family:var(--font); font-size:.95rem; }
+    .hud-rank { background:var(--sp-red); border-radius:999px; padding:4px 10px; font-weight:800; font-size:.78rem; }
 
-    /* ── PROGRESS BAR ── */
-    .progress-section {
-      position: relative; z-index: 1;
-      background: rgba(13,15,28,0.7);
-      border-bottom: 1px solid rgba(230,36,41,0.15);
-      padding: 10px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .progress-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
-    .progress-count { font-weight: 800; font-size: 0.9rem; color: var(--text); }
-    .progress-segments { display: flex; gap: 5px; height: 8px; flex: 1; margin: 0 16px; }
-    .prog-seg {
-      flex: 1; border-radius: 99px;
-      background: rgba(255,255,255,0.08);
-      transition: all 0.4s;
-      position: relative; overflow: hidden;
-    }
-    .prog-seg.done { background: var(--sp-red); box-shadow: 0 0 8px rgba(230,36,41,0.5); }
-    .prog-seg.active { background: var(--amber); animation: segPulse 1.5s infinite; }
-    @keyframes segPulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+    /* SCREENS */
+    .screen { position:relative; z-index:1; min-height:calc(100vh - 57px); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px; }
+    .hidden { display:none !important; }
 
-    /* ── MAIN LAYOUT ── */
-    .main { position: relative; z-index: 1; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    /* ── LOBBY SCREEN ── */
+    .lobby-icon { font-size:5rem; margin-bottom:16px; animation:float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+    .lobby-title { font-family:var(--bang); font-size:clamp(2rem,8vw,3.5rem); letter-spacing:3px; text-align:center; color:var(--text); margin-bottom:8px; }
+    .lobby-sub { color:var(--muted); font-size:1rem; text-align:center; margin-bottom:32px; }
+    .lobby-players { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:500px; }
+    .player-pill { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:8px 16px; }
+    .player-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; flex-shrink:0; }
+    .lobby-waiting { margin-top:28px; display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.9rem; }
+    .dot { width:10px; height:10px; border-radius:50%; background:var(--sp-red); animation:blink 1.2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
-    /* ── SECTION LABELS ── */
-    .section-label {
-      font-family: var(--font); font-weight: 800; font-size: 0.72rem;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--muted);
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 14px;
-    }
-    .section-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--sp-red); box-shadow: 0 0 8px var(--sp-red); }
+    /* ── MISSION ACTIVE SCREEN ── */
+    .mission-header { width:100%; max-width:700px; }
+    .mission-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(230,36,41,.15); border:1px solid rgba(230,36,41,.4); border-radius:999px; padding:6px 16px; font-weight:800; font-size:.8rem; color:var(--sp-red2); letter-spacing:1px; margin-bottom:16px; }
+    .mission-area { font-family:var(--bang); font-size:clamp(1.8rem,6vw,2.8rem); letter-spacing:2px; margin-bottom:6px; }
+    .mission-topic { font-size:.8rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:20px; }
 
-    /* ── LEADERBOARD CHIPS ── */
-    .lb-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-    .lb-chip {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 999px;
-      padding: 6px 14px 6px 6px;
-      font-size: 0.85rem;
-      transition: all 0.2s;
+    /* Timer */
+    .timer-wrap { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:24px; }
+    .timer-ring {
+      width:80px; height:80px; border-radius:50%;
+      border:5px solid rgba(255,255,255,.1);
+      display:flex; align-items:center; justify-content:center;
+      font-family:var(--bang); font-size:2rem; letter-spacing:2px;
+      color:var(--text); position:relative;
+      transition:border-color .5s;
     }
-    .lb-chip.me {
-      border-color: var(--sp-red);
-      background: rgba(230,36,41,0.1);
-      box-shadow: 0 0 12px rgba(230,36,41,0.25);
-    }
-    .lb-chip-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 0.75rem; color: #fff;
-      flex-shrink: 0;
-    }
-    .lb-chip-rank { font-size: 1rem; }
-    .lb-chip-rank.gold { color: var(--gold); }
-    .lb-chip-rank.silver { color: #C0C0C0; }
-    .lb-chip-rank.bronze { color: #CD7F32; }
-    .lb-chip-name { font-weight: 700; }
-    .lb-chip-pts { color: var(--gold); font-weight: 800; margin-left: 4px; }
+    .timer-ring.warn { border-color:var(--amber); color:var(--amber); animation:tPulse .8s infinite; }
+    .timer-ring.crit { border-color:var(--sp-red); color:var(--sp-red); animation:tPulse .4s infinite; }
+    @keyframes tPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+    .timer-label { font-size:.75rem; color:var(--muted); text-align:center; }
 
-    /* ── MISSION CARDS GRID ── */
-    .missions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    @keyframes cardIn { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
+    /* Progress bar rounds */
+    .round-prog { width:100%; max-width:700px; display:flex; gap:5px; margin-bottom:20px; }
+    .round-dot { flex:1; height:6px; border-radius:99px; background:rgba(255,255,255,.08); transition:.3s; }
+    .round-dot.done { background:var(--green); }
+    .round-dot.active { background:var(--sp-red); animation:segPulse 1.5s infinite; }
+    @keyframes segPulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
 
-    .mission-card {
-      background: var(--sp-card);
-      border: 1px solid var(--sp-border);
-      border-radius: 16px;
-      padding: 20px;
-      display: flex; flex-direction: column; gap: 12px;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-      animation: cardIn 0.45s both;
-      position: relative; overflow: hidden;
+    /* Question box (when in quiz) */
+    .q-wrap { width:100%; max-width:700px; }
+    .q-box { background:var(--sp-card); border:1px solid var(--line); border-radius:16px; padding:24px; margin-bottom:16px; }
+    .q-text { font-family:var(--font); font-weight:700; font-size:1.15rem; line-height:1.55; }
+    .q-diff-badge { display:inline-block; font-size:.65rem; font-weight:800; padding:3px 9px; border-radius:999px; margin-top:8px; }
+    .d-media    { background:rgba(0,230,118,.15); color:var(--green); }
+    .d-dificil  { background:rgba(245,158,11,.15); color:var(--amber); }
+    .d-avanzada { background:rgba(230,36,41,.15); color:var(--sp-red2); }
+    .opts { display:flex; flex-direction:column; gap:10px; }
+    .opt {
+      background:rgba(255,255,255,.04); border:2px solid rgba(255,255,255,.08);
+      border-radius:13px; padding:15px 18px; cursor:pointer;
+      font-size:1rem; font-weight:600; color:var(--text); text-align:left;
+      transition:.15s; font-family:var(--body);
     }
-    .mission-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--sp-red), var(--sp-blue2));
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .mission-card:hover { transform: translateY(-4px); border-color: rgba(230,36,41,0.5); box-shadow: 0 12px 40px rgba(230,36,41,0.15); }
-    .mission-card:hover::before { opacity: 1; }
-    .mission-card.completed { border-color: rgba(0,230,118,0.25); background: rgba(0,230,118,0.04); }
-    .mission-card.completed::before { background: linear-gradient(90deg, var(--green), #00BFA5); opacity: 1; }
-    .mission-card.store-mission { border-color: rgba(255,215,0,0.3); }
-    .mission-card.store-mission::before { background: linear-gradient(90deg, var(--gold), #FF6B35); }
+    .opt:hover:not(:disabled) { border-color:var(--sp-red); transform:translateX(4px); }
+    .opt:disabled { cursor:default; }
+    .opt.correct { border-color:var(--green); background:rgba(0,230,118,.1); color:var(--green); }
+    .opt.wrong   { border-color:var(--sp-red); background:rgba(230,36,41,.08); color:var(--sp-red2); }
+    .opt.locked-out { opacity:.5; }
 
-    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-    .mission-title { font-family: var(--font); font-weight: 800; font-size: 1.1rem; line-height: 1.3; }
-    .mission-topic { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sp-red); margin-top: 4px; }
-    .card-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+    .q-prog { height:5px; background:rgba(255,255,255,.07); border-radius:99px; overflow:hidden; margin-bottom:18px; }
+    .q-prog > div { height:100%; background:linear-gradient(90deg,var(--sp-red),var(--sp-blue2)); transition:.4s; }
 
-    .status-badge {
-      font-size: 0.65rem; font-weight: 800; letter-spacing: 1px;
-      padding: 3px 8px; border-radius: 999px; text-transform: uppercase;
-    }
-    .status-available { background: rgba(43,92,230,0.15); color: #7FA8FF; border: 1px solid rgba(43,92,230,0.3); }
-    .status-in-progress { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
-    .status-completed { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
-    .status-locked { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+    .fb { border-radius:12px; padding:16px 18px; margin-top:8px; display:none; animation:fbPop .2s; }
+    .fb.show { display:block; }
+    @keyframes fbPop { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    .fb.ok { background:rgba(0,230,118,.1); border:1px solid rgba(0,230,118,.35); }
+    .fb.no { background:rgba(230,36,41,.08); border:1px solid rgba(230,36,41,.3); }
+    .fb .verdict { font-family:var(--font); font-weight:900; font-size:1.05rem; margin-bottom:4px; }
+    .fb .expl { color:var(--muted); font-size:.85rem; line-height:1.55; }
 
-    .diff-badge {
-      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.5px;
-      padding: 2px 7px; border-radius: 999px; text-transform: uppercase;
-    }
-    .diff-media    { background: rgba(0,230,118,0.12); color: var(--green); }
-    .diff-dificil  { background: rgba(245,158,11,0.12); color: var(--amber); }
-    .diff-extremo  { background: rgba(230,36,41,0.12); color: var(--sp-red2); }
-    .diff-especial { background: rgba(255,215,0,0.12); color: var(--gold); }
+    .btn-next { margin-top:14px; width:100%; padding:14px; border-radius:12px; background:linear-gradient(135deg,var(--sp-red),#C0001F); color:#fff; border:none; font-family:var(--font); font-weight:800; font-size:.95rem; cursor:pointer; transition:.2s; }
+    .btn-next:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(230,36,41,.4); }
 
-    .mission-desc {
-      font-size: 0.85rem; color: var(--muted); line-height: 1.55; flex: 1;
-    }
-    .card-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);
-    }
-    .pts-badge { font-weight: 800; font-size: 0.85rem; color: var(--gold); }
-    .time-badge { font-size: 0.78rem; color: var(--muted); }
+    /* ── LOCKED / TIME UP ── */
+    .locked-icon { font-size:4.5rem; margin-bottom:14px; }
+    .locked-title { font-family:var(--bang); font-size:clamp(2rem,7vw,3.2rem); letter-spacing:3px; color:var(--sp-red); text-align:center; margin-bottom:8px; }
+    .locked-sub { color:var(--muted); text-align:center; margin-bottom:28px; }
+    .results-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; width:100%; max-width:700px; }
+    .result-card { background:var(--sp-card); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; align-items:center; gap:12px; }
+    .result-card.correct-card { border-color:rgba(0,230,118,.3); }
+    .result-card.wrong-card   { border-color:rgba(230,36,41,.2); }
+    .result-card.no-answer    { opacity:.6; }
+    .rc-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem; flex-shrink:0; }
+    .rc-info { flex:1; }
+    .rc-name { font-weight:700; font-size:.95rem; }
+    .rc-status { font-size:.78rem; margin-top:2px; }
+    .rc-pts { font-weight:800; font-size:.9rem; color:var(--gold); }
 
-    /* ── BUTTONS ── */
-    .btn-mission {
-      width: 100%; padding: 12px; border-radius: 10px;
-      font-family: var(--font); font-weight: 800; font-size: 0.9rem; letter-spacing: 0.5px;
-      border: none; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-start {
-      background: linear-gradient(135deg, var(--sp-red), #C0001F);
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(230,36,41,0.35);
-    }
-    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(230,36,41,0.5); }
-    .btn-continue {
-      background: linear-gradient(135deg, var(--amber), #D97706);
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(245,158,11,0.3);
-    }
-    .btn-continue:hover { transform: translateY(-2px); }
-    .btn-done {
-      background: rgba(0,230,118,0.1);
-      color: var(--green);
-      border: 1px solid rgba(0,230,118,0.3);
-      cursor: default;
-    }
-    .btn-store {
-      background: linear-gradient(135deg, var(--gold), #FF6B35);
-      color: #000;
-      font-weight: 900;
-      box-shadow: 0 4px 20px rgba(255,215,0,0.35);
-    }
-    .btn-store:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,215,0,0.5); }
+    .next-btn-wrap { margin-top:28px; text-align:center; }
+    .btn-waiting { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px 28px; color:var(--muted); font-family:var(--font); font-weight:700; font-size:.9rem; }
 
-    /* ── SPIDER-MAN LOGO SVG ── */
-    .spider-logo {
-      width: 36px; height: 36px;
+    /* ── PODIUM ── */
+    .podium-wrap { width:100%; max-width:700px; text-align:center; }
+    .podium-title { font-family:var(--bang); font-size:clamp(2.5rem,9vw,4.5rem); letter-spacing:3px; color:var(--gold); text-shadow:0 0 40px rgba(255,215,0,.5); margin-bottom:8px; }
+    .podium-sub { color:var(--muted); margin-bottom:40px; }
+    .podium { display:flex; align-items:flex-end; justify-content:center; gap:16px; margin-bottom:32px; }
+    .podium-place { display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .podium-avatar { border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:#fff; font-family:var(--font); }
+    .p1 .podium-avatar { width:80px; height:80px; font-size:1.4rem; box-shadow:0 0 30px rgba(255,215,0,.5); border:3px solid var(--gold); }
+    .p2 .podium-avatar { width:64px; height:64px; font-size:1.1rem; border:3px solid #C0C0C0; }
+    .p3 .podium-avatar { width:56px; height:56px; font-size:1rem; border:3px solid #CD7F32; }
+    .podium-medal { font-size:1.6rem; }
+    .p1 .podium-medal { font-size:2rem; }
+    .podium-name { font-weight:800; font-size:.95rem; text-align:center; }
+    .p1 .podium-name { font-size:1.1rem; color:var(--gold); }
+    .podium-pts { font-size:.8rem; color:var(--muted); }
+    .p1 .podium-pts { font-size:.95rem; color:var(--gold); }
+    .podium-bar { width:100%; border-radius:8px 8px 0 0; }
+    .p1 .podium-bar { height:100px; background:linear-gradient(180deg,var(--gold),rgba(255,215,0,.3)); }
+    .p2 .podium-bar { height:70px; background:linear-gradient(180deg,#C0C0C0,rgba(192,192,192,.3)); }
+    .p3 .podium-bar { height:50px; background:linear-gradient(180deg,#CD7F32,rgba(205,127,50,.3)); }
+
+    .others-list { width:100%; max-width:500px; margin:0 auto; }
+    .other-entry { display:flex; align-items:center; gap:12px; padding:12px 16px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:12px; margin-bottom:8px; }
+    .other-rank { font-family:var(--bang); font-size:1.4rem; color:var(--muted); min-width:30px; }
+    .other-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; flex-shrink:0; }
+    .other-name { flex:1; font-weight:700; }
+    .other-pts { font-weight:800; color:var(--gold); }
+
+    @keyframes confettiFall { to{transform:translateY(110vh) rotate(720deg); opacity:0;} }
+    .confetti-piece { position:fixed; pointer-events:none; z-index:9999; animation:confettiFall linear forwards; }
+
+    @media(max-width:480px) {
+      .hud { padding:8px 12px; }
+      .hud-brand { font-size:1.4rem; }
+      .podium { gap:8px; }
+      .p1 .podium-avatar { width:64px; height:64px; font-size:1.1rem; }
+      .results-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP HUD -->
-  <div class="hud">
-    <div class="hud-brand" onclick="window.location.href='index.html'">
-      <svg class="spider-logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="18" cy="18" rx="17" ry="17" fill="#E62429"/>
-        <path d="M18 5 C12 10 10 14 10 18 C10 22 12 26 18 31 C24 26 26 22 26 18 C26 14 24 10 18 5Z" fill="#1B2B8F" opacity="0.7"/>
-        <ellipse cx="18" cy="18" rx="5" ry="5" fill="#fff" opacity="0.15"/>
-        <path d="M4 14 L18 18 L32 14" stroke="white" stroke-width="0.8" stroke-opacity="0.5"/>
-        <path d="M4 22 L18 18 L32 22" stroke="white" stroke-width="0.8" stroke-opacity="0.5"/>
-        <path d="M8 8 L18 18 L28 8" stroke="white" stroke-width="0.8" stroke-opacity="0.4"/>
-        <path d="M8 28 L18 18 L28 28" stroke="white" stroke-width="0.8" stroke-opacity="0.4"/>
-        <!-- eyes -->
-        <ellipse cx="14" cy="15" rx="3.5" ry="2.5" fill="white" transform="rotate(-15 14 15)"/>
-        <ellipse cx="22" cy="15" rx="3.5" ry="2.5" fill="white" transform="rotate(15 22 15)"/>
-      </svg>
-      UAA <span id="nav-code">----</span>
-    </div>
-
-    <div class="hud-center">
-      <div class="hud-center-label">Tiempo Restante</div>
-      <div class="hud-timer" id="nav-timer">--:--</div>
-    </div>
-
-    <div class="hud-right">
-      <div class="hud-name" id="nav-name">Jugador</div>
-      <div class="hud-rank" id="nav-rank">#—</div>
-      <div class="hud-pts">⭐ <span id="nav-pts">0</span></div>
-    </div>
+<!-- HUD -->
+<div class="hud">
+  <div>
+    <div class="hud-brand">🕷 UAA</div>
+    <div class="hud-code" id="nav-code">----</div>
   </div>
-
-  <!-- PROGRESS BAR -->
-  <div class="progress-section">
-    <div class="progress-label">🕸️ Progreso</div>
-    <div class="progress-segments" id="progress-segments"></div>
-    <div class="progress-count" id="progress-count">0 / 0</div>
+  <div class="hud-right">
+    <div class="hud-name" id="nav-name">Jugador</div>
+    <div class="hud-rank" id="nav-rank">#—</div>
+    <div class="hud-pts">⭐ <span id="nav-pts">0</span></div>
   </div>
+</div>
 
-  <!-- MAIN -->
-  <div class="main">
+<!-- ════════ SCREEN: LOBBY ════════ -->
+<div class="screen" id="screen-lobby">
+  <div class="lobby-icon">🕷️</div>
+  <div class="lobby-title">ESPERANDO AL<br>ADMINISTRADOR</div>
+  <div class="lobby-sub">¡Ya estás dentro! El juego comenzará en cualquier momento.</div>
+  <div class="lobby-players" id="lobby-players"></div>
+  <div class="lobby-waiting">
+    <div class="dot"></div>
+    Esperando que el admin inicie la primera misión…
+  </div>
+</div>
 
-    <!-- LEADERBOARD -->
-    <div class="section-label">🏆 Ranking en vivo</div>
-    <div class="lb-row" id="lb-chips"></div>
-
-    <!-- MISSIONS -->
-    <div class="section-label">🕷️ Misiones Disponibles</div>
-    <div class="missions-grid" id="missions-grid">
-      <div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px 0;">
-        Cargando misiones…
+<!-- ════════ SCREEN: MISSION ACTIVE ════════ -->
+<div class="screen hidden" id="screen-mission" style="justify-content:flex-start;padding-top:20px;">
+  <div style="width:100%;max-width:700px;">
+    <div class="mission-badge">
+      <span id="mission-num-badge">MISIÓN 1</span>
+      <span style="color:var(--muted)">de</span>
+      <span id="mission-total-badge">6</span>
+    </div>
+    <div class="timer-wrap">
+      <div>
+        <div class="timer-ring" id="timer-ring">00</div>
+        <div class="timer-label">TIEMPO</div>
+      </div>
+      <div style="flex:1">
+        <div class="round-prog" id="round-prog"></div>
+        <div class="mission-area" id="mission-area-title">Área</div>
+        <div class="mission-topic" id="mission-area-sub">Categoría</div>
       </div>
     </div>
 
+    <!-- Quiz questions -->
+    <div id="quiz-wrap" class="q-wrap">
+      <div class="q-prog"><div id="q-pbar"></div></div>
+      <div class="q-box">
+        <div class="q-text" id="q-text">Cargando pregunta…</div>
+        <span class="q-diff-badge d-media" id="q-diff">MEDIA</span>
+      </div>
+      <div class="opts" id="q-opts"></div>
+      <div class="fb" id="q-fb">
+        <div class="verdict" id="q-fb-v"></div>
+        <div class="expl" id="q-fb-e"></div>
+      </div>
+      <button class="btn-next hidden" id="q-next">Siguiente →</button>
+    </div>
   </div>
+</div>
 
-  <script>
-    const player = {
-      code:  sessionStorage.getItem('uaa_game_code'),
-      id:    sessionStorage.getItem('uaa_player_id'),
-      name:  sessionStorage.getItem('uaa_player_name') || 'Jugador',
-      pts:   parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10),
-      token: sessionStorage.getItem('uaa_player_token'),
-      rank:  parseInt(sessionStorage.getItem('uaa_my_rank') || '0', 10),
-    };
+<!-- ════════ SCREEN: TIME UP / LOCKED ════════ -->
+<div class="screen hidden" id="screen-locked">
+  <div class="locked-icon">⏰</div>
+  <div class="locked-title">¡TIEMPO TERMINADO!</div>
+  <div class="locked-sub">Resultados de esta ronda</div>
+  <div class="results-grid" id="round-results-grid"></div>
+  <div class="next-btn-wrap">
+    <div class="btn-waiting">
+      <div class="dot"></div>
+      Esperando la siguiente misión…
+    </div>
+  </div>
+</div>
 
-    // Timer: seed from sessionStorage if server hasn't started yet
-    window._timeLeft = parseInt(sessionStorage.getItem('uaa_time_left') || '-1', 10);
+<!-- ════════ SCREEN: FINAL PODIUM ════════ -->
+<div class="screen hidden" id="screen-podium">
+  <div class="podium-wrap">
+    <div class="podium-title">🏆 ¡PARTIDA<br>TERMINADA!</div>
+    <div class="podium-sub">Resultados finales</div>
+    <div class="podium" id="podium"></div>
+    <div class="others-list" id="others-list"></div>
+  </div>
+</div>
 
-    const MISSION_META = {
-      ecom_decision:  { icon:'🤔', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
-      fraud_detect:   { icon:'🔍', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
-      speed_search:   { icon:'⚡', diff:'EXTREMO', diffClass:'diff-extremo', pts:'+250 pts', time:'12s' },
-      store_mission:  { icon:'🛒', diff:'ESPECIAL', diffClass:'diff-especial', pts:'+300 pts', time:'libre' },
-      checkout_debug: { icon:'🔧', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'35s' },
-      detective:      { icon:'🕵️', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
-      best_cart:      { icon:'🛒', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
-    };
+<script>
+// ── Session ──────────────────────────────────────────────────────────────────
+const P = {
+  code:  sessionStorage.getItem('uaa_game_code'),
+  id:    sessionStorage.getItem('uaa_player_id'),
+  name:  sessionStorage.getItem('uaa_player_name') || 'Jugador',
+  pts:   parseInt(sessionStorage.getItem('uaa_my_points') || '0'),
+  token: sessionStorage.getItem('uaa_player_token'),
+  rank:  parseInt(sessionStorage.getItem('uaa_my_rank') || '0'),
+};
 
-    async function api(method, url, body) {
-      const token = player.token || '';
-      try {
-        const opts = { method, headers:{'Content-Type':'application/json'} };
-        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-        if (body) opts.body = JSON.stringify(body);
-        const res = await fetch(url, opts);
-        const data = await res.json().catch(() => ({}));
-        return { data, ok: res.ok };
-      } catch(e) { return { data:null, ok:false }; }
-    }
+// ── Quiz state ───────────────────────────────────────────────────────────────
+const Q = {
+  mission: null, questions: [], qi: 0,
+  answered: false, missionAnswered: false,  // track per-question and per-mission
+};
 
-    function updateHUD() {
-      const stored = parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10);
-      if (stored > player.pts) player.pts = stored; // never go lower than stored
-      document.getElementById('nav-code').textContent = player.code || '----';
-      document.getElementById('nav-name').textContent = player.name;
-      document.getElementById('nav-pts').textContent  = player.pts.toLocaleString();
-      if (player.rank > 0) document.getElementById('nav-rank').textContent = '#' + player.rank;
-    }
+// ── Timer ────────────────────────────────────────────────────────────────────
+let _missionStartTs  = null;
+let _missionDuration = 60;
+let _timerInterval   = null;
+let _pollInterval    = null;
+let _lastPhase       = '';
+let _lastMissionIdx  = -1;
 
-    function renderProgress(missions) {
-      const done  = missions.filter(m => m.status === 'completed').length;
-      const total = missions.length;
-      document.getElementById('progress-count').textContent = `${done} / ${total}`;
-      const segsEl = document.getElementById('progress-segments');
-      segsEl.innerHTML = '';
-      missions.forEach(m => {
-        const seg = document.createElement('div');
-        seg.className = 'prog-seg' + (m.status==='completed'?' done':m.status==='in_progress'?' active':'');
-        segsEl.appendChild(seg);
-      });
-    }
+async function api(method, url, body) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (P.token) opts.headers['Authorization'] = 'Bearer ' + P.token;
+  if (body)    opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(url, opts);
+    return await r.json().catch(() => ({}));
+  } catch(e) { return null; }
+}
 
-    function renderLeaderboard(board) {
-      const cont = document.getElementById('lb-chips');
-      cont.innerHTML = '';
-      board.forEach((p, i) => {
-        const isMe = (p.id || p.player_id) === player.id;
-        const rank  = i + 1;
-        const rankClass = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
-        const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
-        const color = p.color || p.avatar_color || '#E62429';
-        const initials = (p.initials || p.avatar_initials || (p.name||'?')[0]).toUpperCase();
-        const pts = p.points ?? 0;
+// ── HUD ──────────────────────────────────────────────────────────────────────
+function updateHUD() {
+  const stored = parseInt(sessionStorage.getItem('uaa_my_points') || '0');
+  if (stored > P.pts) P.pts = stored;
+  document.getElementById('nav-code').textContent = P.code || '----';
+  document.getElementById('nav-name').textContent = P.name;
+  document.getElementById('nav-pts').textContent  = P.pts.toLocaleString();
+  if (P.rank > 0) document.getElementById('nav-rank').textContent = '#' + P.rank;
+}
 
-        if (isMe && pts > player.pts) {
-          player.pts = pts;
-          sessionStorage.setItem('uaa_my_points', pts);
-          updateHUD();
+// ── Screen switching ──────────────────────────────────────────────────────────
+function showScreen(id) {
+  ['screen-lobby','screen-mission','screen-locked','screen-podium']
+    .forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+}
+
+// ── Lobby ─────────────────────────────────────────────────────────────────────
+function renderLobbyPlayers(players) {
+  const el = document.getElementById('lobby-players');
+  el.innerHTML = players.map(p => `
+    <div class="player-pill">
+      <div class="player-avatar" style="background:${p.avatar_color}">${p.avatar_initials}</div>
+      <span style="font-weight:700;font-size:.9rem">${p.name}</span>
+    </div>
+  `).join('');
+}
+
+// ── Timer countdown ───────────────────────────────────────────────────────────
+function startLocalTimer() {
+  if (_timerInterval) clearInterval(_timerInterval);
+  _timerInterval = setInterval(() => {
+    if (!_missionStartTs) return;
+    const elapsed   = (Date.now() / 1000) - _missionStartTs;
+    const remaining = Math.max(0, Math.round(_missionDuration - elapsed));
+    renderTimerDisplay(remaining);
+  }, 500);
+}
+
+function renderTimerDisplay(sec) {
+  const el = document.getElementById('timer-ring');
+  if (!el) return;
+  el.textContent = String(sec).padStart(2, '0');
+  el.className = 'timer-ring' + (sec <= 10 ? ' crit' : sec <= 20 ? ' warn' : '');
+}
+
+// ── Round progress dots ───────────────────────────────────────────────────────
+function renderRoundProg(total, current) {
+  const el = document.getElementById('round-prog');
+  if (!el) return;
+  el.innerHTML = Array.from({length: total}, (_, i) =>
+    `<div class="round-dot${i < current ? ' done' : i === current ? ' active' : ''}"></div>`
+  ).join('');
+}
+
+// ── Load quiz mission ─────────────────────────────────────────────────────────
+async function loadMission(missionId) {
+  Q.answered = false;
+  Q.missionAnswered = false;
+  if (!P.code || !P.id || !missionId) return;
+
+  const data = await api('POST', '/api/quiz/start', {
+    player_id: P.id, game_code: P.code, mission_id: missionId
+  });
+  if (!data || !data.questions) return;
+
+  Q.mission   = data;
+  Q.questions = data.questions;
+  Q.qi        = 0;
+
+  document.getElementById('mission-area-title').textContent = (data.emoji || '') + '  ' + (data.area || '');
+  document.getElementById('mission-area-sub').textContent   = 'ÁREA DE LA CARRERA';
+
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = Q.questions[Q.qi];
+  if (!q) return;
+  document.getElementById('q-pbar').style.width = (Q.qi / Q.questions.length * 100) + '%';
+  document.getElementById('q-text').textContent = q.text;
+  const dc = {'media':'d-media','dificil':'d-dificil','avanzada':'d-avanzada'}[q.difficulty] || 'd-media';
+  document.getElementById('q-diff').className = 'q-diff-badge ' + dc;
+  document.getElementById('q-diff').textContent = (q.difficulty || 'media').toUpperCase() + ' · ' + q.points + ' pts';
+
+  const opts = document.getElementById('q-opts');
+  opts.innerHTML = '';
+  q.options.forEach((txt, idx) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = txt;
+    b.onclick = () => chooseAnswer(idx, b, q);
+    opts.appendChild(b);
+  });
+
+  const fb = document.getElementById('q-fb');
+  fb.className = 'fb';
+  document.getElementById('q-next').classList.add('hidden');
+}
+
+async function chooseAnswer(idx, btn, q) {
+  if (Q.answered) return;
+  Q.answered = true;
+  document.querySelectorAll('#q-opts .opt').forEach(b => { b.disabled = true; b.classList.add('locked-out'); });
+
+  const took = Date.now();
+  let r = null;
+  try {
+    r = await api('POST', '/api/quiz/answer', {
+      player_id: P.id, game_code: P.code,
+      mission_id: Q.mission.mission_id,
+      question_id: q.id, answer_index: idx,
+      time_taken_ms: 1000, streak: 0
+    });
+  } catch(e) {}
+
+  // 409 = mission locked (time ran out just as they answered)
+  if (!r || r.status === 409) {
+    btn.classList.add('wrong');
+    showFeedback(false, '⏰ Tiempo terminado — respuesta no contabilizada', '');
+    return;
+  }
+
+  const correct = r.correct;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  const btns = document.querySelectorAll('#q-opts .opt');
+  if (!correct && typeof r.correct_index === 'number' && btns[r.correct_index]) {
+    btns[r.correct_index].classList.add('correct');
+  }
+
+  // Update points
+  if (typeof r.total_points === 'number') {
+    P.pts = r.total_points;
+    sessionStorage.setItem('uaa_my_points', P.pts);
+    updateHUD();
+  } else if (r.net) {
+    P.pts = Math.max(0, P.pts + r.net);
+    sessionStorage.setItem('uaa_my_points', P.pts);
+    updateHUD();
+  }
+
+  const label = correct
+    ? `¡Correcto! +${r.net || r.points} pts` + (r.speed_bonus ? `  ⚡+${r.speed_bonus}` : '') + (r.streak_bonus ? `  🔥+${r.streak_bonus}` : '')
+    : `Incorrecto  ${r.net || 0} pts`;
+  showFeedback(correct, label, r.explanation || '');
+
+  const nb = document.getElementById('q-next');
+  nb.classList.remove('hidden');
+  nb.textContent = (Q.qi + 1 >= Q.questions.length) ? '¡Misión completada! 🏁' : 'Siguiente →';
+  nb.onclick = nextQuestion;
+}
+
+function showFeedback(ok, verdict, expl) {
+  const fb = document.getElementById('q-fb');
+  fb.className = 'fb show ' + (ok ? 'ok' : 'no');
+  document.getElementById('q-fb-v').textContent = verdict;
+  document.getElementById('q-fb-e').textContent = expl;
+}
+
+function nextQuestion() {
+  Q.qi++;
+  Q.answered = false;
+  if (Q.qi >= Q.questions.length) {
+    // Mission fully answered — show "waiting" state
+    document.getElementById('quiz-wrap').innerHTML = `
+      <div style="text-align:center;padding:40px 0;color:var(--muted)">
+        <div style="font-size:3rem;margin-bottom:12px">✅</div>
+        <div style="font-family:var(--font);font-weight:800;font-size:1.2rem;color:var(--text)">¡Misión completada!</div>
+        <div style="margin-top:8px">Espera a que termine el tiempo para ver los resultados…</div>
+      </div>`;
+    return;
+  }
+  renderQuestion();
+}
+
+// ── Round results ─────────────────────────────────────────────────────────────
+function renderRoundResults(results) {
+  const grid = document.getElementById('round-results-grid');
+  if (!results || !results.length) { grid.innerHTML = '<div style="color:var(--muted)">Sin datos</div>'; return; }
+  grid.innerHTML = results.map(r => {
+    const cls = r.answered ? (r.correct ? 'correct-card' : 'wrong-card') : 'no-answer';
+    const icon = r.answered ? (r.correct ? '✅' : '❌') : '⏰';
+    const label = r.answered ? (r.correct ? 'Correcta' : 'Incorrecta') : 'Sin responder';
+    return `<div class="result-card ${cls}">
+      <div class="rc-avatar" style="background:${r.avatar_color || '#333'}">${r.avatar_initials || '?'}</div>
+      <div class="rc-info">
+        <div class="rc-name">${r.name}</div>
+        <div class="rc-status" style="color:${r.correct ? 'var(--green)' : r.answered ? 'var(--sp-red2)' : 'var(--muted)'}">${icon} ${label}</div>
+      </div>
+      <div class="rc-pts">⭐${r.total_points || 0}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Podium ────────────────────────────────────────────────────────────────────
+function renderPodium(board) {
+  // Animate reveal: 3rd → 2nd → 1st with delays
+  const p1 = board[0], p2 = board[1], p3 = board[2];
+  const podiumEl = document.getElementById('podium');
+  podiumEl.innerHTML = '';
+
+  function makePodiumEntry(player, rank, delay) {
+    if (!player) return '';
+    const medals = {1:'🥇',2:'🥈',3:'🥉'};
+    const cls = {1:'p1',2:'p2',3:'p3'}[rank];
+    const el = document.createElement('div');
+    el.className = 'podium-place ' + cls;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'all .5s ease';
+    el.innerHTML = `
+      <div class="podium-medal">${medals[rank]}</div>
+      <div class="podium-avatar" style="background:${player.avatar_color || '#333'}">${player.avatar_initials || '?'}</div>
+      <div class="podium-name">${player.name}</div>
+      <div class="podium-pts">⭐ ${player.points || 0}</div>
+      <div class="podium-bar"></div>`;
+    setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'none'; }, delay);
+    return el;
+  }
+
+  // order: 3rd (left), 1st (center), 2nd (right)
+  [p3 && makePodiumEntry(p3, 3, 200), p1 && makePodiumEntry(p1, 1, 600), p2 && makePodiumEntry(p2, 2, 400)]
+    .filter(Boolean).forEach(el => podiumEl.appendChild(el));
+
+  // Others (4th+)
+  const others = board.slice(3);
+  document.getElementById('others-list').innerHTML = others.length
+    ? '<div style="color:var(--muted);font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">Clasificación</div>' +
+      others.map((p, i) => `
+        <div class="other-entry">
+          <div class="other-rank">${i+4}</div>
+          <div class="other-avatar" style="background:${p.avatar_color || '#333'}">${p.avatar_initials || '?'}</div>
+          <div class="other-name">${p.name}</div>
+          <div class="other-pts">⭐ ${p.points || 0}</div>
+        </div>`).join('')
+    : '';
+
+  if (p1 && p1.player_id === P.id) launchConfetti();
+}
+
+function launchConfetti() {
+  const colors = ['#FFD700','#E62429','#00E676','#2B5CE6','#C77DFF','#fff'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const size = 6 + Math.random() * 8;
+      el.style.cssText = `left:${Math.random()*100}vw;top:-20px;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${3+Math.random()*4}s;animation-delay:${Math.random()}s;`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 7000);
+    }, i * 40);
+  }
+}
+
+// ── Main state machine ────────────────────────────────────────────────────────
+async function poll() {
+  if (!P.code) return;
+  const state = await api('GET', `/api/games/${P.code}/state`);
+  if (!state) return;
+
+  // Update player points from leaderboard
+  const me = (state.players || []).find(p => p.player_id === P.id);
+  if (me) {
+    if (me.points > P.pts) { P.pts = me.points; sessionStorage.setItem('uaa_my_points', P.pts); }
+    if (me.rank) { P.rank = me.rank; sessionStorage.setItem('uaa_my_rank', me.rank); }
+    updateHUD();
+  }
+
+  const phase = state.mission_phase || 'lobby';
+  const mIdx  = state.current_mission_index ?? -1;
+  const mId   = state.current_mission_id;
+
+  // Lobby players
+  if (phase === 'lobby') {
+    renderLobbyPlayers(state.players || []);
+  }
+
+  // Phase transitions
+  if (phase !== _lastPhase || (phase === 'active' && mIdx !== _lastMissionIdx)) {
+    _lastPhase      = phase;
+    _lastMissionIdx = mIdx;
+
+    if (phase === 'lobby') {
+      showScreen('screen-lobby');
+      if (_timerInterval) clearInterval(_timerInterval);
+
+    } else if (phase === 'active') {
+      // New mission round started
+      _missionStartTs  = state.mission_start_ts;
+      _missionDuration = state.mission_duration_sec || 60;
+      showScreen('screen-mission');
+
+      // Update round badges
+      document.getElementById('mission-num-badge').textContent = `MISIÓN ${mIdx + 1}`;
+      document.getElementById('mission-total-badge').textContent = state.total_missions || '?';
+      renderRoundProg(state.total_missions || 1, mIdx);
+
+      // Reset quiz UI
+      const qw = document.getElementById('quiz-wrap');
+      qw.innerHTML = `<div class="q-prog"><div id="q-pbar"></div></div>
+        <div class="q-box"><div class="q-text" id="q-text">Cargando…</div><span class="q-diff-badge d-media" id="q-diff">MEDIA</span></div>
+        <div class="opts" id="q-opts"></div>
+        <div class="fb" id="q-fb"><div class="verdict" id="q-fb-v"></div><div class="expl" id="q-fb-e"></div></div>
+        <button class="btn-next hidden" id="q-next">Siguiente →</button>`;
+      Q.qi = 0; Q.answered = false;
+      startLocalTimer();
+      loadMission(mId);
+
+    } else if (phase === 'locked') {
+      if (_timerInterval) clearInterval(_timerInterval);
+      renderTimerDisplay(0);
+      showScreen('screen-locked');
+      // results will arrive from poll on next tick
+
+    } else if (phase === 'finished') {
+      if (_timerInterval) clearInterval(_timerInterval);
+      // Save leaderboard to session for results.html
+      if (state.players && state.players.length) {
+        const sorted = [...state.players].sort((a,b) => (b.points||0) - (a.points||0));
+        sessionStorage.setItem('uaa_game_results', JSON.stringify({ leaderboard: sorted }));
+        const me = sorted.find(p => p.player_id === P.id);
+        if (me) {
+          sessionStorage.setItem('uaa_my_rank', String(me.rank || sorted.indexOf(me) + 1));
+          sessionStorage.setItem('uaa_my_points', String(me.points || P.pts));
         }
-        if (isMe) {
-          player.rank = rank;
-          sessionStorage.setItem('uaa_my_rank', rank);
-          document.getElementById('nav-rank').textContent = '#' + rank;
-        }
-
-        const chip = document.createElement('div');
-        chip.className = `lb-chip${isMe?' me':''}`;
-        chip.innerHTML = `
-          <div class="lb-chip-avatar" style="background:${color}">${initials}</div>
-          <span class="lb-chip-rank ${rankClass}">${medal}</span>
-          <span class="lb-chip-name">${p.name}</span>
-          <span class="lb-chip-pts">⭐ ${pts}</span>`;
-        cont.appendChild(chip);
-      });
-    }
-
-    let _redirecting = false;
-    function goToResults() {
-      if (_redirecting) return;
-      _redirecting = true;
-      window.location.href = 'results.html';
-    }
-
-    function renderTimer() {
-      const t  = Math.max(0, window._timeLeft ?? 0);
-      const el = document.getElementById('nav-timer');
-      if (!el) return;
-      if (t < 0) { el.textContent = '--:--'; return; }
-      const mm = Math.floor(t/60).toString().padStart(2,'0');
-      const ss = (t%60).toString().padStart(2,'0');
-      el.textContent = `${mm}:${ss}`;
-      el.classList.toggle('warn',     t <= 60 && t > 30);
-      el.classList.toggle('critical', t <= 30);
-      sessionStorage.setItem('uaa_time_left', t);
-    }
-
-    async function startMission(id, type, status) {
-      if (status === 'completed') return;
-      sessionStorage.setItem('uaa_mission_id', id);
-      sessionStorage.setItem('uaa_mission_type', type);
-      if (player.code && player.id && status === 'available') {
-        await api('POST', '/api/missions/start', { player_id:player.id, game_code:player.code, mission_id:id });
       }
-      if (type === 'store_mission') window.location.href = 'store.html?mission=' + id;
-      else window.location.href = 'game.html?mission=' + id;
+      // Redirect to full results / podium page
+      setTimeout(() => { window.location.href = 'results.html'; }, 1500);
+      showScreen('screen-podium');
+      document.getElementById('podium').innerHTML = '<div style="text-align:center;font-size:2rem;padding:40px">🏆 Calculando resultados…</div>';
+      document.getElementById('others-list').innerHTML = '';
+      launchConfetti();
     }
+  }
 
-    function renderMissions(missions) {
-      const grid = document.getElementById('missions-grid');
-      grid.innerHTML = '';
+  // Always update timer from server's start_ts (stays in sync)
+  if (phase === 'active' && state.mission_start_ts) {
+    _missionStartTs  = state.mission_start_ts;
+    _missionDuration = state.mission_duration_sec || 60;
+    const elapsed   = (Date.now() / 1000) - _missionStartTs;
+    const remaining = Math.max(0, Math.round(_missionDuration - elapsed));
+    renderTimerDisplay(remaining);
+  }
+}
 
-      const quizMissions      = missions.filter(m => m.is_quiz);
-      const allQuizzesCompleted = quizMissions.length > 0 && quizMissions.every(m => m.status === 'completed');
-      const storeMissionObj   = missions.find(m => m.mission_type === 'store_mission');
-
-      // Auto-redirect to store once all quizzes done
-      if (allQuizzesCompleted && storeMissionObj && storeMissionObj.status === 'available') {
-        const key = 'store_auto_triggered_' + storeMissionObj.mission_id;
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, 'true');
-          alert('¡Felicidades! Completaste todas las áreas. Ahora entrarás a tu misión final: La Tienda UAA.');
-          startMission(storeMissionObj.mission_id, storeMissionObj.mission_type, storeMissionObj.status);
-          return;
-        }
-      }
-
-      missions.forEach((m, i) => {
-        const isStore    = m.mission_type === 'store_mission';
-        const isQuiz     = m.is_quiz;
-        const isDone     = m.status === 'completed';
-        const isProgress = m.status === 'in_progress';
-        const isLocked   = isStore && !allQuizzesCompleted && !isDone;
-
-        let statusText  = isDone ? 'COMPLETADA' : isProgress ? 'EN PROGRESO' : 'DISPONIBLE';
-        let statusClass = isDone ? 'status-completed' : isProgress ? 'status-in-progress' : 'status-available';
-        let btnText     = 'INICIAR MISIÓN →';
-        let btnClass    = 'btn-start';
-
-        if (isDone)     { btnClass='btn-done';     btnText='✓ COMPLETADA'; }
-        if (isProgress) { btnClass='btn-continue'; btnText='CONTINUAR →'; }
-
-        let onclickCode;
-        if (isLocked) {
-          statusText  = '🔒 BLOQUEADA';
-          statusClass = 'status-locked';
-          btnText     = '🔒 Completa las áreas';
-          btnClass    = 'btn-done';
-          onclickCode = `alert('Completa todas las áreas de carrera para desbloquear La Tienda.')`;
-        } else if (isStore && !isDone) {
-          btnClass    = 'btn-store';
-          btnText     = '🛒 ENTRAR A LA TIENDA';
-          onclickCode = `(function(){alert('Entrarás al Simulador de E-Commerce de La Tienda UAA. Tu objetivo: explora, agrega productos y completa el checkout.');startMission('${m.mission_id}','${m.mission_type}','${m.status}');})()`;
-        } else if (isQuiz) {
-          onclickCode = isDone ? '' : `window.location.href='mision.html?mission=${m.mission_id}'`;
-        } else {
-          onclickCode = isDone ? '' : `startMission('${m.mission_id}','${m.mission_type}','${m.status}')`;
-        }
-
-        const cardClass = `mission-card${isDone?' completed':isProgress?' in-progress':''}${isStore?' store-mission':''}`;
-        const card = document.createElement('div');
-        card.className = cardClass;
-        card.style.animationDelay = `${i * 0.07}s`;
-        if (isLocked) card.style.opacity = '0.55';
-
-        const footerPts  = isQuiz ? '+150 pts aprox.' : (MISSION_META[m.mission_type]?.pts || '+150 pts');
-        const footerTime = isQuiz ? `${m.num_questions} preguntas` : (MISSION_META[m.mission_type]?.time || 'Libre');
-        const titleText  = isQuiz ? `${m.emoji || ''} ${m.area}` : (m.title || 'La Tienda');
-        const topicText  = isQuiz ? 'ÁREA DE LA CARRERA' : (m.topic || 'CUSTOMER JOURNEY');
-        const diffBadge  = isQuiz ? '<span class="diff-badge diff-media">MEDIA</span>' : `<span class="diff-badge ${MISSION_META[m.mission_type]?.diffClass || 'diff-especial'}">${MISSION_META[m.mission_type]?.diff || 'ESPECIAL'}</span>`;
-
-        card.innerHTML = `
-          <div class="card-top">
-            <div style="flex:1">
-              <div class="mission-title">${titleText}</div>
-              <div class="mission-topic">${topicText}</div>
-            </div>
-            <div class="card-badges">
-              <span class="status-badge ${statusClass}">${statusText}</span>
-              ${diffBadge}
-            </div>
-          </div>
-          <div class="mission-desc">${isQuiz ? 'Demuestra tus conocimientos y capacidad en esta área de la carrera.' : (m.desc || 'Navega por la tienda real y completa el checkout.')}</div>
-          <div class="card-footer">
-            <span class="pts-badge">⭐ ${footerPts}</span>
-            <span class="time-badge">⏱ ${footerTime}</span>
-          </div>
-          <button class="btn-mission ${btnClass}" ${isDone && !isStore ? 'disabled' : ''} onclick="${onclickCode}">${btnText}</button>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    async function loadData() {
-      let missions = [];
-
-      if (player.code && player.id) {
-        let storeMission = null;
-
-        // 1. Get store mission
-        try {
-          const mRes = await api('GET', `/api/missions/pool/${player.code}/${player.id}`);
-          if (mRes.ok && mRes.data?.missions) {
-            storeMission = mRes.data.missions.find(m => m.mission_type === 'store_mission');
-          }
-        } catch(e) {}
-
-        // 2. Get quiz missions
-        try {
-          const qRes = await api('GET', `/api/quiz/missions/${player.code}/${player.id}`);
-          if (qRes.ok && qRes.data?.missions) {
-            missions = qRes.data.missions.map(m => ({ ...m, is_quiz: true }));
-          }
-        } catch(e) {}
-
-        if (storeMission) missions.push(storeMission);
-
-        // 3. Leaderboard — opportunistic sync
-        try {
-          const lRes = await api('GET', `/api/scoring/leaderboard/${player.code}`);
-          if (lRes.ok && Array.isArray(lRes.data) && lRes.data.length > 0) {
-            renderLeaderboard(lRes.data);
-          } else {
-            // Build a local chip from sessionStorage so the UI is never empty
-            renderLeaderboard([{
-              id: player.id, player_id: player.id,
-              name: player.name, points: player.pts,
-              avatar_color: '#E62429',
-              avatar_initials: (player.name[0] || 'J').toUpperCase()
-            }]);
-          }
-        } catch(e) {}
-
-        // 4. Timer from server
-        try {
-          const sRes = await api('GET', `/api/games/${player.code}/state`);
-          if (sRes.ok && sRes.data) {
-            const tr = sRes.data.time_remaining;
-            if (tr !== null && tr !== undefined && tr >= 0) {
-              window._timeLeft = tr;
-              renderTimer();
-              if (sRes.data.status === 'finished' || tr <= 0) goToResults();
-            }
-          }
-        } catch(e) {}
-
-        // 5. Re-sync points from sessionStorage (never overwrite with lower value)
-        const stored = parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10);
-        if (stored > player.pts) { player.pts = stored; }
-        updateHUD();
-      }
-
-      renderProgress(missions);
-      renderMissions(missions);
-    }
-
-    async function init() {
-      updateHUD();
-      await loadData();
-      setInterval(loadData, 5000);
-      // Local countdown tick
-      setInterval(() => {
-        if (window._timeLeft > 0) {
-          window._timeLeft--;
-          renderTimer();
-        }
-      }, 1000);
-    }
-
-    init();
-  </script>
+// ── Init ──────────────────────────────────────────────────────────────────────
+updateHUD();
+showScreen('screen-lobby');
+poll();
+_pollInterval = setInterval(poll, 2000);
+startLocalTimer();
+</script>
 </body>
 </html>

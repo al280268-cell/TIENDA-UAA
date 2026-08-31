@@ -19,7 +19,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.core.database import get_db
-from backend.core.game_state import get_game, update_score
+from backend.core.game_state import get_game, update_score, record_round_answer
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 
@@ -260,6 +260,11 @@ class AnswerReq(BaseModel):
 # ── Responder UNA pregunta ────────────────────────────────────────────────────
 @router.post("/answer")
 async def answer(req: AnswerReq):
+    # Block if global mission round is locked (time's up)
+    gs = get_game(req.game_code)
+    if gs and gs.mission_locked:
+        raise HTTPException(status_code=409, detail="Tiempo terminado — la misión ya fue bloqueada")
+
     async with get_db() as db:
         cur = await db.execute(
             "SELECT run_data, status FROM quiz_progress WHERE game_code=? AND player_id=? AND mission_id=?",
@@ -312,6 +317,8 @@ async def answer(req: AnswerReq):
     if gained and not already:
         try:
             update_score(req.game_code, req.player_id, gained, is_correct)
+            # Record for Kahoot-style round tracking
+            record_round_answer(req.game_code, req.player_id, is_correct, gained)
             # Send live update to the Ably channel so others see the score immediately
             from backend.app import publish_to_ably
             await publish_to_ably(f"game:{req.game_code}", "score_update", {

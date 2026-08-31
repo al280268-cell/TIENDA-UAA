@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Misión — UAA E-Commerce</title>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+<script>
+  // In the new synchronized Kahoot mode, all quiz gameplay happens inside hub.html.
+  // If someone lands here directly, send them back to the hub.
+  const code = sessionStorage.getItem('uaa_game_code');
+  const id   = sessionStorage.getItem('uaa_player_id');
+  if (code && id) {
+    window.location.replace('hub.html');
+  } else {
+    window.location.replace('index.html');
+  }
+</script>
 <style>
   :root {
     --sp-red:#E62429; --sp-red2:#FF3B40; --sp-blue:#1B2B8F; --sp-blue2:#2B5CE6;
