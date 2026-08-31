@@ -1,0 +1,14 @@
+{
+  "name": "feria-uaa-reto-ecommerce",
+  "version": "1.0.0",
+  "description": "Feria UAA — Reto E-Commerce Multijugador",
+  "scripts": {
+    "dev": "uvicorn backend.app:app --reload --port 8000",
+    "dev:frontend": "python -m http.server 3000 --directory frontend",
+    "install:backend": "pip install -r requirements.txt",
+    "lint": "echo 'No frontend build step needed — vanilla JS'"
+  },
+  "keywords": ["UAA", "e-commerce", "feria", "multijugador"],
+  "author": "UAA Ingeniería en Comercio Electrónico",
+  "license": "MIT"
+}

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sala de Espera — Reto E-Commerce UAA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+
+  <!-- Ably SDK -->
+  <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+  <meta name="ably-key" content="">
+
+  <style>
+    html, body { height: 100%; }
+    body {
+      background: var(--uaa-dark);
+      color: white;
+      overflow-x: hidden;
+    }
+
+    /* ── Fondo ── */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-top-glow {
+      position: absolute;
+      width: 800px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(196,18,48,0.12) 0%, transparent 70%);
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(196,18,48,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(196,18,48,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      background: var(--grad-red);
+      color: white;
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900; font-size: 12px;
+      box-shadow: var(--sh-glow-sm);
+    }
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .phase-badge {
+      background: rgba(196,18,48,0.2);
+      border: 1px solid rgba(196,18,48,0.4);
+      color: #ff8899;
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ── Body principal ── */
+    .lobby-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      padding: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: start;
+    }
+
+    /* ── Columna izquierda ── */
+    .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Code display ── */
+    .code-display {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .code-display::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top, rgba(196,18,48,0.12) 0%, transparent 60%);
+    }
+    .code-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .code-value {
+      font-family: var(--font-display);
+      font-size: 3.8rem;
+      font-weight: 900;
+      letter-spacing: 10px;
+      color: white;
+      position: relative;
+      text-shadow: 0 0 40px rgba(196,18,48,0.5);
+    }
+    .code-url {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.25);
+      margin-top: 10px;
+      position: relative;
+    }
+
+    /* ── Jugadores section ── */
+    .players-section {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 24px;
+      flex: 1;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.5);
+    }
+    .player-count-badge {
+      background: var(--uaa-red);
+      color: white;
+      padding: 4px 14px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      font-family: var(--font-display);
+    }
+
+    /* Lista de jugadores */
+    #players-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      transition: background 0.2s;
+      animation: fadeIn 0.3s ease;
+    }
+    .player-row.me {
+      background: rgba(196,18,48,0.12);
+      border-color: rgba(196,18,48,0.3);
+    }
+    .player-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 12px; color: white;
+      flex-shrink: 0;
+    }
+    .player-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      flex: 1;
+    }
+    .player-me-tag {
+      font-size: 0.7rem;
+      color: #ff8899;
+      font-weight: 700;
+      background: rgba(196,18,48,0.15);
+      border: 1px solid rgba(196,18,48,0.3);
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+    .player-ready-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+    }
+
+    /* ── Columna derecha: tu estado ── */
+    .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+    .profile-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 28px;
+      text-align: center;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900; font-size: 28px; color: white;
+      margin: 0 auto 16px;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+    }
+    .profile-name {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .profile-status {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 20px;
+    }
+
+    /* Waiting dots animation */
+    .waiting-dots {
+      display: inline-flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+    }
+    .dot:nth-child(1) { animation: dot-pulse 1.4s 0s ease-in-out infinite; }
+    .dot:nth-child(2) { animation: dot-pulse 1.4s 0.2s ease-in-out infinite; }
+    .dot:nth-child(3) { animation: dot-pulse 1.4s 0.4s ease-in-out infinite; }
+    @keyframes dot-pulse {
+      0%,80%,100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1.2); background: var(--uaa-red); }
+    }
+
+    /* Info card */
+    .info-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 24px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-key {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .info-val {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .info-val.red { color: var(--uaa-red); }
+
+    /* Tip card */
+    .tip-card {
+      background: rgba(196,18,48,0.08);
+      border: 1px solid rgba(196,18,48,0.2);
+      border-radius: 18px;
+      padding: 18px 20px;
+    }
+    .tip-card p {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+    .tip-card strong { color: #ff8899; }
+
+    /* ── Countdown overlay ── */
+    .countdown-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--uaa-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .countdown-overlay.active { opacity: 1; pointer-events: all; }
+    .countdown-label {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .countdown-number {
+      font-family: var(--font-display);
+      font-size: clamp(10rem, 30vw, 18rem);
+      font-weight: 900;
+      line-height: 0.9;
+      color: var(--uaa-red);
+      text-shadow: var(--sh-glow);
+      animation: pop 0.4s ease-out;
+    }
+    .go-text {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 15vw, 8rem);
+      font-weight: 900;
+      color: white;
+      text-shadow: var(--sh-glow);
+      display: none;
+      animation: pop 0.4s ease-out;
+    }
+    .countdown-sub {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 700px) {
+      .lobby-body {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+      }
+      .code-value { font-size: 2.8rem; letter-spacing: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-top-glow"></div>
+  <div class="grid-overlay"></div>
+</div>
+
+<div class="page">
+  <header class="header">
+    <div class="logo-area">
+      <div class="logo-mark">UAA</div>
+      <span class="logo-text">Feria Universitaria · Reto E-Commerce</span>
+    </div>
+    <div class="phase-badge">Sala de Espera</div>
+  </header>
+
+  <div class="lobby-body">
+    <!-- Columna izquierda -->
+    <div class="left-col">
+      <!-- Código -->
+      <div class="code-display">
+        <div class="code-label">Código de la partida</div>
+        <div class="code-value" id="display-code">—</div>
+        <div class="code-url">feria.uaa.mx</div>
+      </div>
+
+      <!-- Lista de jugadores -->
+      <div class="players-section">
+        <div class="section-header">
+          <span class="section-title">Jugadores conectados</span>
+          <span class="player-count-badge" id="player-count">0</span>
+        </div>
+        <div id="players-list">
+          <p style="color:rgba(255,255,255,0.3);text-align:center;padding:24px;font-size:0.875rem;">
+            Esperando jugadores...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha -->
+    <div class="right-col">
+      <!-- Perfil del jugador -->
+      <div class="profile-card">
+        <div class="profile-avatar" id="my-avatar">?</div>
+        <div class="profile-name" id="my-name">—</div>
+        <div class="profile-status">Estás listo para competir</div>
+        <div class="waiting-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <p style="font-size:0.78rem;color:rgba(255,255,255,0.25);margin-top:12px;">
+          Esperando que el admin inicie...
+        </p>
+      </div>
+
+      <!-- Info de la partida -->
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-key">Dificultad</span>
+          <span class="info-val red" id="info-difficulty">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Rondas</span>
+          <span class="info-val" id="info-rounds">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Duración</span>
+          <span class="info-val" id="info-duration">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Máx. jugadores</span>
+          <span class="info-val" id="info-max">—</span>
+        </div>
+      </div>
+
+      <!-- Tip -->
+      <div class="tip-card">
+        <p>
+          <strong>Tip:</strong> El juego comenzará cuando el administrador pulse INICIAR. Mientras tanto, prepárate para responder misiones sobre comercio electrónico.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Countdown overlay -->
+<div class="countdown-overlay" id="countdown-overlay">
+  <div class="countdown-label">¡La competencia comienza en!</div>
+  <div class="countdown-number" id="countdown-num">3</div>
+  <div class="go-text" id="go-text">¡VAMOS!</div>
+  <div class="countdown-sub" id="countdown-sub"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script src="js/websocket.js"></script>
+<script src="js/ui.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const params   = new URLSearchParams(window.location.search);
+  const gameCode = (params.get('code') || App.Session.get('uaa_game_code') || '').toUpperCase();
+
+  if (!gameCode) { window.location.href = 'index.html'; return; }
+
+  const playerToken = App.Session.get('uaa_player_token');
+  if (!playerToken) {
+    window.location.href = 'index.html?code=' + encodeURIComponent(gameCode);
+    return;
+  }
+
+  App.Session.set('uaa_game_code', gameCode);
+
+  const myId       = App.Session.get('uaa_player_id');
+  const myName     = App.Session.get('uaa_player_name') || 'Jugador';
+  const myColor    = App.Session.get('uaa_avatar_color') || '#C41230';
+  const myInitials = App.Session.get('uaa_avatar_initials') || myName.slice(0,2).toUpperCase();
+
+  // Mostrar código y avatar
+  document.getElementById('display-code').textContent = gameCode;
+  const avatarEl = document.getElementById('my-avatar');
+  avatarEl.textContent  = myInitials;
+  avatarEl.style.background = myColor;
+  avatarEl.style.boxShadow  = `0 0 0 4px rgba(255,255,255,0.08), 0 0 20px ${myColor}66`;
+  document.getElementById('my-name').textContent = myName;
+
+  // Cargar estado
+  async function fetchState() {
+    const { data } = await App.Api.get('/api/games/' + gameCode + '/state');
+    if (!data) return;
+    if (data.status === 'active') { goToGame(); return; }
+
+    const diffMap = { easy:'Fácil', normal:'Normal', hard:'Difícil', feria:'MODO FERIA' };
+    document.getElementById('info-difficulty').textContent = diffMap[data.difficulty] || data.difficulty || '—';
+    document.getElementById('info-rounds').textContent     = data.total_rounds ? data.total_rounds + ' rondas' : '—';
+    document.getElementById('info-duration').textContent   = data.duration_seconds ? Math.round(data.duration_seconds/60) + ' min' : '—';
+    document.getElementById('info-max').textContent        = data.max_players ? data.max_players + ' jugadores' : '—';
+
+    renderPlayers(data.players || [], myId);
+    document.getElementById('player-count').textContent = (data.players || []).length;
+  }
+
+  await fetchState();
+
+  // Polling cada 2.5s
+  const poll = setInterval(async () => {
+    const { data } = await App.Api.get('/api/games/' + gameCode + '/state');
+    if (!data) return;
+    if (data.status === 'active' || data.status === 'finished') {
+      clearInterval(poll);
+      if (data.status === 'active') { startCountdown(); return; }
+    }
+    renderPlayers(data.players || [], myId);
+    document.getElementById('player-count').textContent = (data.players || []).length;
+  }, 2500);
+
+  // Ably si está configurado
+  const ablyKey = document.querySelector('meta[name="ably-key"]')?.content || '';
+  if (ablyKey) {
+    RealtimeClient.connect(ablyKey, gameCode);
+    RealtimeClient.on('player_joined',   () => fetchState());
+    RealtimeClient.on('player_left',     () => fetchState());
+    RealtimeClient.on('countdown_start', () => { clearInterval(poll); startCountdown(); });
+    RealtimeClient.on('game_started',    () => { clearInterval(poll); goToGame(); });
+    RealtimeClient.on('player_kicked',   (d) => {
+      if (d.player_id === myId) {
+        clearInterval(poll);
+        alert('Has sido expulsado de la partida.');
+        window.location.href = 'index.html';
+      }
+    });
+  }
+
+  function renderPlayers(list, meId) {
+    const container = document.getElementById('players-list');
+    if (!list.length) {
+      container.innerHTML = '<p style="color:rgba(255,255,255,0.25);text-align:center;padding:24px;font-size:0.875rem;">Esperando jugadores...</p>';
+      return;
+    }
+    container.innerHTML = list.map(p => {
+      const isMe     = p.player_id === meId;
+      const initials = p.avatar_initials || (p.name||'??').slice(0,2).toUpperCase();
+      const color    = p.avatar_color || '#C41230';
+      return `
+        <div class="player-row${isMe ? ' me' : ''}">
+          <div class="player-avatar" style="background:${color};box-shadow:0 0 12px ${color}66">${initials}</div>
+          <span class="player-name">${p.name || 'Jugador'}</span>
+          ${isMe ? '<span class="player-me-tag">TÚ</span>' : '<div class="player-ready-dot"></div>'}
+        </div>`;
+    }).join('');
+  }
+
+  function startCountdown() {
+    const overlay = document.getElementById('countdown-overlay');
+    const numEl   = document.getElementById('countdown-num');
+    const goEl    = document.getElementById('go-text');
+    const subEl   = document.getElementById('countdown-sub');
+    overlay.classList.add('active');
+
+    let count = 3;
+    numEl.textContent = count;
+
+    const tick = setInterval(() => {
+      count--;
+      if (count > 0) {
+        numEl.textContent = count;
+        numEl.style.animation = 'none';
+        numEl.offsetHeight;
+        numEl.style.animation = 'pop 0.4s ease-out';
+        subEl.textContent = '';
+      } else {
+        clearInterval(tick);
+        numEl.style.display = 'none';
+        goEl.style.display  = 'block';
+        subEl.textContent   = '¡Prepárate!';
+        setTimeout(goToGame, 900);
+      }
+    }, 1000);
+  }
+
+  function goToGame() {
+    window.location.href = 'hub.html';
+  }
+});
+</script>
+</body>
+</html>

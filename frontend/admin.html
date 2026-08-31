@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UAA Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090E;
+      --surface: #0E1117;
+      --card: #161B24;
+      --card-hover: #1C2230;
+      --sidebar: #0B0E14;
+      --border: rgba(255,255,255,0.06);
+      --border-strong: rgba(255,255,255,0.1);
+      --red: #C41230;
+      --red-muted: rgba(196,18,48,0.12);
+      --gold: #F59E0B;
+      --green: #10B981;
+      --green-muted: rgba(16,185,129,0.1);
+      --blue: #3B82F6;
+      --blue-muted: rgba(59,130,246,0.1);
+      --text: #E8ECF0;
+      --text-secondary: rgba(232,236,240,0.55);
+      --text-muted: rgba(232,236,240,0.3);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --sidebar-w: 240px;
+      --transition: all 0.2s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* TYPOGRAPHY */
+    h1, h2, h3, h4, .font-display { font-family: var(--font-display); font-weight: 700; }
+    .font-mono { font-family: var(--font-mono); }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+    .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 24px; font-weight: 600; }
+    
+    /* BUTTONS */
+    button { font-family: inherit; cursor: pointer; border: none; outline: none; transition: var(--transition); }
+    .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 14px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); }
+    .btn:hover { background: var(--card-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--text); color: var(--bg); border: none; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-danger { background: var(--red); color: white; border: none; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-ghost { background: transparent; border: none; color: var(--text-secondary); }
+    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .btn-sm { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+
+    /* INPUTS */
+    input { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text); padding: 8px 12px; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; width: 100%; transition: var(--transition); }
+    input:focus { border-color: var(--text-secondary); }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px; }
+
+    /* LAYOUT */
+    #app-layout { display: flex; min-height: 100vh; }
+    
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; transition: transform 0.3s ease; }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-header .logo { font-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
+    .sidebar-header .logo-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; }
+    .sidebar-nav { padding: 24px 16px; flex: 1; overflow-y: auto; }
+    .nav-section-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; margin: 0 8px 8px; text-transform: uppercase; font-weight: 600; }
+    .nav-item { display: block; padding: 8px 16px; border-radius: 6px; color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: var(--transition); text-decoration: none; border: none; background: none; width: 100%; text-align: left; margin-bottom: 4px; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .nav-item.active { color: var(--text); background: rgba(255,255,255,0.07); font-weight: 600; }
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+
+    /* MAIN CONTENT */
+    .content { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .mobile-header { display: none; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; justify-content: space-between; }
+    .menu-toggle { background: transparent; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
+    .sec-content { padding: 32px 48px; display: none; flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; }
+    .sec-content.active { display: block; }
+    
+    /* CARDS */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .kpi-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+    .kpi-value { font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1.1; margin-bottom: 4px; }
+    .kpi-sub { font-size: 12px; color: var(--text-muted); }
+
+    /* TABLES */
+    .table-responsive { overflow-x: auto; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-secondary); font-weight: 500; font-size: 12px; white-space: nowrap; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr:last-child td { border-bottom: none; }
+    
+    /* BADGES */
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge-gray { background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border-strong); }
+    .badge-green { background: var(--green-muted); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+    .badge-blue { background: var(--blue-muted); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+    .badge-yellow { background: rgba(245,158,11,0.1); color: var(--gold); border: 1px solid rgba(245,158,11,0.2); }
+    .badge-red { background: var(--red-muted); color: var(--red); border: 1px solid rgba(196,18,48,0.2); }
+
+    /* LOGIN SCREEN */
+    #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+    .login-box { width: 100%; max-width: 360px; padding: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+    .login-header { margin-bottom: 24px; text-align: center; }
+    .login-error { color: var(--red); font-size: 13px; margin-bottom: 16px; display: none; text-align: center; }
+
+    /* MODALS */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 480px; box-shadow: 0 24px 48px rgba(0,0,0,0.5); }
+    .modal-title { padding: 20px 24px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-weight: 600; font-size: 18px; }
+    .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    .modal-actions { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: var(--card); border-radius: 0 0 8px 8px; }
+
+    /* TOASTS */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; color: white; background: var(--surface); border: 1px solid var(--border-strong); box-shadow: 0 8px 16px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; max-width: 300px; display: flex; align-items: center; gap: 8px; }
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error { border-left: 3px solid var(--red); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* EMPTY STATES */
+    .empty-state { padding: 48px 24px; text-align: center; color: var(--text-secondary); border: 1px dashed var(--border-strong); border-radius: 8px; margin-bottom: 24px; }
+    .empty-icon { font-size: 24px; margin-bottom: 16px; opacity: 0.5; font-family: var(--font-mono); }
+    .empty-title { font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .empty-desc { font-size: 13px; }
+
+    /* SKELETON */
+    .skeleton { background: linear-gradient(90deg, var(--card) 25%, var(--card-hover) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 16px; margin-bottom: 8px; }
+    @keyframes shimmer { 0% {background-position:200% 0} 100% {background-position:-200% 0} }
+
+    /* UTILS */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-4 { gap: 16px; }
+    .text-right { text-align: right; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .content { margin-left: 0; }
+      .mobile-header { display: flex; }
+      .sec-content { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-header">
+        <div class="font-display" style="font-size: 24px; font-weight: 900;">UAA Admin</div>
+        <div class="text-secondary" style="font-size: 13px; margin-top: 4px;">Panel de control</div>
+      </div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="input-group">
+          <label>Contraseña</label>
+          <input type="password" id="login-pwd" required>
+        </div>
+        <div class="login-error" id="login-error">Contraseña incorrecta</div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;" id="login-btn">INICIAR SESIÓN</button>
+      </form>
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="index.html" class="text-muted" style="text-decoration: none; font-size: 12px;">Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP LAYOUT -->
+  <div id="app-layout">
+    
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">UAA</div>
+        <div class="logo-sub">ADMIN</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section-label">PRINCIPAL</div>
+        <button class="nav-item active" data-section="dashboard" onclick="navTo('dashboard')">Dashboard</button>
+        <button class="nav-item" data-section="games" onclick="navTo('games')">Partidas</button>
+        <button class="nav-item" data-section="players" onclick="navTo('players')">Jugadores</button>
+        <button class="nav-item" data-section="missions" onclick="navTo('missions')">Misiones</button>
+        <button class="nav-item" data-section="inventory" onclick="navTo('inventory')">Inventario</button>
+        <button class="nav-item" data-section="simulator" onclick="navTo('simulator')">Simulador</button>
+        
+        <div class="nav-section-label" style="margin-top:24px">DATOS</div>
+        <button class="nav-item" data-section="analytics" onclick="navTo('analytics')">Analítica</button>
+      </div>
+      <div class="sidebar-footer">
+        <button class="nav-item" onclick="logout()">✕ Cerrar sesión</button>
+        <a class="nav-item" href="index.html" target="_blank" style="margin-top:4px">Ver sitio →</a>
+      </div>
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <main class="content">
+      <header class="mobile-header">
+        <div class="font-display font-weight-700">UAA Admin</div>
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      </header>
+      
+      <!-- SECTION: DASHBOARD -->
+      <section id="sec-dashboard" class="sec-content active">
+        <h2 class="section-title">Dashboard</h2>
+        
+        <div class="kpi-grid" id="dash-kpi">
+          <div class="kpi-card"><div class="skeleton"></div><div class="skeleton" style="width: 50%"></div></div>
+          <div class="kpi-card"><div class="skeleton"></div><div class="skeleton" style="width: 50%"></div></div>
+          <div class="kpi-card"><div class="skeleton"></div><div class="skeleton" style="width: 50%"></div></div>
+        </div>
+
+        <div class="flex gap-4 mb-4 items-center flex-wrap">
+          <div class="card" style="flex:1; margin-bottom: 0;">
+            <div class="card-header">
+              <h3 class="font-display" style="font-size: 16px;">Crear Partida</h3>
+            </div>
+            <div class="flex items-center gap-4">
+              <div style="flex:1">
+                <label class="text-secondary" style="font-size: 12px; display: block; margin-bottom: 4px;">Máx. Jugadores</label>
+                <input type="number" id="dash-max-players" value="5" min="1" max="100" style="max-width: 120px;">
+              </div>
+              <button class="btn btn-danger" id="btn-create-game" onclick="createGame()" style="height: fit-content; align-self: flex-end; padding: 10px 24px;">CREAR PARTIDA (1 CLIC)</button>
+            </div>
+          </div>
+
+          <div id="active-game-panel" style="display:none; flex:1;">
+             <!-- Rellenado por JS -->
+          </div>
+        </div>
+
+        <h3 class="section-title" style="margin-top: 48px;">Últimas Partidas</h3>
+        <div class="table-responsive card" style="padding: 0;">
+          <table id="dash-games-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Estado</th>
+                <th>Jugadores</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5"><div class="skeleton"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION: GAMES -->
+      <section id="sec-games" class="sec-content">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="section-title" style="margin-bottom: 0;">Partidas</h2>
+          <button class="btn btn-primary btn-sm" onclick="navTo('dashboard')">+ Nueva Partida</button>
+        </div>
+        
+        <div class="table-responsive card" style="padding: 0;">
+          <table id="games-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Estado</th>
+                <th>Jugadores</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION: PLAYERS -->
+      <section id="sec-players" class="sec-content">
+        <h2 class="section-title">Jugadores</h2>
+        
+        <div class="card">
+          <div class="input-group" style="margin-bottom:0; max-width: 300px;">
+            <label>Buscar partida (Código)</label>
+            <div class="flex gap-2">
+              <input type="text" id="players-game-code" placeholder="Ej: UAA-1234" class="font-mono text-uppercase">
+              <button class="btn btn-primary" onclick="loadPlayers()">Buscar</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="players-content">
+          <div class="empty-state">
+            <div class="empty-icon">—</div>
+            <div class="empty-title">Sin partida seleccionada</div>
+            <div class="empty-desc">Ingresa un código de partida para ver sus jugadores</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: MISSIONS -->
+      <section id="sec-missions" class="sec-content">
+        <h2 class="section-title">Misiones Disponibles</h2>
+        
+        <div class="table-responsive card" style="padding: 0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Título</th>
+                <th>Tema</th>
+                <th>Pts</th>
+                <th>Dificultad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-mono text-muted">ecom_decision</td>
+                <td>Decisión de Negocio</td>
+                <td>Estrategia Digital</td>
+                <td><span class="badge badge-yellow">100</span></td>
+                <td><span class="badge badge-gray">Media</span></td>
+              </tr>
+              <tr>
+                <td class="font-mono text-muted">fraud_detect</td>
+                <td>Detective E-Commerce</td>
+                <td>Seguridad</td>
+                <td><span class="badge badge-yellow">100</span></td>
+                <td><span class="badge badge-red">Alta</span></td>
+              </tr>
+              <tr>
+                <td class="font-mono text-muted">store_mission</td>
+                <td>La Tienda</td>
+                <td>Customer Journey</td>
+                <td><span class="badge badge-yellow">150</span></td>
+                <td><span class="badge badge-red">Alta</span></td>
+              </tr>
+              <tr>
+                <td class="font-mono text-muted">speed_search</td>
+                <td>Búsqueda Relámpago</td>
+                <td>UX de Catálogo</td>
+                <td><span class="badge badge-yellow">100</span></td>
+                <td><span class="badge badge-gray">Media</span></td>
+              </tr>
+              <tr>
+                <td class="font-mono text-muted">checkout_debug</td>
+                <td>Rescata el Checkout</td>
+                <td>CRO</td>
+                <td><span class="badge badge-yellow">100</span></td>
+                <td><span class="badge badge-red">Alta</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION: INVENTORY -->
+      <section id="sec-inventory" class="sec-content">
+        <h2 class="section-title">Inventario y Premios</h2>
+        
+        <div class="table-responsive card" style="padding: 0;">
+          <table id="inventory-table">
+            <thead>
+              <tr>
+                <th>Premio</th>
+                <th>Stock Inicial</th>
+                <th>Disponibles</th>
+                <th>Canjeados</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="6"><div class="skeleton"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION: SIMULADOR -->
+      <section id="sec-simulator" class="sec-content">
+        <h2 class="section-title">Simulador de Tienda (solo staff)</h2>
+        <div class="card" style="padding:24px;max-width:640px">
+          <p style="color:var(--text-secondary);line-height:1.6;margin-bottom:20px">
+            El simulador es una herramienta demostrativa para mostrar cómo funciona una tienda en línea.
+            <strong>No forma parte del juego de los participantes.</strong> Actívalo solo cuando quieras usarlo con el público
+            en otro momento; mientras esté desactivado, los jugadores no verán ningún acceso a él.
+          </p>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="font-weight:700">Estado:
+              <span id="sim-state" style="margin-left:6px;font-weight:800">…</span>
+            </div>
+            <button class="btn btn-primary" id="sim-toggle" onclick="toggleSimulator()">Cargando…</button>
+            <a class="btn" id="sim-open" href="simulate.html" target="_blank"
+               style="display:none;background:#2B5CE6;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:700">
+               Abrir simulador →</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: ANALYTICS -->
+      <section id="sec-analytics" class="sec-content">
+        <h2 class="section-title">Analítica Global</h2>
+        
+        <div class="kpi-grid" id="analytics-kpi">
+          <div class="kpi-card"><div class="skeleton"></div></div>
+          <div class="kpi-card"><div class="skeleton"></div></div>
+          <div class="kpi-card"><div class="skeleton"></div></div>
+          <div class="kpi-card"><div class="skeleton"></div></div>
+        </div>
+        
+        <div class="empty-state mt-4">
+          <div class="empty-icon">—</div>
+          <div class="empty-title">Datos recopilándose</div>
+          <div class="empty-desc">Las tablas detalladas de analítica estarán disponibles con más datos históricos.</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TOASTS -->
+  <div id="toast-container"></div>
+
+  <!-- CONFIRM MODAL -->
+  <div class="modal-overlay" id="confirmModal" style="display:none">
+    <div class="modal">
+      <div class="modal-title" id="confirmTitle">¿Confirmar acción?</div>
+      <div class="modal-body" id="confirmBody"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeConfirmModal()">Cancelar</button>
+        <button class="btn btn-danger" id="confirmOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal" style="display:none">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-title flex justify-between items-center">
+        <span id="detailTitle">Detalle</span>
+        <button class="btn-ghost" style="font-size: 20px; line-height: 1;" onclick="closeDetailModal()">✕</button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       GLOBAL STATE & CONFIG
+       ========================================================================== */
+    const Admin = {
+      token: sessionStorage.getItem('uaa_admin_token') || '',
+      activeGame: null, // {game_code, status}
+      activeSection: 'dashboard',
+      pollInterval: null,
+      gamesCache: []
+    };
+
+    const API_BASE = '/api';
+
+    /* ==========================================================================
+       API HELPER
+       ========================================================================== */
+    async function api(method, url, body) {
+      const token = sessionStorage.getItem('uaa_admin_token') || '';
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+        if (body) opts.body = JSON.stringify(body);
+        const r = await fetch(url, opts);
+        
+        let d = {};
+        if (r.headers.get('content-type')?.includes('application/json')) {
+          d = await r.json().catch(() => ({}));
+        }
+        
+        return { data: d, ok: r.ok, status: r.status };
+      } catch(e) { 
+        console.error('API Error:', e);
+        return { data: null, ok: false, status: 0 }; 
+      }
+    }
+
+    /* ==========================================================================
+       UI UTILS
+       ========================================================================== */
+    function toast(msg, type = 'success') {
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.innerHTML = type === 'success' ? '<span>✓</span>' : '<span>✕</span>';
+      el.innerHTML += `<span>${msg}</span>`;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    function getBadgeStatus(status) {
+      if (status === 'waiting') return '<span class="badge badge-gray">Waiting</span>';
+      if (status === 'active') return '<span class="badge badge-green">Active</span>';
+      if (status === 'finished') return '<span class="badge badge-blue">Finished</span>';
+      return `<span class="badge badge-gray">${status}</span>`;
+    }
+
+    /* MODALS */
+    let confirmCallback = null;
+    function confirmAction(title, body, onConfirm) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmBody').innerHTML = body;
+      confirmCallback = onConfirm;
+      document.getElementById('confirmModal').style.display = 'flex';
+    }
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').style.display = 'none';
+      confirmCallback = null;
+    }
+    document.getElementById('confirmOk').addEventListener('click', async () => {
+      if (confirmCallback) await confirmCallback();
+      closeConfirmModal();
+    });
+
+    function showDetailModal(title, contentHTML) {
+      document.getElementById('detailTitle').textContent = title;
+      document.getElementById('detailBody').innerHTML = contentHTML;
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+    function closeDetailModal() {
+      document.getElementById('detailModal').style.display = 'none';
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    /* ==========================================================================
+       AUTH & INIT
+       ========================================================================== */
+    function init() {
+      if (!Admin.token) {
+        showLogin();
+      } else {
+        showApp();
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-layout').style.display = 'none';
+    }
+
+    function showApp() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-layout').style.display = 'flex';
+      navTo('dashboard');
+      startPolling();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('login-pwd').value;
+      const btn = document.getElementById('login-btn');
+      const err = document.getElementById('login-error');
+      
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+      err.style.display = 'none';
+
+      const { data, ok } = await api('POST', '/api/admin/login', { password: pwd });
+      
+      btn.disabled = false;
+      btn.textContent = 'INICIAR SESIÓN';
+
+      if (ok && data && data.admin_token) {
+        Admin.token = data.admin_token;
+        sessionStorage.setItem('uaa_admin_token', Admin.token);
+        showApp();
+      } else {
+        err.style.display = 'block';
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('uaa_admin_token');
+      Admin.token = '';
+      stopPolling();
+      showLogin();
+    }
+
+    /* ==========================================================================
+       NAVIGATION & RENDERERS
+       ========================================================================== */
+    function navTo(section) {
+      Admin.activeSection = section;
+      
+      // Update UI active states
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeNav = document.querySelector(`.nav-item[data-section="${section}"]`);
+      if (activeNav) activeNav.classList.add('active');
+
+      document.querySelectorAll('.sec-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(`sec-${section}`).classList.add('active');
+
+      // Mobile close sidebar
+      document.getElementById('sidebar').classList.remove('open');
+
+      // Load specific data
+      refreshCurrentSection();
+    }
+
+    function refreshCurrentSection() {
+      if (Admin.activeSection === 'dashboard') loadDashboard();
+      else if (Admin.activeSection === 'games') loadGames();
+      else if (Admin.activeSection === 'players') { /* Only search driven */ }
+      else if (Admin.activeSection === 'inventory') loadInventory();
+      else if (Admin.activeSection === 'simulator') loadSimulatorState();
+      else if (Admin.activeSection === 'analytics') loadAnalytics();
+    }
+
+    /* ==========================================================================
+       DASHBOARD LOGIC
+       ========================================================================== */
+    async function loadDashboard() {
+      const { data, ok } = await api('GET', '/api/admin/games');
+      if (!ok) return;
+      
+      const games = data || [];
+      Admin.gamesCache = games;
+      
+      // Calculate KPIs
+      const activeGames = games.filter(g => g.status === 'active').length;
+      let totalPlayers = 0;
+      games.forEach(g => totalPlayers += g.players_count || 0);
+      
+      document.getElementById('dash-kpi').innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-title">Partidas Activas</div>
+          <div class="kpi-value">${activeGames}</div>
+          <div class="kpi-sub">de ${games.length} totales</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Jugadores Totales</div>
+          <div class="kpi-value">${totalPlayers}</div>
+          <div class="kpi-sub">registrados históricamente</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Estado Sistema</div>
+          <div class="kpi-value" style="color:var(--green)">ON</div>
+          <div class="kpi-sub">API respondiendo</div>
+        </div>
+      `;
+
+      // Render table
+      const tbody = document.querySelector('#dash-games-table tbody');
+      if (games.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No hay partidas creadas</td></tr>`;
+      } else {
+        const top5 = [...games].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 5);
+        tbody.innerHTML = top5.map(g => {
+          // La API devuelve 'code', normalizamos para compatibilidad
+          const gc = g.code || g.game_code || '---';
+          return `
+          <tr>
+            <td class="font-mono font-weight-600">${gc}</td>
+            <td>${getBadgeStatus(g.status)}</td>
+            <td>${g.players_count || 0}</td>
+            <td>${formatDate(g.created_at)}</td>
+            <td>
+              <button class="btn btn-sm" onclick="viewGameDetail('${gc}')">Ver</button>
+              <button class="btn btn-ghost btn-sm" onclick="showCodeModal('${gc}');copyAndFlash('${gc}')">Código</button>
+            </td>
+          </tr>
+        `}).join('');
+      }
+
+      updateActiveGamePanel(games);
+    }
+
+    function updateActiveGamePanel(games) {
+      const activeOrWaiting = games.find(g => g.status === 'waiting' || g.status === 'active');
+      const panel = document.getElementById('active-game-panel');
+      
+      if (activeOrWaiting) {
+        const gc = activeOrWaiting.code || activeOrWaiting.game_code || '';
+        Admin.activeGame = { game_code: gc, status: activeOrWaiting.status };
+        panel.style.display = 'block';
+        panel.innerHTML = `
+          <div class="card" style="margin-bottom:0; background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.2);">
+            <div class="card-header">
+              <h3 class="font-display text-uppercase" style="font-size:12px; color:var(--gold);">Partida Actual</h3>
+              ${getBadgeStatus(activeOrWaiting.status)}
+            </div>
+            <div class="font-mono text-center" style="font-size: 48px; font-weight: 900; color: var(--gold); letter-spacing: 0.1em; margin: 16px 0; cursor:pointer;" onclick="showCodeModal('${gc}')" title="Clic para ver código grande">
+              ${gc}
+            </div>
+            <div style="font-size:11px;text-align:center;color:var(--text-muted);margin-bottom:16px;">Toca el código para verlo en grande</div>
+            <div class="flex gap-2 justify-center mt-4">
+              <button class="btn btn-ghost btn-sm" onclick="copyAndFlash('${gc}');navigator.clipboard?.writeText('${gc}')">Copiar Código</button>
+              <button class="btn btn-ghost btn-sm" onclick="showCodeModal('${gc}')">Ver en grande</button>
+              ${activeOrWaiting.status === 'waiting' 
+                ? `<button class="btn btn-primary btn-sm" onclick="startGame('${gc}')">Iniciar Partida</button>`
+                : `<button class="btn btn-danger btn-sm" onclick="endGame('${gc}')">Terminar Partida</button>`
+              }
+            </div>
+          </div>
+        `;
+      } else {
+        Admin.activeGame = null;
+        panel.style.display = 'none';
+      }
+    }
+
+    async function createGame() {
+      const btn = document.getElementById('btn-create-game');
+      btn.disabled = true;
+      btn.textContent = 'Creando...';
+      
+      const maxPlayers = parseInt(document.getElementById('dash-max-players')?.value) || 5;
+      
+      const { data, ok } = await api('POST', '/api/games/create', {
+        name: 'Feria UAA ' + new Date().toLocaleDateString('es'),
+        difficulty: 'normal',
+        max_players: Math.min(maxPlayers, 5),
+        duration_seconds: 240,
+        rounds: 5,
+        prizes_config: [],
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'CREAR PARTIDA';
+
+      if (!ok || !data?.game_code) {
+        toast('Error al crear partida. Reintenta.', 'error');
+        return;
+      }
+
+      const code = data.game_code;
+      Admin.activeGame = { game_code: code, status: 'waiting' };
+
+      // MOSTRAR CÓDIGO INMEDIATAMENTE en modal grande — crítico para feria
+      showCodeModal(code);
+      loadDashboard();
+    }
+
+    function showCodeModal(code) {
+      // Eliminar modal previo si existe
+      const old = document.getElementById('code-modal-overlay');
+      if (old) old.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'code-modal-overlay';
+      overlay.style.cssText = `
+        position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;
+        display:flex;align-items:center;justify-content:center;
+      `;
+      overlay.innerHTML = `
+        <div style="
+          background:#111318;border:1px solid rgba(255,255,255,0.12);
+          border-radius:16px;padding:48px;text-align:center;
+          max-width:480px;width:90%;
+        ">
+          <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:600;
+            letter-spacing:0.12em;color:rgba(240,242,245,0.4);text-transform:uppercase;
+            margin-bottom:12px;">PARTIDA CREADA — CÓDIGO PARA JUGADORES</div>
+
+          <div id="big-code" style="
+            font-family:'Space Grotesk','JetBrains Mono',monospace;
+            font-size:64px;font-weight:900;letter-spacing:0.08em;
+            color:#F59E0B;cursor:pointer;user-select:all;
+            padding:24px 16px;background:rgba(245,158,11,0.05);
+            border:2px solid rgba(245,158,11,0.2);border-radius:12px;
+            margin-bottom:8px;transition:all 0.15s;
+          " onclick="copyAndFlash('${code}')" title="Clic para copiar">${code}</div>
+
+          <div style="font-size:12px;color:rgba(240,242,245,0.35);margin-bottom:32px;">
+            Toca el código para copiar · Los jugadores lo ingresan en la pantalla de inicio
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="startGame('${code}');document.getElementById('code-modal-overlay').remove();" style="
+              background:#C41230;color:#fff;border:none;padding:14px 28px;
+              border-radius:6px;font-family:'Space Grotesk',sans-serif;font-weight:700;
+              font-size:15px;cursor:pointer;
+            ">INICIAR PARTIDA</button>
+            <button onclick="document.getElementById('code-modal-overlay').remove();" style="
+              background:rgba(255,255,255,0.07);color:rgba(240,242,245,0.7);border:1px solid rgba(255,255,255,0.1);
+              padding:14px 28px;border-radius:6px;font-family:'Space Grotesk',sans-serif;
+              font-weight:600;font-size:15px;cursor:pointer;
+            ">Cerrar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      // Cerrar al clic fuera del card
+      overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+    }
+
+    function copyAndFlash(code) {
+      navigator.clipboard?.writeText(code).catch(() => {});
+      const el = document.getElementById('big-code');
+      if (el) {
+        el.style.background = 'rgba(16,185,129,0.15)';
+        el.style.borderColor = 'rgba(16,185,129,0.4)';
+        el.style.color = '#10B981';
+        const prev = el.textContent;
+        el.textContent = '✓ COPIADO';
+        setTimeout(() => {
+          el.textContent = code;
+          el.style.background = 'rgba(245,158,11,0.05)';
+          el.style.borderColor = 'rgba(245,158,11,0.2)';
+          el.style.color = '#F59E0B';
+        }, 1500);
+      }
+      toast('Código copiado: ' + code);
+    }
+
+    /* ==========================================================================
+       GAMES ACTIONS
+       ========================================================================== */
+    async function loadGames() {
+      const { data, ok } = await api('GET', '/api/admin/games');
+      const tbody = document.querySelector('#games-table tbody');
+      
+      if (!ok || !data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state" style="margin:0"><div class="empty-icon">—</div><div class="empty-title">Sin partidas</div></div></td></tr>`;
+        return;
+      }
+
+      Admin.gamesCache = data;
+      const games = [...data].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+      tbody.innerHTML = games.map(g => {
+        // La API devuelve 'code', normalizamos igual que en dashboard
+        const gc = g.code || g.game_code || '—';
+        const fecha = g.created_at && !g.created_at.startsWith('1970') ? formatDate(g.created_at) : '—';
+        return `
+        <tr>
+          <td class="font-mono font-weight-600" style="color:var(--gold)">${gc}</td>
+          <td>${getBadgeStatus(g.status)}</td>
+          <td>${g.players_count || 0}</td>
+          <td>${fecha}</td>
+          <td>${g.finished_at ? formatDate(g.finished_at) : '—'}</td>
+          <td>
+            <div class="flex gap-2">
+              <button class="btn btn-sm" onclick="viewGameDetail('${gc}')">Ver</button>
+              <button class="btn btn-ghost btn-sm" onclick="showCodeModal('${gc}')">Código</button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+
+    async function viewGameDetail(code) {
+      if (!code || code === '—') return;
+      showDetailModal('Cargando...', '<div class="skeleton"></div><div class="skeleton"></div>');
+      
+      const { data, ok } = await api('GET', `/api/admin/game/${code}`);
+      if (!ok || !data) {
+        // Intentar desde caché
+        const cached = (Admin.gamesCache || []).find(g => (g.code || g.game_code) === code);
+        if (cached) {
+          const gc = cached.code || cached.game_code || code;
+          showDetailModal(`Partida ${gc}`, `
+            <div class="font-mono" style="font-size:24px;font-weight:700;color:var(--gold);margin-bottom:16px">${gc}</div>
+            <div>${getBadgeStatus(cached.status)}</div>
+            <div style="margin-top:16px;color:var(--text-secondary);font-size:13px">Jugadores: ${cached.players_count || 0}</div>
+            <div class="flex justify-end mt-4 gap-2">
+              ${cached.status === 'waiting' ? `<button class="btn btn-primary" onclick="startGame('${gc}'); closeDetailModal()">Iniciar Partida</button>` : ''}
+              ${cached.status === 'active' ? `<button class="btn btn-danger" onclick="endGame('${gc}'); closeDetailModal()">Terminar Partida</button>` : ''}
+            </div>
+          `);
+        } else {
+          showDetailModal('Error', 'No se pudieron cargar los detalles.');
+        }
+        return;
+      }
+
+      const gc = data.code || data.game_code || code;
+      const html = `
+        <div class="flex justify-between items-center mb-4">
+          <div class="font-mono" style="font-size:24px;font-weight:700;color:var(--gold)">${gc}</div>
+          <div>${getBadgeStatus(data.status)}</div>
+        </div>
+        <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:24px">
+          <div class="kpi-card" style="padding:12px">
+            <div class="text-secondary" style="font-size:11px">Inicio</div>
+            <div style="font-size:14px">${data.created_at && !data.created_at.startsWith('1970') ? formatDate(data.created_at) : '—'}</div>
+          </div>
+          <div class="kpi-card" style="padding:12px">
+            <div class="text-secondary" style="font-size:11px">Fin</div>
+            <div style="font-size:14px">${data.finished_at ? formatDate(data.finished_at) : '—'}</div>
+          </div>
+        </div>
+        <h4 class="font-display mb-4">Jugadores (${data.players_count || 0})</h4>
+        <div class="table-responsive">
+          <table style="font-size:12px">
+            <thead><tr><th>Nombre</th><th>Puntos</th><th>Misiones</th></tr></thead>
+            <tbody>
+              ${(data.players || []).map(p => `
+                <tr>
+                  <td>${p.name || p.id}</td>
+                  <td><span class="badge badge-yellow">${p.score || 0}</span></td>
+                  <td>${p.missions_completed || 0}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="3" class="text-muted">Sin jugadores aún</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+        <div class="flex justify-end mt-4 gap-2">
+          ${data.status === 'waiting' ? `<button class="btn btn-primary" onclick="startGame('${gc}'); closeDetailModal()">Iniciar Partida</button>` : ''}
+          ${data.status === 'active' ? `<button class="btn btn-danger" onclick="endGame('${gc}'); closeDetailModal()">Terminar Partida</button>` : ''}
+        </div>
+      `;
+      showDetailModal('Detalle de Partida', html);
+    }
+
+    async function startGame(code) {
+      if (!code || code === '—') { toast('Código de partida inválido', 'error'); return; }
+      confirmAction('Iniciar partida', `¿Iniciar la partida <b style="color:var(--gold)">${code}</b>?`, async () => {
+        const { ok } = await api('POST', `/api/games/${code}/start`);
+        if (ok) { toast('Partida iniciada: ' + code); refreshCurrentSection(); }
+        else { toast('Error al iniciar — verifica que la partida exista', 'error'); }
+      });
+    }
+
+    async function endGame(code) {
+      if (!code || code === '—') return;
+      confirmAction('Terminar partida', `¿Terminar la partida <b style="color:var(--red)">${code}</b>?`, async () => {
+        const { ok } = await api('POST', `/api/games/${code}/end`);
+        if (ok) { toast('Partida terminada'); Admin.activeGame = null; refreshCurrentSection(); }
+        else { toast('Error al terminar', 'error'); }
+      });
+    }
+
+    function copyCode(code) {
+      navigator.clipboard.writeText(code).then(() => toast('Código copiado'));
+    }
+
+    /* ==========================================================================
+       PLAYERS LOGIC
+       ========================================================================== */
+    async function loadPlayers() {
+      const codeInput = document.getElementById('players-game-code').value.trim().toUpperCase();
+      const container = document.getElementById('players-content');
+      
+      if (!codeInput) {
+        toast('Ingresa un código', 'error');
+        return;
+      }
+
+      container.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+      
+      const { data, ok } = await api('GET', `/api/games/${codeInput}/state`);
+      
+      if (!ok || !data) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">✕</div><div class="empty-title">Partida no encontrada</div><div class="empty-desc">Verifica el código ingresado.</div></div>`;
+        return;
+      }
+
+      const players = data.players || {};
+      const keys = Object.keys(players);
+
+      if (keys.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">—</div><div class="empty-title">Sin jugadores</div><div class="empty-desc">Nadie se ha unido a esta partida aún.</div></div>`;
+        return;
+      }
+
+      const html = `
+        <div class="card" style="padding:0">
+          <div class="card-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border); margin:0;">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-uppercase">${codeInput}</span>
+              ${getBadgeStatus(data.status)}
+            </div>
+            <div class="text-secondary text-sm">${keys.length} jugadores</div>
+          </div>
+          <div class="table-responsive" style="margin:0">
+            <table>
+              <thead>
+                <tr>
+                  <th>Jugador</th>
+                  <th>ID</th>
+                  <th>Puntos</th>
+                  <th>Misiones</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${keys.map(k => {
+                  const p = players[k];
+                  return `
+                  <tr>
+                    <td class="font-weight-500">${p.name || 'Anónimo'}</td>
+                    <td class="font-mono text-muted" style="font-size:11px;">${k.substring(0,8)}...</td>
+                    <td><span class="badge badge-yellow">${p.score || 0}</span></td>
+                    <td>${(p.completed_missions || []).length}</td>
+                    <td>
+                      <button class="btn btn-sm btn-ghost" style="color:var(--red)" onclick="kickPlayer('${codeInput}', '${k}')">Expulsar</button>
+                    </td>
+                  </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    async function kickPlayer(gameCode, playerId) {
+      confirmAction('Expulsar jugador', '¿Estás seguro de que quieres expulsar a este jugador? Perderá todo su progreso.', async () => {
+        const { ok } = await api('POST', '/api/admin/player/kick', { game_code: gameCode, player_id: playerId });
+        if (ok) {
+          toast('Jugador expulsado');
+          loadPlayers(); // reload list
+        } else {
+          toast('Error al expulsar', 'error');
+        }
+      });
+    }
+
+    /* ==========================================================================
+       SIMULATOR LOGIC
+       ========================================================================== */
+    async function loadSimulatorState() {
+      const btn   = document.getElementById('sim-toggle');
+      const label = document.getElementById('sim-state');
+      const link  = document.getElementById('sim-open');
+
+      try {
+        const { data, ok } = await api('GET', '/api/admin/simulator');
+        if (!ok || data == null) throw new Error('no data');
+        const enabled = !!data.enabled;
+        label.textContent = enabled ? 'ACTIVO' : 'INACTIVO';
+        label.style.color = enabled ? 'var(--green)' : 'var(--text-muted)';
+        btn.textContent   = enabled ? 'Desactivar simulador' : 'Activar simulador';
+        btn.className     = enabled ? 'btn btn-danger' : 'btn btn-primary';
+        link.style.display = enabled ? 'inline-block' : 'none';
+      } catch(e) {
+        label.textContent = 'Error';
+        btn.textContent   = 'Reintentar';
+        btn.className     = 'btn';
+      }
+    }
+
+    async function toggleSimulator() {
+      const label   = document.getElementById('sim-state');
+      const current = label.textContent === 'ACTIVO';
+      const { ok } = await api('POST', '/api/admin/simulator', { enabled: !current });
+      if (ok) {
+        toast(current ? 'Simulador desactivado' : 'Simulador activado ✓');
+        loadSimulatorState();
+      } else {
+        toast('Error al cambiar estado del simulador', 'error');
+      }
+    }
+
+    /* ==========================================================================
+       INVENTORY LOGIC
+       ========================================================================== */
+    async function loadInventory() {
+      const tbody = document.querySelector('#inventory-table tbody');
+      tbody.innerHTML = `<tr><td colspan="6"><div class="skeleton"></div></td></tr>`;
+
+      const { data, ok } = await api('GET', '/api/rewards/admin/all');
+
+      if (!ok || !data) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state" style="margin:0"><div class="empty-icon">✕</div><div class="empty-title">Error al cargar inventario</div></div></td></tr>`;
+        return;
+      }
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-muted text-center" style="padding:24px">Sin premios registrados</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(i => {
+        const remaining = i.stock_remaining ?? i.current_stock ?? 0;
+        const initial   = i.stock_initial  ?? i.initial_stock  ?? 0;
+        const canjeados = i.claimed ?? (initial - remaining);
+        const disabled  = !!i.disabled;
+
+        const percent = initial > 0 ? (remaining / initial) * 100 : 0;
+        let stateStr;
+        if (disabled)        stateStr = `<span class="badge badge-gray">Desactivado</span>`;
+        else if (remaining === 0) stateStr = `<span class="badge badge-red">Agotado</span>`;
+        else if (percent <= 20)   stateStr = `<span class="badge badge-yellow">Stock bajo</span>`;
+        else                      stateStr = `<span class="badge badge-green">En stock</span>`;
+
+        const emoji = i.emoji || '🎁';
+        const toggleLabel = disabled ? 'Activar' : 'Desactivar';
+        const toggleClass = disabled ? 'btn btn-sm btn-primary' : 'btn btn-sm';
+
+        return `
+          <tr style="${disabled ? 'opacity:0.5;' : ''}">
+            <td class="font-weight-500">${emoji} ${i.name}</td>
+            <td class="text-muted">${initial}</td>
+            <td class="font-mono">
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${remaining}
+                <button class="btn btn-ghost btn-sm" onclick="editStock('${i.id}', '${i.name}', ${remaining})" style="padding:2px 6px;font-size:12px;opacity:0.6;" title="Editar Stock">✎</button>
+              </div>
+            </td>
+            <td>${canjeados}</td>
+            <td>${stateStr}</td>
+            <td>
+              <button class="${toggleClass}" onclick="toggleReward('${i.id}', ${!disabled})">${toggleLabel}</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function editStock(id, name, currentStock) {
+      const newStock = prompt(`Nuevo stock disponible para "${name}":`, currentStock);
+      if (newStock === null) return; // Cancelado
+      
+      const parsed = parseInt(newStock, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        toast('Stock inválido. Debe ser un número mayor o igual a 0', 'error');
+        return;
+      }
+      
+      const { ok } = await api('POST', '/api/rewards/admin/stock', { reward_id: id, stock: parsed });
+      if (ok) {
+        toast('Stock actualizado ✓');
+        loadInventory();
+      } else {
+        toast('Error al actualizar el stock', 'error');
+      }
+    }
+
+    async function toggleReward(rewardId, disable) {
+      const { ok } = await api('POST', '/api/rewards/admin/toggle', { reward_id: rewardId, disabled: disable });
+      if (ok) {
+        toast(disable ? 'Premio desactivado' : 'Premio activado ✓');
+        loadInventory();
+      } else {
+        toast('Error al cambiar estado del premio', 'error');
+      }
+    }
+
+    /* ==========================================================================
+       ANALYTICS LOGIC
+       ========================================================================== */
+    async function loadAnalytics() {
+      // Basic mock analytics from games cache
+      const games = Admin.gamesCache || [];
+      const totalG = games.length;
+      let totalP = 0;
+      let totalPoints = 0;
+
+      games.forEach(g => {
+        totalP += g.players_count || 0;
+        // Mock points sum
+        totalPoints += (g.players_count || 0) * 150; 
+      });
+
+      document.getElementById('analytics-kpi').innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-title">Total Partidas</div>
+          <div class="kpi-value">${totalG}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Total Jugadores</div>
+          <div class="kpi-value">${totalP}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Puntos Otorgados</div>
+          <div class="kpi-value">${totalPoints}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Retención</div>
+          <div class="kpi-value" style="color:var(--blue)">85%</div>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       POLLING
+       ========================================================================== */
+    function startPolling() {
+      if (Admin.pollInterval) clearInterval(Admin.pollInterval);
+      Admin.pollInterval = setInterval(async () => {
+        if (Admin.activeSection === 'dashboard') {
+          // just update active game implicitly if needed, or re-fetch dashboard slightly
+          // For now, only refresh players if we are looking at active game in players view
+        }
+        if (Admin.activeSection === 'players') {
+          const code = document.getElementById('players-game-code').value.trim();
+          if (code) {
+             // silent refresh
+             const { data, ok } = await api('GET', `/api/games/${code}/state`);
+             if (ok && data) {
+               // Update silently if we want, or skip to avoid flickering. 
+               // Skipping explicit re-render to avoid losing focus/scroll, just rely on manual refresh for now.
+             }
+          }
+        }
+      }, 3000);
+    }
+    function stopPolling() {
+      if (Admin.pollInterval) clearInterval(Admin.pollInterval);
+      Admin.pollInterval = null;
+    }
+
+    // Init App
+    window.onload = init;
+  </script>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIENDA UAA — Misiones</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sp-red:    #E62429;
+      --sp-red2:   #FF3B40;
+      --sp-blue:   #1B2B8F;
+      --sp-blue2:  #2B5CE6;
+      --sp-dark:   #07070F;
+      --sp-surface:#0D0F1C;
+      --sp-card:   #111527;
+      --sp-border: rgba(230,36,41,0.18);
+      --sp-glow:   rgba(230,36,41,0.35);
+      --gold:      #FFD700;
+      --green:     #00E676;
+      --amber:     #F59E0B;
+      --text:      #F0F4FF;
+      --muted:     rgba(240,244,255,0.5);
+      --font:      'Space Grotesk', sans-serif;
+      --body:      'Inter', sans-serif;
+      --bang:      'Bangers', cursive;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    /* ── WEB PATTERN BACKGROUND ── */
+    body {
+      font-family: var(--body);
+      background: var(--sp-dark);
+      color: var(--text);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 800px 500px at 0% 0%, rgba(230,36,41,0.18), transparent),
+        radial-gradient(ellipse 700px 500px at 100% 100%, rgba(27,43,143,0.22), transparent);
+      pointer-events: none; z-index: 0;
+    }
+    /* SVG web pattern overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0 L80 80 M80 0 L0 80 M40 0 L40 80 M0 40 L80 40' stroke='rgba(230,36,41,0.06)' stroke-width='1'/%3E%3Ccircle cx='0' cy='0' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3Ccircle cx='80' cy='80' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.9;
+    }
+
+    /* ── HUD TOP BAR ── */
+    .hud {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(7,7,15,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(230,36,41,0.3);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 20px; gap: 16px;
+    }
+    .hud-brand {
+      font-family: var(--bang);
+      font-size: 2rem; letter-spacing: 2px;
+      color: var(--sp-red);
+      text-shadow: 0 0 20px rgba(230,36,41,0.6);
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer;
+    }
+    .hud-brand span { color: var(--text); font-size: 1rem; font-family: var(--font); font-weight: 700; letter-spacing: 0.5px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 10px; }
+    .hud-center {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .hud-center-label { font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .hud-timer {
+      font-family: var(--bang); font-size: 1.8rem; letter-spacing: 3px;
+      color: var(--text);
+      transition: color 0.3s;
+    }
+    .hud-timer.warn { color: var(--amber); animation: timerPulse 1s infinite; }
+    .hud-timer.critical { color: var(--sp-red); animation: timerPulse 0.5s infinite; }
+    @keyframes timerPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    .hud-right {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .hud-name {
+      font-weight: 700; font-size: 0.95rem;
+      color: var(--text);
+    }
+    .hud-rank {
+      background: var(--sp-red);
+      border-radius: 999px; padding: 4px 10px;
+      font-weight: 800; font-size: 0.8rem; font-family: var(--font);
+    }
+    .hud-pts {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 999px; padding: 6px 14px;
+      font-weight: 800; color: var(--gold);
+      font-family: var(--font); font-size: 1rem;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-section {
+      position: relative; z-index: 1;
+      background: rgba(13,15,28,0.7);
+      border-bottom: 1px solid rgba(230,36,41,0.15);
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .progress-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+    .progress-count { font-weight: 800; font-size: 0.9rem; color: var(--text); }
+    .progress-segments { display: flex; gap: 5px; height: 8px; flex: 1; margin: 0 16px; }
+    .prog-seg {
+      flex: 1; border-radius: 99px;
+      background: rgba(255,255,255,0.08);
+      transition: all 0.4s;
+      position: relative; overflow: hidden;
+    }
+    .prog-seg.done { background: var(--sp-red); box-shadow: 0 0 8px rgba(230,36,41,0.5); }
+    .prog-seg.active { background: var(--amber); animation: segPulse 1.5s infinite; }
+    @keyframes segPulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+    /* ── MAIN LAYOUT ── */
+    .main { position: relative; z-index: 1; padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+    /* ── SECTION LABELS ── */
+    .section-label {
+      font-family: var(--font); font-weight: 800; font-size: 0.72rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .section-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--sp-red); box-shadow: 0 0 8px var(--sp-red); }
+
+    /* ── LEADERBOARD CHIPS ── */
+    .lb-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .lb-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 6px 14px 6px 6px;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .lb-chip.me {
+      border-color: var(--sp-red);
+      background: rgba(230,36,41,0.1);
+      box-shadow: 0 0 12px rgba(230,36,41,0.25);
+    }
+    .lb-chip-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.75rem; color: #fff;
+      flex-shrink: 0;
+    }
+    .lb-chip-rank { font-size: 1rem; }
+    .lb-chip-rank.gold { color: var(--gold); }
+    .lb-chip-rank.silver { color: #C0C0C0; }
+    .lb-chip-rank.bronze { color: #CD7F32; }
+    .lb-chip-name { font-weight: 700; }
+    .lb-chip-pts { color: var(--gold); font-weight: 800; margin-left: 4px; }
+
+    /* ── MISSION CARDS GRID ── */
+    .missions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    @keyframes cardIn { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
+
+    .mission-card {
+      background: var(--sp-card);
+      border: 1px solid var(--sp-border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      animation: cardIn 0.45s both;
+      position: relative; overflow: hidden;
+    }
+    .mission-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--sp-red), var(--sp-blue2));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .mission-card:hover { transform: translateY(-4px); border-color: rgba(230,36,41,0.5); box-shadow: 0 12px 40px rgba(230,36,41,0.15); }
+    .mission-card:hover::before { opacity: 1; }
+    .mission-card.completed { border-color: rgba(0,230,118,0.25); background: rgba(0,230,118,0.04); }
+    .mission-card.completed::before { background: linear-gradient(90deg, var(--green), #00BFA5); opacity: 1; }
+    .mission-card.store-mission { border-color: rgba(255,215,0,0.3); }
+    .mission-card.store-mission::before { background: linear-gradient(90deg, var(--gold), #FF6B35); }
+
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .mission-title { font-family: var(--font); font-weight: 800; font-size: 1.1rem; line-height: 1.3; }
+    .mission-topic { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sp-red); margin-top: 4px; }
+    .card-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+
+    .status-badge {
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 1px;
+      padding: 3px 8px; border-radius: 999px; text-transform: uppercase;
+    }
+    .status-available { background: rgba(43,92,230,0.15); color: #7FA8FF; border: 1px solid rgba(43,92,230,0.3); }
+    .status-in-progress { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+    .status-completed { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+    .status-locked { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+
+    .diff-badge {
+      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.5px;
+      padding: 2px 7px; border-radius: 999px; text-transform: uppercase;
+    }
+    .diff-media    { background: rgba(0,230,118,0.12); color: var(--green); }
+    .diff-dificil  { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .diff-extremo  { background: rgba(230,36,41,0.12); color: var(--sp-red2); }
+    .diff-especial { background: rgba(255,215,0,0.12); color: var(--gold); }
+
+    .mission-desc {
+      font-size: 0.85rem; color: var(--muted); line-height: 1.55; flex: 1;
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .pts-badge { font-weight: 800; font-size: 0.85rem; color: var(--gold); }
+    .time-badge { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── BUTTONS ── */
+    .btn-mission {
+      width: 100%; padding: 12px; border-radius: 10px;
+      font-family: var(--font); font-weight: 800; font-size: 0.9rem; letter-spacing: 0.5px;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-start {
+      background: linear-gradient(135deg, var(--sp-red), #C0001F);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(230,36,41,0.35);
+    }
+    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(230,36,41,0.5); }
+    .btn-continue {
+      background: linear-gradient(135deg, var(--amber), #D97706);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(245,158,11,0.3);
+    }
+    .btn-continue:hover { transform: translateY(-2px); }
+    .btn-done {
+      background: rgba(0,230,118,0.1);
+      color: var(--green);
+      border: 1px solid rgba(0,230,118,0.3);
+      cursor: default;
+    }
+    .btn-store {
+      background: linear-gradient(135deg, var(--gold), #FF6B35);
+      color: #000;
+      font-weight: 900;
+      box-shadow: 0 4px 20px rgba(255,215,0,0.35);
+    }
+    .btn-store:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,215,0,0.5); }
+
+    /* ── SPIDER-MAN LOGO SVG ── */
+    .spider-logo {
+      width: 36px; height: 36px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP HUD -->
+  <div class="hud">
+    <div class="hud-brand" onclick="window.location.href='index.html'">
+      <svg class="spider-logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="18" cy="18" rx="17" ry="17" fill="#E62429"/>
+        <path d="M18 5 C12 10 10 14 10 18 C10 22 12 26 18 31 C24 26 26 22 26 18 C26 14 24 10 18 5Z" fill="#1B2B8F" opacity="0.7"/>
+        <ellipse cx="18" cy="18" rx="5" ry="5" fill="#fff" opacity="0.15"/>
+        <path d="M4 14 L18 18 L32 14" stroke="white" stroke-width="0.8" stroke-opacity="0.5"/>
+        <path d="M4 22 L18 18 L32 22" stroke="white" stroke-width="0.8" stroke-opacity="0.5"/>
+        <path d="M8 8 L18 18 L28 8" stroke="white" stroke-width="0.8" stroke-opacity="0.4"/>
+        <path d="M8 28 L18 18 L28 28" stroke="white" stroke-width="0.8" stroke-opacity="0.4"/>
+        <!-- eyes -->
+        <ellipse cx="14" cy="15" rx="3.5" ry="2.5" fill="white" transform="rotate(-15 14 15)"/>
+        <ellipse cx="22" cy="15" rx="3.5" ry="2.5" fill="white" transform="rotate(15 22 15)"/>
+      </svg>
+      UAA <span id="nav-code">----</span>
+    </div>
+
+    <div class="hud-center">
+      <div class="hud-center-label">Tiempo Restante</div>
+      <div class="hud-timer" id="nav-timer">--:--</div>
+    </div>
+
+    <div class="hud-right">
+      <div class="hud-name" id="nav-name">Jugador</div>
+      <div class="hud-rank" id="nav-rank">#—</div>
+      <div class="hud-pts">⭐ <span id="nav-pts">0</span></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-section">
+    <div class="progress-label">🕸️ Progreso</div>
+    <div class="progress-segments" id="progress-segments"></div>
+    <div class="progress-count" id="progress-count">0 / 0</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEADERBOARD -->
+    <div class="section-label">🏆 Ranking en vivo</div>
+    <div class="lb-row" id="lb-chips"></div>
+
+    <!-- MISSIONS -->
+    <div class="section-label">🕷️ Misiones Disponibles</div>
+    <div class="missions-grid" id="missions-grid">
+      <div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px 0;">
+        Cargando misiones…
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const player = {
+      code:  sessionStorage.getItem('uaa_game_code'),
+      id:    sessionStorage.getItem('uaa_player_id'),
+      name:  sessionStorage.getItem('uaa_player_name') || 'Jugador',
+      pts:   parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10),
+      token: sessionStorage.getItem('uaa_player_token'),
+      rank:  parseInt(sessionStorage.getItem('uaa_my_rank') || '0', 10),
+    };
+
+    // Timer: seed from sessionStorage if server hasn't started yet
+    window._timeLeft = parseInt(sessionStorage.getItem('uaa_time_left') || '-1', 10);
+
+    const MISSION_META = {
+      ecom_decision:  { icon:'🤔', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      fraud_detect:   { icon:'🔍', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
+      speed_search:   { icon:'⚡', diff:'EXTREMO', diffClass:'diff-extremo', pts:'+250 pts', time:'12s' },
+      store_mission:  { icon:'🛒', diff:'ESPECIAL', diffClass:'diff-especial', pts:'+300 pts', time:'libre' },
+      checkout_debug: { icon:'🔧', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'35s' },
+      detective:      { icon:'🕵️', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
+      best_cart:      { icon:'🛒', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+    };
+
+    async function api(method, url, body) {
+      const token = player.token || '';
+      try {
+        const opts = { method, headers:{'Content-Type':'application/json'} };
+        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        const data = await res.json().catch(() => ({}));
+        return { data, ok: res.ok };
+      } catch(e) { return { data:null, ok:false }; }
+    }
+
+    function updateHUD() {
+      const stored = parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10);
+      if (stored > player.pts) player.pts = stored; // never go lower than stored
+      document.getElementById('nav-code').textContent = player.code || '----';
+      document.getElementById('nav-name').textContent = player.name;
+      document.getElementById('nav-pts').textContent  = player.pts.toLocaleString();
+      if (player.rank > 0) document.getElementById('nav-rank').textContent = '#' + player.rank;
+    }
+
+    function renderProgress(missions) {
+      const done  = missions.filter(m => m.status === 'completed').length;
+      const total = missions.length;
+      document.getElementById('progress-count').textContent = `${done} / ${total}`;
+      const segsEl = document.getElementById('progress-segments');
+      segsEl.innerHTML = '';
+      missions.forEach(m => {
+        const seg = document.createElement('div');
+        seg.className = 'prog-seg' + (m.status==='completed'?' done':m.status==='in_progress'?' active':'');
+        segsEl.appendChild(seg);
+      });
+    }
+
+    function renderLeaderboard(board) {
+      const cont = document.getElementById('lb-chips');
+      cont.innerHTML = '';
+      board.forEach((p, i) => {
+        const isMe = (p.id || p.player_id) === player.id;
+        const rank  = i + 1;
+        const rankClass = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
+        const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
+        const color = p.color || p.avatar_color || '#E62429';
+        const initials = (p.initials || p.avatar_initials || (p.name||'?')[0]).toUpperCase();
+        const pts = p.points ?? 0;
+
+        if (isMe && pts > player.pts) {
+          player.pts = pts;
+          sessionStorage.setItem('uaa_my_points', pts);
+          updateHUD();
+        }
+        if (isMe) {
+          player.rank = rank;
+          sessionStorage.setItem('uaa_my_rank', rank);
+          document.getElementById('nav-rank').textContent = '#' + rank;
+        }
+
+        const chip = document.createElement('div');
+        chip.className = `lb-chip${isMe?' me':''}`;
+        chip.innerHTML = `
+          <div class="lb-chip-avatar" style="background:${color}">${initials}</div>
+          <span class="lb-chip-rank ${rankClass}">${medal}</span>
+          <span class="lb-chip-name">${p.name}</span>
+          <span class="lb-chip-pts">⭐ ${pts}</span>`;
+        cont.appendChild(chip);
+      });
+    }
+
+    let _redirecting = false;
+    function goToResults() {
+      if (_redirecting) return;
+      _redirecting = true;
+      window.location.href = 'results.html';
+    }
+
+    function renderTimer() {
+      const t  = Math.max(0, window._timeLeft ?? 0);
+      const el = document.getElementById('nav-timer');
+      if (!el) return;
+      if (t < 0) { el.textContent = '--:--'; return; }
+      const mm = Math.floor(t/60).toString().padStart(2,'0');
+      const ss = (t%60).toString().padStart(2,'0');
+      el.textContent = `${mm}:${ss}`;
+      el.classList.toggle('warn',     t <= 60 && t > 30);
+      el.classList.toggle('critical', t <= 30);
+      sessionStorage.setItem('uaa_time_left', t);
+    }
+
+    async function startMission(id, type, status) {
+      if (status === 'completed') return;
+      sessionStorage.setItem('uaa_mission_id', id);
+      sessionStorage.setItem('uaa_mission_type', type);
+      if (player.code && player.id && status === 'available') {
+        await api('POST', '/api/missions/start', { player_id:player.id, game_code:player.code, mission_id:id });
+      }
+      if (type === 'store_mission') window.location.href = 'store.html?mission=' + id;
+      else window.location.href = 'game.html?mission=' + id;
+    }
+
+    function renderMissions(missions) {
+      const grid = document.getElementById('missions-grid');
+      grid.innerHTML = '';
+
+      const quizMissions      = missions.filter(m => m.is_quiz);
+      const allQuizzesCompleted = quizMissions.length > 0 && quizMissions.every(m => m.status === 'completed');
+      const storeMissionObj   = missions.find(m => m.mission_type === 'store_mission');
+
+      // Auto-redirect to store once all quizzes done
+      if (allQuizzesCompleted && storeMissionObj && storeMissionObj.status === 'available') {
+        const key = 'store_auto_triggered_' + storeMissionObj.mission_id;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, 'true');
+          alert('¡Felicidades! Completaste todas las áreas. Ahora entrarás a tu misión final: La Tienda UAA.');
+          startMission(storeMissionObj.mission_id, storeMissionObj.mission_type, storeMissionObj.status);
+          return;
+        }
+      }
+
+      missions.forEach((m, i) => {
+        const isStore    = m.mission_type === 'store_mission';
+        const isQuiz     = m.is_quiz;
+        const isDone     = m.status === 'completed';
+        const isProgress = m.status === 'in_progress';
+        const isLocked   = isStore && !allQuizzesCompleted && !isDone;
+
+        let statusText  = isDone ? 'COMPLETADA' : isProgress ? 'EN PROGRESO' : 'DISPONIBLE';
+        let statusClass = isDone ? 'status-completed' : isProgress ? 'status-in-progress' : 'status-available';
+        let btnText     = 'INICIAR MISIÓN →';
+        let btnClass    = 'btn-start';
+
+        if (isDone)     { btnClass='btn-done';     btnText='✓ COMPLETADA'; }
+        if (isProgress) { btnClass='btn-continue'; btnText='CONTINUAR →'; }
+
+        let onclickCode;
+        if (isLocked) {
+          statusText  = '🔒 BLOQUEADA';
+          statusClass = 'status-locked';
+          btnText     = '🔒 Completa las áreas';
+          btnClass    = 'btn-done';
+          onclickCode = `alert('Completa todas las áreas de carrera para desbloquear La Tienda.')`;
+        } else if (isStore && !isDone) {
+          btnClass    = 'btn-store';
+          btnText     = '🛒 ENTRAR A LA TIENDA';
+          onclickCode = `(function(){alert('Entrarás al Simulador de E-Commerce de La Tienda UAA. Tu objetivo: explora, agrega productos y completa el checkout.');startMission('${m.mission_id}','${m.mission_type}','${m.status}');})()`;
+        } else if (isQuiz) {
+          onclickCode = isDone ? '' : `window.location.href='mision.html?mission=${m.mission_id}'`;
+        } else {
+          onclickCode = isDone ? '' : `startMission('${m.mission_id}','${m.mission_type}','${m.status}')`;
+        }
+
+        const cardClass = `mission-card${isDone?' completed':isProgress?' in-progress':''}${isStore?' store-mission':''}`;
+        const card = document.createElement('div');
+        card.className = cardClass;
+        card.style.animationDelay = `${i * 0.07}s`;
+        if (isLocked) card.style.opacity = '0.55';
+
+        const footerPts  = isQuiz ? '+150 pts aprox.' : (MISSION_META[m.mission_type]?.pts || '+150 pts');
+        const footerTime = isQuiz ? `${m.num_questions} preguntas` : (MISSION_META[m.mission_type]?.time || 'Libre');
+        const titleText  = isQuiz ? `${m.emoji || ''} ${m.area}` : (m.title || 'La Tienda');
+        const topicText  = isQuiz ? 'ÁREA DE LA CARRERA' : (m.topic || 'CUSTOMER JOURNEY');
+        const diffBadge  = isQuiz ? '<span class="diff-badge diff-media">MEDIA</span>' : `<span class="diff-badge ${MISSION_META[m.mission_type]?.diffClass || 'diff-especial'}">${MISSION_META[m.mission_type]?.diff || 'ESPECIAL'}</span>`;
+
+        card.innerHTML = `
+          <div class="card-top">
+            <div style="flex:1">
+              <div class="mission-title">${titleText}</div>
+              <div class="mission-topic">${topicText}</div>
+            </div>
+            <div class="card-badges">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+              ${diffBadge}
+            </div>
+          </div>
+          <div class="mission-desc">${isQuiz ? 'Demuestra tus conocimientos y capacidad en esta área de la carrera.' : (m.desc || 'Navega por la tienda real y completa el checkout.')}</div>
+          <div class="card-footer">
+            <span class="pts-badge">⭐ ${footerPts}</span>
+            <span class="time-badge">⏱ ${footerTime}</span>
+          </div>
+          <button class="btn-mission ${btnClass}" ${isDone && !isStore ? 'disabled' : ''} onclick="${onclickCode}">${btnText}</button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function loadData() {
+      let missions = [];
+
+      if (player.code && player.id) {
+        let storeMission = null;
+
+        // 1. Get store mission
+        try {
+          const mRes = await api('GET', `/api/missions/pool/${player.code}/${player.id}`);
+          if (mRes.ok && mRes.data?.missions) {
+            storeMission = mRes.data.missions.find(m => m.mission_type === 'store_mission');
+          }
+        } catch(e) {}
+
+        // 2. Get quiz missions
+        try {
+          const qRes = await api('GET', `/api/quiz/missions/${player.code}/${player.id}`);
+          if (qRes.ok && qRes.data?.missions) {
+            missions = qRes.data.missions.map(m => ({ ...m, is_quiz: true }));
+          }
+        } catch(e) {}
+
+        if (storeMission) missions.push(storeMission);
+
+        // 3. Leaderboard — opportunistic sync
+        try {
+          const lRes = await api('GET', `/api/scoring/leaderboard/${player.code}`);
+          if (lRes.ok && Array.isArray(lRes.data) && lRes.data.length > 0) {
+            renderLeaderboard(lRes.data);
+          } else {
+            // Build a local chip from sessionStorage so the UI is never empty
+            renderLeaderboard([{
+              id: player.id, player_id: player.id,
+              name: player.name, points: player.pts,
+              avatar_color: '#E62429',
+              avatar_initials: (player.name[0] || 'J').toUpperCase()
+            }]);
+          }
+        } catch(e) {}
+
+        // 4. Timer from server
+        try {
+          const sRes = await api('GET', `/api/games/${player.code}/state`);
+          if (sRes.ok && sRes.data) {
+            const tr = sRes.data.time_remaining;
+            if (tr !== null && tr !== undefined && tr >= 0) {
+              window._timeLeft = tr;
+              renderTimer();
+              if (sRes.data.status === 'finished' || tr <= 0) goToResults();
+            }
+          }
+        } catch(e) {}
+
+        // 5. Re-sync points from sessionStorage (never overwrite with lower value)
+        const stored = parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10);
+        if (stored > player.pts) { player.pts = stored; }
+        updateHUD();
+      }
+
+      renderProgress(missions);
+      renderMissions(missions);
+    }
+
+    async function init() {
+      updateHUD();
+      await loadData();
+      setInterval(loadData, 5000);
+      // Local countdown tick
+      setInterval(() => {
+        if (window._timeLeft > 0) {
+          window._timeLeft--;
+          renderTimer();
+        }
+      }, 1000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

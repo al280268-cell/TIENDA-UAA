@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Producto · TIENDA UAA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0C10;
+      --surface: #111318;
+      --card: #191D26;
+      --border: rgba(255,255,255,0.06);
+      --red: #E62429; --blue:#2B5CE6;
+      --gold: #F59E0B;
+      --green: #10B981;
+      --text: #F0F2F5;
+      --text-secondary: rgba(240,242,245,0.55);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text);  position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:400px;height:400px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.4;pointer-events:none;z-index:0;}
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .navbar { padding: 1.5rem 5%; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; text-decoration: none; color: white; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 3rem 5%; display: grid; grid-template-columns: 55% 45%; gap: 4rem; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; gap: 2rem; } }
+
+    /* Left Column */
+    .img-showcase { background: var(--surface); border-radius: 16px; overflow: hidden; position: relative; height: 480px; display: flex; align-items: center; justify-content: center; cursor: crosshair; }
+    .img-bg-gradient { position: absolute; inset: 0; background: radial-gradient(circle at center, var(--accent) 0%, transparent 70%); opacity: 0.15; transition: opacity 0.3s; }
+    .img-showcase:hover .img-bg-gradient { opacity: 0.25; }
+    .watermark { position: absolute; font-family: var(--font-body); font-weight: 900; font-size: 80px; opacity: 0.08; color: white; white-space: nowrap; pointer-events: none; }
+    .main-img-text { position: relative; z-index: 2; font-family: var(--font-body); font-weight: 700; font-size: 22px; transition: transform 0.3s; }
+    .img-showcase:hover .main-img-text { transform: scale(1.05); }
+
+    .thumbnails { display: flex; gap: 1rem; margin-top: 1rem; }
+    .thumb { width: 80px; height: 80px; background: var(--surface); border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); }
+    .thumb:hover, .thumb.active { border-color: var(--accent); color: white; }
+
+    /* Right Column */
+    .breadcrumb { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; background: rgba(245,158,11,0.15); color: var(--gold); font-size: 0.875rem; font-weight: 600; border-radius: 100px; margin-bottom: 1rem; animation: pulse 2s infinite; }
+    h1 { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.2; }
+    .rating { display: flex; align-items: center; gap: 0.5rem; color: var(--gold); font-size: 1.125rem; margin-bottom: 1.5rem; }
+    .rating-count { color: var(--text-secondary); font-size: 0.875rem; }
+    
+    .price-container { margin-bottom: 1.5rem; }
+    .price { font-family: var(--font-mono); font-size: 2.5rem; font-weight: 700; }
+    .stock { display: inline-flex; align-items: center; gap: 8px; color: var(--green); font-size: 0.875rem; font-weight: 500; background: rgba(16,185,129,0.1); padding: 0.5rem 1rem; border-radius: 100px; margin-bottom: 2rem; }
+    .stock-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+    .qty-selector { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .qty-btn { width: 40px; height: 40px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); color: white; font-size: 1.25rem; cursor: pointer; transition: all 0.2s; }
+    .qty-btn:hover { background: var(--card); border-color: var(--text-secondary); }
+    .qty-input { width: 50px; text-align: center; background: transparent; border: none; color: white; font-family: var(--font-mono); font-size: 1.125rem; outline: none; }
+
+    .btn-add { width: 100%; height: 56px; background: var(--red); color: white; border: none; border-radius: 8px; font-family: var(--font-display); font-size: 1.125rem; font-weight: 700; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+    .btn-add:hover { background: #E11D48; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(196,18,48,0.2); }
+    .btn-buy { width: 100%; height: 56px; background: transparent; color: white; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-display); font-size: 1.125rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+    .btn-buy:hover { background: var(--surface); border-color: white; }
+
+    .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+    .btn-add.loading .text { display: none; }
+    .btn-add.loading .spinner { display: block; }
+    .btn-add.success { background: var(--green); }
+
+    .trust-badges { display: flex; gap: 1.5rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.875rem; }
+    
+    .tabs { display: flex; gap: 2rem; border-bottom: 1px solid var(--border); margin-top: 4rem; margin-bottom: 2rem; }
+    .tab { padding-bottom: 1rem; cursor: pointer; color: var(--text-secondary); font-weight: 600; position: relative; }
+    .tab.active { color: white; }
+    .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--red); }
+    
+    .tab-content { color: var(--text-secondary); line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="store.html" class="logo" id="logoLink">TIENDA UAA</a>
+  </nav>
+
+  <div class="container" id="productContainer">
+    <!-- Rendered via JS -->
+  </div>
+
+  <script>
+        const PRODUCTS = [
+      { id:'p1', emoji:'🎧', name:'Audífonos Bluetooth Pro', category:'Electrónica', price:899, rating:4.8, reviews:127, badge:'Más vendido', desc:'Cancelación de ruido activa. 30h batería. Driver 40mm.', color:'#1a1a2e', accent:'#6C63FF' },
+      { id:'p2', emoji:'🎒', name:'Mochila Tech UAA', category:'Accesorios', price:599, rating:4.6, reviews:89, badge:'UAA Edition', desc:'Puerto USB integrado. Compartimento laptop 15\".', color:'#0d1b2a', accent:'#00B4D8' },
+      { id:'p3', emoji:'🥤', name:'Termo Premium 750ml', category:'Lifestyle', price:349, rating:4.9, reviews:203, badge:'Top Rated', desc:'24h frío / 12h calor. Acero inoxidable.', color:'#1a2e1a', accent:'#10B981' },
+      { id:'p4', emoji:'📷', name:'Webcam Full HD 1080p', category:'Electrónica', price:1299, rating:4.7, reviews:61, badge:'', desc:'Autofocus, micrófono integrado, plug & play.', color:'#1a1a1a', accent:'#F59E0B' },
+      { id:'p5', emoji:'⌨️', name:'Teclado Mecánico RGB', category:'Electrónica', price:2499, rating:4.5, reviews:44, badge:'Premium', desc:'Switches tácticos. Build full aluminio.', color:'#2e1a1a', accent:'#EF4444' },
+      { id:'p6', emoji:'🖱️', name:'Ratón Inalámbrico', category:'Electrónica', price:449, rating:4.7, reviews:156, badge:'', desc:'DPI ajustable hasta 3200. 90 días batería.', color:'#1a1a1a', accent:'#8B5CF6' },
+      { id:'p7', emoji:'💡', name:'Lámpara LED Escritorio', category:'Lifestyle', price:289, rating:4.4, reviews:78, badge:'', desc:'3 modos luz. Carga USB-C integrada.', color:'#2e2a1a', accent:'#FCD34D' },
+      { id:'p8', emoji:'🔌', name:'Hub USB-C 7 en 1', category:'Electrónica', price:799, rating:4.6, reviews:93, badge:'Esencial', desc:'HDMI 4K, USB 3.0 x3, SD, Ethernet, 100W PD.', color:'#1a1a2e', accent:'#3B82F6' },
+    ];
+
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id') || 'p1';
+    // Fix navigation links to preserve mission
+    document.getElementById('logoLink').href = `store.html${window.location.search}`;
+
+    // Dummy fetch if product not in subset
+    const product = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
+
+    document.getElementById('productContainer').innerHTML = `
+      <div class="left-col">
+        <div class="img-showcase" style="--accent: ${product.accent}; background: ${product.color}">
+          <div class="img-bg-gradient"></div>
+          <div class="watermark">${product.name.toUpperCase()}</div>
+          <div class="main-img-text" id="mainImg" style="font-size:8rem; line-height:1; filter:drop-shadow(0 12px 24px rgba(0,0,0,.5));">${product.emoji || '📦'}</div>
+        </div>
+        <div class="thumbnails">
+          <div class="thumb active" onclick="changeImage('FRONTAL', this)" style="--accent: ${product.accent}">Frente</div>
+          <div class="thumb" onclick="changeImage('LATERAL', this)" style="--accent: ${product.accent}">Lado</div>
+          <div class="thumb" onclick="changeImage('DETALLE', this)" style="--accent: ${product.accent}">Detalle</div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="breadcrumb">Tienda &gt; ${product.category} &gt; <span style="color:white">${product.name}</span></div>
+        ${product.badge ? `<div class="badge">${product.badge}</div>` : ''}
+        <h1>${product.name}</h1>
+        <div class="rating">★★★★★ <span class="rating-count">(${product.reviews} reviews)</span></div>
+        
+        <div class="price-container">
+          <div class="price" id="priceDisplay">$0</div>
+        </div>
+        
+        <div class="stock"><div class="stock-dot"></div> En stock (12 unidades)</div>
+        
+        <div class="qty-selector">
+          <button class="qty-btn" onclick="updateQty(-1)">-</button>
+          <input type="text" class="qty-input" id="qty" value="1" readonly>
+          <button class="qty-btn" onclick="updateQty(1)">+</button>
+        </div>
+
+        <button class="btn-add" id="btnAdd" onclick="addToCart()">
+          <span class="text">AGREGAR AL CARRITO</span>
+          <div class="spinner"></div>
+        </button>
+        <button class="btn-buy" onclick="buyNow()">COMPRAR AHORA</button>
+
+        <div class="trust-badges">
+          <div>🔒 Pago seguro</div>
+          <div>↩ 30 días de devolución</div>
+          <div>🚚 Envío gratis</div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active">Descripción</div>
+          <div class="tab">Especificaciones</div>
+        </div>
+        <div class="tab-content">
+          ${product.desc} <br><br>
+          Diseñado para ofrecer la mejor experiencia premium. Materiales de alta calidad y rendimiento excepcional.
+        </div>
+      </div>
+    `;
+
+    // Animations
+    function changeImage(text, el) {
+      document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const mainImg = document.getElementById('mainImg');
+      mainImg.style.opacity = 0;
+      setTimeout(() => {
+        mainImg.innerHTML = product.emoji || '📦';
+        mainImg.style.opacity = 1;
+      }, 200);
+    }
+
+    let currentQty = 1;
+    function updateQty(delta) {
+      currentQty = Math.max(1, Math.min(10, currentQty + delta));
+      document.getElementById('qty').value = currentQty;
+    }
+
+    // Animated count up for price
+    let startTimestamp = null;
+    const duration = 800;
+    const finalPrice = product.price;
+    const priceEl = document.getElementById('priceDisplay');
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // easeOutExpo
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.floor(easeProgress * finalPrice);
+      priceEl.innerText = `$${current.toLocaleString()} MXN`;
+      if (progress < 1) window.requestAnimationFrame(step);
+    };
+    window.requestAnimationFrame(step);
+
+    function addToCart() {
+      const btn = document.getElementById('btnAdd');
+      btn.classList.add('loading');
+      btn.style.pointerEvents = 'none';
+      
+      setTimeout(() => {
+        btn.classList.remove('loading');
+        btn.classList.add('success');
+        btn.querySelector('.text').innerText = '✓ AGREGADO';
+        btn.querySelector('.text').style.display = 'block';
+        
+        let cart = JSON.parse(sessionStorage.getItem('uaa_cart') || '[]');
+        const item = cart.find(x => x.id === product.id);
+        if(item) item.qty += currentQty;
+        else cart.push({ ...product, qty: currentQty });
+        sessionStorage.setItem('uaa_cart', JSON.stringify(cart));
+
+        setTimeout(() => {
+          btn.classList.remove('success');
+          btn.querySelector('.text').innerText = 'AGREGAR AL CARRITO';
+          btn.style.pointerEvents = 'auto';
+        }, 1500);
+      }, 800);
+    }
+
+    function buyNow() {
+      addToCart();
+      setTimeout(() => {
+        window.location.href = `checkout.html${window.location.search}`;
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

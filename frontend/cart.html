@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito · TIENDA UAA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0C10;
+      --surface: #111318;
+      --card: #191D26;
+      --border: rgba(255,255,255,0.06);
+      --red: #E62429; --blue:#2B5CE6;
+      --green: #10B981;
+      --gold: #F59E0B;
+      --text: #F0F2F5;
+      --text-secondary: rgba(240,242,245,0.55);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text);  position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:400px;height:400px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.4;pointer-events:none;z-index:0;}
+    
+    @keyframes slideOutRight {
+      to { transform: translateX(100%); opacity: 0; margin-bottom: -100px; padding: 0; height: 0; border: none; }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { text-shadow: 0 0 10px rgba(245,158,11,0.5); }
+      50% { text-shadow: 0 0 20px rgba(245,158,11,0.8); }
+    }
+
+    .navbar { padding: 1.5rem 5%; border-bottom: 1px solid var(--border); }
+    .logo { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; text-decoration: none; color: white; }
+
+    .container { max-width: 1200px; margin: 3rem auto; padding: 0 5%; display: grid; grid-template-columns: 65% 35%; gap: 3rem; align-items: start; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+    h1 { font-family: var(--font-display); font-size: 2rem; margin-bottom: 2rem; }
+
+    /* Cart Items */
+    .cart-items { display: flex; flex-direction: column; gap: 1rem; }
+    .cart-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; gap: 1.5rem; align-items: center; transition: all 0.3s; }
+    .item-img { width: 100px; height: 100px; border-radius: 8px; background: #111; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.5rem; color: rgba(255,255,255,0.2); position: relative; overflow: hidden; }
+    .item-info { flex: 1; }
+    .item-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .item-cat { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    
+    .qty-controls { display: flex; align-items: center; gap: 0.5rem; }
+    .qty-btn { width: 32px; height: 32px; background: var(--surface); border: 1px solid var(--border); color: white; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .qty-btn:hover { background: var(--border); }
+    .qty-input { width: 40px; text-align: center; background: transparent; border: none; color: white; font-family: var(--font-mono); font-weight: 700; }
+    
+    .item-price { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 700; text-align: right; }
+    .btn-remove { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.875rem; text-decoration: underline; margin-top: 0.5rem; display: block; text-align: right; transition: 0.2s; }
+    .btn-remove:hover { color: var(--red); }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 4rem 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: none; }
+    .empty-state svg { width: 80px; height: 80px; color: var(--text-secondary); margin-bottom: 1.5rem; }
+    .empty-state h2 { font-family: var(--font-display); margin-bottom: 1rem; }
+    .empty-state p { color: var(--text-secondary); margin-bottom: 2rem; }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; background: var(--red); color: white; padding: 1rem 2rem; border-radius: 8px; font-family: var(--font-display); font-weight: 700; text-decoration: none; transition: 0.3s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(196,18,48,0.2); }
+
+    /* Summary */
+    .summary { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; position: sticky; top: 2rem; }
+    .summary-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-secondary); }
+    .summary-row.total { color: white; font-size: 1.25rem; font-weight: 700; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .points { color: var(--gold); font-size: 0.875rem; font-weight: 600; text-align: right; margin-bottom: 2rem; animation: pulse-glow 2s infinite; }
+    
+    .btn-checkout { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--red); color: white; border: none; padding: 1.25rem; border-radius: 8px; font-family: var(--font-display); font-size: 1.125rem; font-weight: 700; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .btn-checkout:hover { background: #E11D48; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(196,18,48,0.2); }
+    .btn-checkout:hover svg { transform: translateX(4px); }
+    .btn-checkout svg { transition: 0.3s; }
+
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="store.html" class="logo" id="logoLink">TIENDA UAA</a>
+  </nav>
+
+  <div class="container">
+    <div class="left-col">
+      <h1>Tu Carrito</h1>
+      <div id="cartItems" class="cart-items"></div>
+      <div id="emptyState" class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path><path d="M15 9l-6 6"></path><path d="M9 9l6 6"></path></svg>
+        <h2>Tu carrito está vacío</h2>
+        <p>Parece que no has agregado nada todavía.</p>
+        <a href="store.html" class="btn-primary" id="btnBack">Ir a la tienda</a>
+      </div>
+    </div>
+    
+    <div class="right-col">
+      <div class="summary" id="summaryBlock">
+        <div class="summary-title">Resumen de orden</div>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="subtotal">$0</span>
+        </div>
+        <div class="summary-row">
+          <span>Envío</span>
+          <span style="color:var(--green)">Gratis</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="total">$0</span>
+        </div>
+        <div class="points" id="pointsText">★ +0 pts</div>
+        
+        <a href="checkout.html" class="btn-checkout" id="btnCheckout">
+          PROCEDER AL PAGO
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const missionQuery = window.location.search;
+    document.getElementById('logoLink').href = `store.html${missionQuery}`;
+    document.getElementById('btnBack').href = `store.html${missionQuery}`;
+    document.getElementById('btnCheckout').href = `checkout.html${missionQuery}`;
+
+    let cart = JSON.parse(sessionStorage.getItem('uaa_cart') || '[]');
+
+    function renderCart() {
+      const container = document.getElementById('cartItems');
+      const emptyState = document.getElementById('emptyState');
+      const summaryBlock = document.getElementById('summaryBlock');
+      
+      container.innerHTML = '';
+      
+      if(cart.length === 0) {
+        emptyState.style.display = 'block';
+        summaryBlock.style.opacity = '0.5';
+        summaryBlock.style.pointerEvents = 'none';
+        updateTotals();
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      summaryBlock.style.opacity = '1';
+      summaryBlock.style.pointerEvents = 'auto';
+
+      cart.forEach((item, index) => {
+        const el = document.createElement('div');
+        el.className = 'cart-item';
+        el.id = `item-${index}`;
+        el.innerHTML = `
+          <div class="item-img" style="background:${item.color}; font-size:1.8rem; display:flex; align-items:center; justify-content:center;">${item.emoji || item.name.substring(0,2).toUpperCase()}</div>
+          <div class="item-info">
+            <div class="item-title">${item.name}</div>
+            <div class="item-cat">${item.category}</div>
+            <div class="qty-controls">
+              <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
+              <input class="qty-input" value="${item.qty}" readonly>
+              <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+            </div>
+          </div>
+          <div>
+            <div class="item-price" id="price-${index}">$${(item.price * item.qty).toLocaleString()}</div>
+            <button class="btn-remove" onclick="removeItem(${index})">Eliminar</button>
+          </div>
+        `;
+        container.appendChild(el);
+      });
+      updateTotals();
+    }
+
+    function changeQty(index, delta) {
+      if(cart[index].qty + delta > 0) {
+        cart[index].qty += delta;
+        sessionStorage.setItem('uaa_cart', JSON.stringify(cart));
+        
+        // Update DOM specifically
+        const row = document.getElementById(`item-${index}`);
+        row.querySelector('.qty-input').value = cart[index].qty;
+        
+        // Animate price
+        animateValue(`price-${index}`, cart[index].price * (cart[index].qty - delta), cart[index].price * cart[index].qty, 300);
+        updateTotals();
+      }
+    }
+
+    function removeItem(index) {
+      const el = document.getElementById(`item-${index}`);
+      el.style.animation = 'slideOutRight 0.3s forwards';
+      setTimeout(() => {
+        cart.splice(index, 1);
+        sessionStorage.setItem('uaa_cart', JSON.stringify(cart));
+        renderCart();
+      }, 300);
+    }
+
+    function updateTotals() {
+      const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      const points = Math.floor(total * 0.1);
+      
+      const elSub = document.getElementById('subtotal');
+      const elTotal = document.getElementById('total');
+      const elPoints = document.getElementById('pointsText');
+      
+      const currTotal = parseInt(elTotal.innerText.replace(/\D/g, '')) || 0;
+      
+      if(currTotal !== total) {
+        animateValue('subtotal', currTotal, total, 500);
+        animateValue('total', currTotal, total, 500);
+        elPoints.innerText = `★ +${points} pts`;
+      }
+    }
+
+    function animateValue(id, start, end, duration) {
+      const obj = document.getElementById(id);
+      if(!obj) return;
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const current = Math.floor(progress * (end - start) + start);
+        obj.innerHTML = `$${current.toLocaleString()}`;
+        if (progress < 1) window.requestAnimationFrame(step);
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    renderCart();
+  </script>
+</body>
+</html>

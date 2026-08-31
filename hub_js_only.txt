@@ -1,0 +1,300 @@
+
+    const player = {
+      code:  sessionStorage.getItem('uaa_game_code'),
+      id:    sessionStorage.getItem('uaa_player_id'),
+      name:  sessionStorage.getItem('uaa_player_name') || 'Jugador',
+      pts:   parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10),
+      token: sessionStorage.getItem('uaa_player_token')
+    };
+
+    const MISSION_META = {
+      ecom_decision:  { icon:'🤔', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      fraud_detect:   { icon:'🔍', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
+      speed_search:   { icon:'⚡', diff:'EXTREMO', diffClass:'diff-extremo', pts:'+250 pts', time:'12s' },
+      store_mission:  { icon:'🛒', diff:'ESPECIAL', diffClass:'diff-especial', pts:'+150 pts', time:'libre' },
+      checkout_debug: { icon:'🔧', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'35s' },
+      detective:      { icon:'🕵️', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
+      best_cart:      { icon:'🛒', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      decision:       { icon:'🤔', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      speed:          { icon:'⚡', diff:'EXTREMO', diffClass:'diff-extremo', pts:'+250 pts', time:'12s' },
+    };
+
+    const MOCK_MISSIONS = [
+      { mission_id:'m1', mission_type:'ecom_decision', status:'completed', title:'Decisión de Negocio', description:'Analiza el embudo de conversión y elige la estrategia correcta.', topic:'E-Commerce Strategy' },
+      { mission_id:'m2', mission_type:'fraud_detect',  status:'in_progress', title:'Detective E-Commerce', description:'Detecta señales de fraude en listados de productos reales.', topic:'Seguridad Digital' },
+      { mission_id:'m3', mission_type:'speed_search',  status:'available', title:'Búsqueda Relámpago', description:'Encuentra el producto exacto en tiempo récord antes de que se acabe el tiempo.', topic:'UX & Catálogo' },
+      { mission_id:'m5', mission_type:'store_mission', status:'available', title:'La Tienda', description:'Navega por la tienda real, agrega productos al carrito y completa el checkout.', topic:'Customer Journey Completo' },
+      { mission_id:'m4', mission_type:'checkout_debug', status:'available', title:'Rescata el Checkout', description:'Identifica cuál error técnico o de UX está bloqueando al cliente para pagar.', topic:'CRO & Optimización' },
+    ];
+
+    const MOCK_LEADERBOARD = [
+      { id: player.id || 'p1', name: player.name, points: player.pts, color:'#FF1744', initials:(player.name.charAt(0)||'J').toUpperCase() },
+      { id:'p2', name:'Ana L.', points:680, color:'#7C3AED', initials:'A' },
+      { id:'p3', name:'Carlos M.', points:520, color:'#00D4FF', initials:'C' },
+      { id:'p4', name:'Sofia R.', points:340, color:'#00E676', initials:'S' },
+    ].sort((a,b) => b.points - a.points);
+
+    async function api(method, url, body) {
+      const token = player.token || '';
+      try {
+        const opts = { method, headers:{'Content-Type':'application/json'} };
+        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        const data = await res.json().catch(() => ({}));
+        return { data, ok: res.ok };
+      } catch(e) { return { data:null, ok:false }; }
+    }
+
+    function updateHUD() {
+      const codeEl = document.getElementById('nav-code');
+      const nameEl = document.getElementById('nav-name');
+      const ptsEl  = document.getElementById('nav-pts');
+      
+      const pNameEl = document.getElementById('p-name');
+      const pScoreEl = document.getElementById('p-score');
+
+      if (codeEl) codeEl.textContent = player.code || 'DEMO';
+      if (nameEl) nameEl.textContent = player.name;
+      if (ptsEl) ptsEl.textContent = player.pts.toLocaleString();
+      
+      if (pNameEl) pNameEl.textContent = player.name;
+      if (pScoreEl) pScoreEl.textContent = player.pts.toLocaleString() + ' pts';
+    }
+    function renderProgress(missions) {
+      const done = missions.filter(m => m.status === 'completed').length;
+      const total = missions.length;
+      document.getElementById('progress-count').textContent = `${done} / ${total} completadas`;
+      const segsEl = document.getElementById('progress-segments');
+      segsEl.innerHTML = '';
+      missions.forEach(m => {
+        const seg = document.createElement('div');
+        seg.className = 'prog-seg' + (m.status==='completed'?' done':m.status==='in_progress'?' active':'');
+        segsEl.appendChild(seg);
+      });
+    }
+
+function renderLeaderboard(board) {
+      const cont = document.getElementById('lb-chips');
+      cont.innerHTML = '';
+      board.forEach((p, i) => {
+        const isMe = (p.id || p.player_id) === player.id;
+        const rank = i + 1;
+        const rankClass = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
+        const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
+        const color = p.color || p.avatar_color || '#333';
+        const initials = p.initials || p.avatar_initials || '?';
+        const chip = document.createElement('div');
+        chip.className = `lb-chip${isMe?' me':''}`;
+        chip.innerHTML = `
+          <div class="lb-chip-avatar" style="background:${color}">${initials}</div>
+          <span class="lb-chip-rank ${rankClass}">${medal}</span>
+          <span class="lb-chip-name">${p.name}</span>
+          <span class="lb-chip-pts">⭐ ${p.points}</span>`;
+        cont.appendChild(chip);
+      });
+    }
+
+
+    async function startMission(id, type, status) {
+        if (status === 'completed') return;
+        sessionStorage.setItem('uaa_mission_id', id);
+        sessionStorage.setItem('uaa_mission_type', type);
+        if (player.code && player.id && status === 'available') {
+          await api('POST', '/api/missions/start', { player_id:player.id, game_code:player.code, mission_id:id });
+        }
+        if (type === 'store_mission') window.location.href = 'store.html?mission=' + id;
+        else window.location.href = 'game.html?mission=' + id;
+    }
+
+    function renderMissions(missions) {
+      const grid = document.getElementById('missions-grid');
+      grid.innerHTML = '';
+      
+      let completedCount = 0;
+      const quizMissions = missions.filter(m => m.is_quiz);
+      const quizzesDone = quizMissions.filter(m => m.status === 'completed').length;
+      const allQuizzesCompleted = (quizMissions.length > 0 && quizzesDone === quizMissions.length);
+      
+      const storeMissionObj = missions.find(m => m.mission_type === 'store_mission');
+      if (allQuizzesCompleted && storeMissionObj && storeMissionObj.status === 'available') {
+          if (!sessionStorage.getItem('store_auto_triggered_' + storeMissionObj.mission_id)) {
+              sessionStorage.setItem('store_auto_triggered_' + storeMissionObj.mission_id, 'true');
+              alert("¡Felicidades! Has completado todas las materias. Ahora entrarás a tu misión final: El Simulador de E-Commerce de La Tienda UAA.");
+              console.log("Auto-redirecting to Store Mission...");
+              startMission(storeMissionObj.mission_id, storeMissionObj.mission_type, storeMissionObj.status);
+              return;
+          }
+      }
+      
+      missions.forEach((m, i) => {
+        const isStore = m.mission_type === 'store_mission';
+        const isQuiz = m.is_quiz;
+        const isDone = m.status === 'completed';
+        const isProgress = m.status === 'in_progress';
+        
+        if(isDone) completedCount++;
+
+        let statusText  = isDone ? 'COMPLETADA' : isProgress ? 'EN PROGRESO' : 'DISPONIBLE';
+        let statusClass = isDone ? 'status-completed' : isProgress ? 'status-in-progress' : 'status-available';
+
+        let btnClass = 'btn-start', btnText = 'INICIAR MISIÓN →';
+        if (isDone)     { btnClass='btn-done';     btnText='✓ COMPLETADA'; }
+        if (isProgress) { btnClass='btn-continue'; btnText='CONTINUAR MISIÓN →'; }
+        
+        let clickAction = isQuiz ? `window.location.href='mision.html?mission=${m.mission_id}'` : `startMission('${m.mission_id}', '${m.mission_type}', '${m.status}')`;
+        let cardStyle = '';
+
+        if (isStore) {
+          if (!allQuizzesCompleted) {
+             statusText = 'BLOQUEADA';
+             statusClass = 'status-completed';
+             btnText = '🔒 BLOQUEADA';
+             btnClass = 'btn-done';
+             clickAction = "alert('Debes completar todas las misiones de las Áreas de la Carrera para desbloquear La Tienda.')";
+             cardStyle = 'opacity: 0.65; filter: grayscale(0.8);';
+          } else {
+             btnText = isDone ? '✓ COMPLETADA' : 'ENTRAR A LA TIENDA →';
+             if(!isDone) clickAction = "alert('Entrarás al Simulador de E-Commerce de La Tienda UAA. Tu objetivo es realizar una compra.'); startMission('" + m.mission_id + "', '" + m.mission_type + "', '" + m.status + "')";
+             if(!isDone) btnClass = 'btn-store';
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = `mission-card${isDone?' completed':isProgress?' in-progress':''}${isStore?' store-mission':''}`;
+        card.style.animationDelay = `${i * 0.08}s`;
+        if (cardStyle) card.style = card.style.cssText + cardStyle;
+        
+        if (isQuiz) {
+          card.innerHTML = `
+            <div class="card-top">
+              <div style="flex:1">
+                <div class="mission-title"><span style="margin-right:8px">${m.emoji}</span>${m.area}</div>
+                <div class="mission-topic">ÁREA DE LA CARRERA</div>
+              </div>
+              <div class="card-badges">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <span class="diff-badge diff-media">MEDIA</span>
+              </div>
+            </div>
+            <div class="mission-desc">Demuestra tus conocimientos y capacidad en esta área.</div>
+            <div class="card-footer">
+              <span class="pts-badge">+150 pts aprox.</span>
+              <span class="time-badge">⏱ ${m.num_questions} preguntas</span>
+            </div>
+            <button class="${'btn-mission ' + btnClass}" onclick="${clickAction}" ${isDone && !isStore ? 'disabled' : ''}>${btnText}</button>
+          `;
+        } else {
+          const meta = MISSION_META[m.mission_type] || { icon:'🛍️', diff:'ESPECIAL', diffClass:'diff-media', pts:'+150 pts', time:'Libre', desc:'Navega por la tienda real, agrega productos al carrito y completa el checkout.' };
+          card.innerHTML = `
+            <div class="card-top">
+              <div style="flex:1">
+                <div class="mission-title"><span style="margin-right:8px">${meta.icon}</span>${m.title || meta.title || 'La Tienda'}</div>
+                <div class="mission-topic">${m.topic || meta.topic || 'CUSTOMER JOURNEY'}</div>
+              </div>
+              <div class="card-badges">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <span class="diff-badge ${meta.diffClass}">${meta.diff}</span>
+              </div>
+            </div>
+            <div class="mission-desc">${m.desc || meta.desc || meta.description || 'Explora la tienda real.'}</div>
+            <div class="card-footer">
+              <span class="pts-badge">${meta.pts}</span>
+              <span class="time-badge">⏱ ${meta.time}</span>
+            </div>
+            <button class="${'btn-mission ' + btnClass}" onclick="${clickAction}" ${isDone && !isStore ? 'disabled' : ''}>${btnText}</button>
+          `;
+        }
+        grid.appendChild(card);
+      });
+    }
+
+    let _redirecting = false;
+    
+    function goToResults() {
+      if (_redirecting) return;
+      _redirecting = true;
+      window.location.href = 'results.html';
+    }
+
+    function renderTimer() {
+      const t = Math.max(0, window._timeLeft ?? 0);
+      const el = document.getElementById('nav-timer');
+      if (!el) return;
+      const mm = Math.floor(t/60).toString().padStart(2,'0');
+      const ss = (t%60).toString().padStart(2,'0');
+      el.textContent = `${mm}:${ss}`;
+      el.classList.toggle('warn', t <= 60);
+      el.style.color = t <= 30 ? '#E62429' : (t <= 60 ? '#F59E0B' : '');
+    }
+
+    async function loadData() {
+
+
+      let missions   = [];
+      let allComplete = false;
+
+      if (player.code && player.id) {
+        let storeMission = null;
+        try {
+          const mRes = await api('GET', `/api/missions/pool/${player.code}/${player.id}`);
+          if (mRes.ok && mRes.data && mRes.data.missions) {
+            storeMission = mRes.data.missions.find(m => m.mission_type === 'store_mission');
+          }
+        } catch(e) {}
+
+        try {
+          const qRes = await api('GET', `/api/quiz/missions/${player.code}/${player.id}`);
+          if (qRes.ok && qRes.data && qRes.data.missions) {
+            missions = qRes.data.missions.map(m => ({
+              ...m,
+              is_quiz: true
+            }));
+          }
+        } catch(e) {}
+
+        if(storeMission) missions.push(storeMission);
+
+        const lRes = await api('GET', `/api/scoring/leaderboard/${player.code}`);
+        let leaderboard = MOCK_LEADERBOARD;
+        if (lRes.ok && Array.isArray(lRes.data) && lRes.data.length > 0) {
+            leaderboard = lRes.data;
+        }
+        renderLeaderboard(leaderboard);
+
+        const sRes = await api('GET', `/api/games/${player.code}/state`);
+        if (sRes.ok && sRes.data && sRes.data.time_remaining !== undefined) {
+          window._timeLeft = sRes.data.time_remaining;
+          renderTimer();
+          if (sRes.data.status === 'finished' || sRes.data.time_remaining <= 0) {
+            goToResults();
+          }
+        }
+
+        const me = leaderboard.find(p => (p.player_id || p.id) === player.id);
+        if (me) {
+          player.pts = me.points;
+          sessionStorage.setItem('uaa_my_points', me.points);
+          updateHUD();
+        }
+      }
+
+      renderProgress(missions);
+      renderMissions(missions);
+    }
+
+    async function init() {
+      if (!player.code || !player.id) console.warn('Sin sesión — usando mock data');
+      updateHUD();
+      await loadData();
+      setInterval(loadData, 5000);
+      setInterval(() => {
+        if (window._timeLeft > 0) {
+          window._timeLeft--;
+          renderTimer();
+        }
+      }, 1000);
+    }
+
+    init();
+  

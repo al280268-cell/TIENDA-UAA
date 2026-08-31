@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIENDA OFICIAL · UAA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060812;
+      --surface: #0D1117;
+      --card: #111827;
+      --card-hover: #162032;
+      --border: rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.15);
+      --red: #E62429; --blue:#2B5CE6;
+      --red-glow: rgba(255,23,68,0.4);
+      --gold: #FFD700;
+      --green: #00E676;
+      --blue: #00D4FF;
+      --orange: #FF6B35;
+      --purple: #C77DFF;
+      --text: #F0F4FF;
+      --text-secondary: rgba(240,244,255,0.55);
+      --text-muted: rgba(240,244,255,0.3);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+    background: #07070F;
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 800px 500px at 0% 0%, rgba(230,36,41,0.14), transparent),
+                radial-gradient(ellipse 700px 500px at 100% 100%, rgba(27,43,143,0.18), transparent);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url('img/web.svg');
+    background-repeat: repeat; background-size: 80px;
+    opacity: 0.35; pointer-events: none; z-index: 0;
+  }
+    body::before{content:'';position:fixed;top:0;left:0;width:400px;height:400px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.4;pointer-events:none;z-index:0;}
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+    @keyframes glow-anim {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.15); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes shimmer {
+      from { background-position: -200% center; }
+      to { background-position: 200% center; }
+    }
+    @keyframes heroGlow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @keyframes particle-rise {
+      0% { opacity: 0.6; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(-80px) rotate(360deg); }
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(6,8,18,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,23,68,0.15);
+      padding: 0.9rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo {
+      font-family: var(--font-display); font-weight: 900; font-size: 1.4rem;
+      background: linear-gradient(135deg, #FF1744, #FF6B35);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .simulate-link {
+      color: var(--blue); font-size: 0.82rem; font-weight: 600;
+      text-decoration: none; padding: 6px 14px;
+      border: 1px solid rgba(0,212,255,0.3); border-radius: 99px;
+      transition: all 0.2s;
+    }
+    .simulate-link:hover { background: rgba(0,212,255,0.1); }
+    .cart-btn { background: none; border: none; color: var(--text); cursor: pointer; position: relative; padding: 4px; }
+    .cart-badge {
+      position: absolute; top: -6px; right: -6px;
+      background: var(--red); color: white;
+      font-size: 0.7rem; font-weight: 700;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-badge.pop { animation: pop 0.3s ease-out; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 480px;
+      display: flex; align-items: center;
+      position: relative; overflow: hidden;
+      padding: 60px 5%;
+      background: linear-gradient(135deg, #060812 0%, #0A1628 40%, #150820 100%);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 50%, rgba(255,23,68,0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 30%, rgba(0,212,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,23,68,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,23,68,0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .hero-content { position: relative; z-index: 10; max-width: 620px; animation: fadeSlideUp 0.8s cubic-bezier(0.2,0.8,0.2,1); }
+    .eyebrow {
+      color: var(--red); font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem;
+    }
+    .dot { width: 7px; height: 7px; background: var(--red); border-radius: 50%; animation: pulse-dot 2s infinite; box-shadow: 0 0 10px var(--red); }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 900; line-height: 1.05;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(135deg, #FF1744 0%, #FF6B35 50%, #FFD700 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.65; max-width: 480px; }
+    .btn-hero {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, #FF1744, #C41230);
+      color: white; border: none; padding: 1rem 2rem;
+      font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+      border-radius: 10px; cursor: pointer; transition: all 0.3s;
+      text-decoration: none; box-shadow: 0 8px 24px rgba(255,23,68,0.35);
+    }
+    .btn-hero:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(255,23,68,0.5); }
+
+    .hero-stats { display: flex; gap: 32px; margin-top: 2.5rem; }
+    .stat { }
+    .stat-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; color: white; }
+    .stat-val span { color: var(--red); }
+    .stat-lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── Search ── */
+    .search-container {
+      position: sticky; top: 61px; z-index: 90;
+      background: rgba(6,8,18,0.9); backdrop-filter: blur(12px);
+      padding: 1.2rem 5%;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-wrapper { position: relative; max-width: 760px; margin: 0 auto; }
+    .search-input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      color: var(--text); padding: 1rem 1.5rem 1rem 3.5rem;
+      font-family: var(--font-body); font-size: 1rem;
+      border-radius: 12px; transition: all 0.3s; outline: none;
+    }
+    .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,212,255,0.15); background: rgba(0,212,255,0.04); }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-icon { position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .filters { display: flex; gap: 0.5rem; margin-top: 1rem; overflow-x: auto; padding-bottom: 4px; }
+    .pill {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-secondary); padding: 0.45rem 1rem;
+      border-radius: 100px; font-size: 0.82rem; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap; font-weight: 600;
+    }
+    .pill:hover { border-color: rgba(255,23,68,0.4); color: var(--red); }
+    .pill.active {
+      background: linear-gradient(135deg, #FF1744, #C41230);
+      color: white; border-color: transparent;
+      box-shadow: 0 4px 12px rgba(255,23,68,0.35);
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem; padding: 2.5rem 5%;
+      max-width: 1400px; margin: 0 auto;
+      align-items: stretch;
+    }
+    /* Todas las cards son idénticas: sin card "hero" especial */
+
+    /* ── Product Card ── */
+    .card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      opacity: 0; animation: fadeSlideUp 0.5s forwards;
+      cursor: pointer; display: flex; flex-direction: column;
+      text-decoration: none; color: inherit; will-change: transform;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-accent-color, rgba(255,255,255,0.25));
+      box-shadow: 0 16px 32px rgba(0,0,0,0.45);
+    }
+
+    .card-img-area {
+      height: 240px; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .product-glow {
+      position: absolute; width: 170px; height: 170px; border-radius: 50%;
+      filter: blur(48px); opacity: 0.55;
+    }
+    .product-watermark { display: none; }
+    .product-emoji {
+      position: relative; z-index: 2;
+      font-size: 6rem; line-height: 1;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    }
+    .card-badge {
+      position: absolute; top: 14px; left: 14px; z-index: 3;
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; backdrop-filter: blur(8px);
+    }
+    .card-badge.gold { background: rgba(255,215,0,0.2); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
+    .card-badge.default { background: rgba(255,255,255,0.1); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.12); }
+
+    .card-info { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; }
+    .category-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 0.6rem;
+      color: var(--tag-color, var(--text-muted));
+    }
+    .card-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.3; }
+    .card-meta { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 6px; }
+    .star { color: var(--gold); font-size: 0.9rem; }
+    .card-price { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700; margin-top: auto; margin-bottom: 0.4rem; color: var(--text); }
+    .card-stock { font-size: 0.8rem; color: var(--green); display: flex; align-items: center; gap: 6px; margin-bottom: 1.2rem; }
+    .stock-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse-dot 2s infinite; box-shadow: 0 0 6px var(--green); }
+
+    .card-actions { display: flex; gap: 0.5rem; }
+    .btn-add {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      color: var(--text); padding: 0.75rem;
+      border-radius: 10px; font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.25s;
+      font-family: var(--font-display);
+    }
+    .btn-add:hover {
+      background: linear-gradient(135deg, #FF1744, #C41230);
+      border-color: transparent;
+      box-shadow: 0 6px 16px rgba(255,23,68,0.35);
+      color: white;
+    }
+    .btn-add.success { background: linear-gradient(135deg, #00E676, #00C853); color: white; border-color: transparent; }
+    .btn-detail {
+      padding: 0.75rem 1rem;
+      background: transparent; border: 1.5px solid rgba(255,255,255,0.1);
+      color: var(--text-secondary); cursor: pointer; border-radius: 10px;
+      transition: all 0.2s; text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .btn-detail:hover { background: rgba(255,255,255,0.07); color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    /* ── Mini Cart ── */
+    .mini-cart {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 340px;
+      background: #0D1117; border-left: 1px solid rgba(255,23,68,0.2);
+      z-index: 1000; transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column;
+    }
+    .mini-cart.open { transform: translateX(0); }
+    .mc-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .mc-title { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+    .mc-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.6rem; line-height: 1; }
+    .mc-body { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .mc-footer { padding: 1.5rem; border-top: 1px solid var(--border); }
+    .mc-item { display: flex; gap: 1rem; align-items: center; }
+    .mc-item-img { width: 52px; height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+    .mc-item-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    .mc-item-price { font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-secondary); }
+    .btn-checkout {
+      width: 100%; padding: 1rem; text-align: center;
+      background: linear-gradient(135deg, #FF1744, #C41230);
+      color: white; border: none; border-radius: 12px;
+      font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+      cursor: pointer; text-decoration: none; display: block;
+      box-shadow: 0 6px 20px rgba(255,23,68,0.35);
+      transition: all 0.2s;
+    }
+    .btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,23,68,0.5); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #111827; border: 1px solid var(--border);
+      border-left: 4px solid var(--green);
+      padding: 1rem 1.5rem; border-radius: 12px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      transform: translateY(120px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 2000;
+      font-weight: 600;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    .section-label {
+      padding: 0 5%; max-width: 1400px; margin: 0 auto;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--text-muted);
+      padding-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+<script>
+  // ── Si es contexto de SIMULACIÓN (mode=simulate y sin misión), exige simulador activo ──
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const isSim = params.get('mode') === 'simulate' && !params.has('mission');
+    if (!isSim) return; // contexto de competencia (misión) → siempre permitido
+    const isAdmin = !!sessionStorage.getItem('uaa_admin_token');
+    fetch('/api/admin/simulator').then(r=>r.json()).then(j=>{
+      if (!j.enabled && !isAdmin) { window.location.replace('inicio.html'); }
+    }).catch(()=>{});
+  })();
+</script>
+
+  <nav class="navbar">
+    <div class="logo">TIENDA UAA</div>
+    <div class="nav-right">
+      <a href="simulate.html" class="simulate-link">🛒 Modo Simulación</a>
+      <button class="cart-btn" onclick="window.location.href='cart.html'+window.location.search">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        <div class="cart-badge" id="cart-badge">0</div>
+      </button>
+    </div>
+  </nav>
+
+  <section class="hero" id="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="eyebrow"><div class="dot"></div> TIENDA OFICIAL · UAA 2026</div>
+      <h1>Tecnología<br><span class="grad">premium</span><br>para ti</h1>
+      <p>Explora nuestro catálogo exclusivo. Descubre productos de calidad y vive la experiencia real del comercio electrónico moderno.</p>
+      <a href="#productos" class="btn-hero">
+        Explorar productos
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-val">8<span>+</span></div><div class="stat-lbl">Productos</div></div>
+        <div class="stat"><div class="stat-val">4<span>★</span></div><div class="stat-lbl">Rating medio</div></div>
+        <div class="stat"><div class="stat-val"><span>∞</span></div><div class="stat-lbl">Experiencias</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="search-container">
+    <div class="search-wrapper">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" class="search-input" placeholder="Buscar productos, marcas y más..." id="searchInput">
+      <div class="filters">
+        <div class="pill active" data-cat="all">Todos</div>
+        <div class="pill" data-cat="Electrónica">💻 Electrónica</div>
+        <div class="pill" data-cat="Accesorios">🎒 Accesorios</div>
+        <div class="pill" data-cat="Lifestyle">☕ Lifestyle</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label" id="productos">📦 Catálogo de productos</div>
+  <main class="grid" id="productGrid"></main>
+
+  <div class="mini-cart" id="miniCart">
+    <div class="mc-header">
+      <div class="mc-title">🛒 Carrito</div>
+      <button class="mc-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="mc-body" id="mcBody"></div>
+    <div class="mc-footer">
+      <a href="cart.html" class="btn-checkout" id="mc-checkout-link">Ir al Checkout →</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <span style="font-size:1.3rem">✅</span>
+    <div>
+      <div style="font-weight:700;margin-bottom:2px">¡Agregado al carrito!</div>
+      <div style="font-size:0.8rem;color:rgba(240,244,255,0.5)">Revisa tu carrito →</div>
+    </div>
+  </div>
+
+  <script>
+    const PRODUCTS = [
+        { id:'p1', emoji:'🎧', name:'Audífonos Bluetooth Pro', category:'Electrónica', price:899, rating:4.8, reviews:127, badge:'Más vendido', badgeType:'gold', desc:'Cancelación de ruido activa. 30h batería. Driver 40mm.', bg:'#1A0308', glowColor:'#E62429', tagColor:'#FF7A7D', accentHex:'e62429' },
+        { id:'p2', emoji:'🎒', name:'Mochila Tech UAA', category:'Accesorios', price:599, rating:4.6, reviews:89, badge:'UAA Edition', badgeType:'gold', desc:'Puerto USB integrado. Compartimento laptop 15".', bg:'#0A1030', glowColor:'#2B5CE6', tagColor:'#7FA8FF', accentHex:'2b5ce6' },
+        { id:'p3', emoji:'🥤', name:'Termo Premium 750ml', category:'Lifestyle', price:349, rating:4.9, reviews:203, badge:'Top Rated', badgeType:'gold', desc:'24h frío / 12h calor. Acero inoxidable grado alimenticio.', bg:'#1A0308', glowColor:'#E62429', tagColor:'#FF7A7D', accentHex:'e62429' },
+        { id:'p4', emoji:'📷', name:'Webcam Full HD 1080p', category:'Electrónica', price:1299, rating:4.7, reviews:61, badge:'', badgeType:'', desc:'Autofocus inteligente. Micrófono integrado. Plug & play.', bg:'#0A1030', glowColor:'#2B5CE6', tagColor:'#7FA8FF', accentHex:'2b5ce6' },
+        { id:'p5', emoji:'⌨️', name:'Teclado Mecánico RGB', category:'Electrónica', price:2499, rating:4.5, reviews:44, badge:'Premium', badgeType:'gold', desc:'Switches tácticos Cherry MX. Build full aluminio anodizado.', bg:'#1A0308', glowColor:'#E62429', tagColor:'#FF7A7D', accentHex:'e62429' },
+        { id:'p6', emoji:'🖱️', name:'Ratón Inalámbrico Ergo', category:'Electrónica', price:449, rating:4.7, reviews:156, badge:'', badgeType:'', desc:'DPI ajustable hasta 3200. Batería 90 días. Ergonómico.', bg:'#0A1030', glowColor:'#2B5CE6', tagColor:'#7FA8FF', accentHex:'2b5ce6' },
+        { id:'p7', emoji:'💡', name:'Lámpara LED Escritorio', category:'Lifestyle', price:289, rating:4.4, reviews:78, badge:'', badgeType:'', desc:'3 modos de luz. Puerto USB-C de carga integrado.', bg:'#1A0308', glowColor:'#E62429', tagColor:'#FF7A7D', accentHex:'e62429' },
+        { id:'p8', emoji:'🔌', name:'Hub USB-C 7 en 1', category:'Electrónica', price:799, rating:4.6, reviews:93, badge:'Esencial', badgeType:'default', desc:'HDMI 4K, USB 3.0 ×3, SD, Ethernet, 100W Power Delivery.', bg:'#0A1030', glowColor:'#2B5CE6', tagColor:'#7FA8FF', accentHex:'2b5ce6' },
+      ];
+
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let cart = JSON.parse(sessionStorage.getItem('uaa_cart') || '[]');
+    const missionQuery = window.location.search;
+
+    // Propagar ?mission= al link del mini-cart si existe
+    if (missionQuery) {
+      const mcLink = document.getElementById('mc-checkout-link');
+      if (mcLink) mcLink.href = 'cart.html' + missionQuery;
+    }
+
+    function buildProductCard(p, i) {
+      const delay = i * 0.08;
+      const badgeHtml = p.badge ? `<div class="card-badge ${p.badgeType}">${p.badge}</div>` : '';
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.category = p.category;
+      card.dataset.name = p.name.toLowerCase();
+      card.style.animationDelay = `${delay}s`;
+      card.style.setProperty('--card-accent-color', `rgba(${parseInt(p.accentHex.slice(0,2),16)},${parseInt(p.accentHex.slice(2,4),16)},${parseInt(p.accentHex.slice(4,6),16)},0.5)`);
+      card.style.setProperty('--card-glow', `0 0 40px rgba(${parseInt(p.accentHex.slice(0,2),16)},${parseInt(p.accentHex.slice(2,4),16)},${parseInt(p.accentHex.slice(4,6),16)},0.15)`);
+      card.innerHTML = `
+        <a href="product.html${missionQuery ? missionQuery + '&' : '?'}id=${p.id}" class="card-img-area" style="background:${p.bg}; text-decoration:none;">
+          ${badgeHtml}
+          <div class="product-glow" style="background:${p.glowColor};"></div>
+          <div class="product-watermark" style="color:${p.glowColor};">${p.name.split(' ')[0].toUpperCase()}</div>
+          <div class="product-emoji">${p.emoji}</div>
+        </a>
+        <div class="card-info">
+          <div class="category-tag" style="--tag-color:${p.tagColor}">● ${p.category}</div>
+          <div class="card-title">${p.name}</div>
+          <div class="card-meta">
+            <span class="star">★</span> ${p.rating}
+            <span style="color:var(--text-muted)">·</span>
+            <span>${p.reviews} reseñas</span>
+          </div>
+          <div class="card-price">$${p.price.toLocaleString()} <span style="font-size:0.9rem;color:var(--text-muted);font-family:var(--font-body);">MXN</span></div>
+          <div class="card-stock"><div class="stock-dot"></div> En stock</div>
+          <div class="card-actions">
+            <button class="btn-add" id="btn-${p.id}" onclick="addToCart(event,'${p.id}')">+ AGREGAR</button>
+            <a href="product.html${missionQuery ? missionQuery + '&' : '?'}id=${p.id}" class="btn-detail" title="Ver detalle">→</a>
+          </div>
+        </div>`;
+      return card;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      const filtered = PRODUCTS.filter(p => {
+        const catMatch = currentFilter === 'all' || p.category === currentFilter;
+        const searchMatch = !searchQuery || p.name.toLowerCase().includes(searchQuery) || p.category.toLowerCase().includes(searchQuery);
+        return catMatch && searchMatch;
+      });
+      if (!filtered.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);font-size:1.1rem;">Sin resultados para tu búsqueda</div>';
+        return;
+      }
+      filtered.forEach((p, i) => grid.appendChild(buildProductCard(p, i)));
+    }
+    renderGrid();
+
+    // Filters
+    document.querySelectorAll('.pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentFilter = pill.dataset.cat;
+        renderGrid();
+      });
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      renderGrid();
+    });
+
+    // Cart Logic
+    updateCartCount();
+
+    function addToCart(e, id) {
+      e.preventDefault(); e.stopPropagation();
+      const btn = document.getElementById('btn-' + id);
+      const p = PRODUCTS.find(x => x.id === id);
+
+      btn.style.transform = 'scale(0.94)';
+      setTimeout(() => {
+        btn.classList.add('success');
+        btn.innerHTML = '✓ AGREGADO';
+        btn.style.transform = 'scale(1)';
+        setTimeout(() => {
+          btn.classList.remove('success');
+          btn.innerHTML = '+ AGREGAR';
+        }, 1500);
+      }, 120);
+
+      const item = cart.find(x => x.id === id);
+      if (item) item.qty++;
+      else cart.push({ ...p, qty: 1 });
+      sessionStorage.setItem('uaa_cart', JSON.stringify(cart));
+      updateCartCount();
+      showToast();
+      openMiniCart();
+    }
+
+    function updateCartCount() {
+      const badge = document.getElementById('cart-badge');
+      const count = cart.reduce((acc, item) => acc + item.qty, 0);
+      badge.textContent = count;
+      badge.classList.remove('pop');
+      void badge.offsetWidth;
+      if (count > 0) badge.classList.add('pop');
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function openMiniCart() {
+      const mc = document.getElementById('miniCart');
+      const body = document.getElementById('mcBody');
+      body.innerHTML = '';
+      if (!cart.length) {
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Tu carrito está vacío</div>';
+      } else {
+        cart.forEach(item => {
+          body.innerHTML += `
+            <div class="mc-item">
+              <div class="mc-item-img" style="background:${item.bg || '#1A1F2E'}">${item.emoji || '📦'}</div>
+              <div style="flex:1">
+                <div class="mc-item-title">${item.name}</div>
+                <div class="mc-item-price">$${item.price.toLocaleString()} × ${item.qty}</div>
+              </div>
+            </div>`;
+        });
+      }
+      mc.classList.add('open');
+      setTimeout(closeCart, 5000);
+    }
+
+    function closeCart() {
+      document.getElementById('miniCart').classList.remove('open');
+    }
+  </script>
+</body>
+</html>

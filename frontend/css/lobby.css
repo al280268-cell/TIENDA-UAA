@@ -1,0 +1,192 @@
+/* Lobby Specific Styles */
+.lobby-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--sp-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-6);
+  min-height: calc(100vh - 80px); /* Assuming header is 80px */
+}
+
+@media (max-width: 768px) {
+  .lobby-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.game-code-display {
+  background: var(--uaa-white);
+  border-radius: var(--r-lg);
+  padding: var(--sp-6);
+  text-align: center;
+  box-shadow: var(--sh-lg);
+  margin-bottom: var(--sp-6);
+}
+
+.game-code-display h2 {
+  font-size: var(--text-lg);
+  color: #666;
+  margin-bottom: var(--sp-2);
+}
+
+.game-code-display .code {
+  font-size: var(--text-4xl);
+  font-family: monospace;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--uaa-red);
+  background: #fafafa;
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  border: 2px dashed #ccc;
+}
+
+.player-list {
+  background: var(--uaa-white);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+  box-shadow: var(--sh-md);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.player-list h3 {
+  margin-bottom: var(--sp-4);
+  font-family: var(--font-display);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid #eee;
+}
+
+.player-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.player-list-item:last-child {
+  border-bottom: none;
+}
+
+.player-list-item .name {
+  flex-grow: 1;
+  font-weight: 600;
+}
+
+.config-panel {
+  background: var(--uaa-white);
+  border-radius: var(--r-lg);
+  padding: var(--sp-6);
+  box-shadow: var(--sh-md);
+}
+
+.config-panel h3 {
+  font-family: var(--font-display);
+  margin-bottom: var(--sp-4);
+  color: var(--uaa-dark);
+}
+
+.difficulty-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+}
+
+.difficulty-card {
+  border: 2px solid #eee;
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.difficulty-card:hover {
+  border-color: var(--uaa-red-light);
+  background: rgba(196, 18, 48, 0.02);
+}
+
+.difficulty-card.selected {
+  border-color: var(--uaa-red);
+  background: rgba(196, 18, 48, 0.05);
+}
+
+.difficulty-card strong {
+  display: block;
+  font-family: var(--font-display);
+  margin-bottom: var(--sp-1);
+}
+
+.difficulty-card span {
+  font-size: var(--text-xs);
+  color: #666;
+}
+
+.countdown-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(26, 26, 26, 0.95);
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.countdown-number {
+  font-size: 15rem;
+  color: var(--uaa-white);
+  font-family: var(--font-display);
+  font-weight: 900;
+  line-height: 1;
+  animation: countdown 1s ease-in-out infinite;
+}
+
+.go-text {
+  font-size: 6rem;
+  color: var(--uaa-red);
+  font-family: var(--font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  animation: pulse 1s infinite;
+  display: none; /* Shown via JS */
+}
+
+/* Header style for lobby/game */
+.app-header {
+  height: 80px;
+  background: var(--uaa-white);
+  box-shadow: var(--sh-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-6);
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.logo-box {
+  background: var(--uaa-red);
+  color: var(--uaa-white);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-family: var(--font-display);
+  border-radius: var(--r-sm);
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+}

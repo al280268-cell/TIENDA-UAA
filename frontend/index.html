@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🕷 FERIA UAA — Reto E-Commerce</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+
+  <style>
+    /* ══════════════════════════════════════════
+       LANDING PAGE — ESTILOS ESPECÍFICOS
+    ══════════════════════════════════════════ */
+
+    html, body { height: 100%; }
+
+    body {
+      background: #07070F;
+      color: white;
+      overflow-x: hidden;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url('img/web.svg');
+      background-repeat: repeat;
+      background-size: 80px;
+      opacity: 0.45;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Fondo animado con partículas ── */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .bg-glow {
+      position: absolute;
+      width: 900px;
+      height: 900px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(196,18,48,0.18) 0%, transparent 70%);
+      top: -300px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: float 6s ease-in-out infinite;
+    }
+    .bg-glow-2 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(140,13,34,0.12) 0%, transparent 70%);
+      bottom: -100px;
+      right: -150px;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(196,18,48,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(196,18,48,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-mark {
+      background: var(--grad-red);
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      box-shadow: var(--sh-glow-sm);
+    }
+    .header-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(196,18,48,0.15);
+      border: 1px solid rgba(196,18,48,0.3);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff4444;
+      box-shadow: 0 0 8px #ff4444;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 24px 40px;
+      gap: 64px;
+    }
+
+    .hero-left {
+      max-width: 560px;
+      animation: slideUp 0.7s ease forwards;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(196,18,48,0.15);
+      border: 1px solid rgba(196,18,48,0.35);
+      color: #ff8899;
+      padding: 8px 18px;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .hero-eyebrow span { font-size: 1rem; }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(3.2rem, 9vw, 6.5rem);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.03em;
+      color: white;
+      margin-bottom: 20px;
+    }
+    .hero-title .accent {
+      color: transparent;
+      -webkit-text-stroke: 2px var(--uaa-red);
+    }
+    .hero-title .highlight {
+      background: var(--grad-red);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 32px;
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    /* Pill features */
+    .feature-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      backdrop-filter: blur(8px);
+    }
+    .pill .icon { font-size: 1rem; }
+
+    /* Stats row */
+    .stats-row {
+      display: flex;
+      gap: 28px;
+    }
+    .stat-item { }
+    .stat-val {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: white;
+    }
+    .stat-val span { color: var(--uaa-red); }
+    .stat-lbl {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Join Card ── */
+    .join-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      min-width: 340px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: slideUp 0.8s 0.1s ease both;
+      flex-shrink: 0;
+    }
+
+    .join-card-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .join-card-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--grad-red);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 16px;
+      box-shadow: var(--sh-glow);
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+    .join-card-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 6px;
+    }
+    .join-card-sub {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* Inputs dark theme */
+    .input-dark {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 15px 18px;
+      color: white;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .input-dark::placeholder { color: rgba(255,255,255,0.25); }
+    .input-dark:focus {
+      border-color: var(--uaa-red);
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 0 3px rgba(196,18,48,0.2);
+    }
+    .input-code {
+      text-align: center;
+      font-size: 2rem !important;
+      font-weight: 900;
+      letter-spacing: 8px;
+      font-family: var(--font-display) !important;
+      text-transform: uppercase;
+    }
+
+    .label-dark {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .input-group-dark { margin-bottom: 16px; }
+
+    /* Join button */
+    .btn-join {
+      width: 100%;
+      padding: 18px;
+      background: var(--grad-red);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 6px 24px rgba(196,18,48,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-join::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+    .btn-join:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(196,18,48,0.65);
+    }
+    .btn-join:active:not(:disabled) { transform: translateY(0); }
+    .btn-join:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      color: #ff8899;
+      font-size: 0.8rem;
+      font-weight: 600;
+      min-height: 18px;
+      margin: 8px 0 4px;
+      text-align: center;
+    }
+
+    .join-footer {
+      text-align: center;
+      margin-top: 16px;
+      color: rgba(255,255,255,0.25);
+      font-size: 0.75rem;
+    }
+
+    /* ── Ticker bar ── */
+    .ticker {
+      background: var(--uaa-red);
+      padding: 10px 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      white-space: nowrap;
+      animation: marquee 20s linear infinite;
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      color: white;
+      padding: 0 40px;
+      flex-shrink: 0;
+    }
+    .ticker-item::after { content: ' \2605 '; color: rgba(255,255,255,0.5); }
+
+    /* ── Responsive ── */
+    @media (max-width: 820px) {
+      .hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 16px 20px 32px;
+        gap: 32px;
+      }
+      .hero-left { max-width: 100%; }
+      .feature-pills, .stats-row { justify-content: center; }
+      .hero-desc { max-width: 100%; margin: 0 auto 24px; }
+      .join-card { min-width: unset; max-width: 100%; }
+      .hero-eyebrow { font-size: 0.7rem; }
+    }
+
+    /* ── Floating emoji particles ── */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      font-size: 1.4rem;
+      opacity: 0;
+      animation: particle-rise 4s ease-in forwards;
+      z-index: 0;
+    }
+    @keyframes particle-rise {
+      0% { opacity: 0.8; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(-120vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Fondo animado -->
+<div class="bg-canvas">
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+  <div class="grid-overlay"></div>
+</div>
+
+<div class="page">
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="logo-mark">UAA</div>
+      <span class="header-title">Licenciatura en Comercio Electrónico</span>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      En vivo
+    </div>
+  </header>
+
+  <!-- ── Hero + Card ── -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">
+        <span>🏆</span> Feria Universitaria 2026
+      </div>
+
+      <h1 class="hero-title">
+        RETO<br>
+        <span class="highlight">E-COM</span><span class="accent">MERCE</span>
+      </h1>
+
+      <p class="hero-desc">
+        Compite en tiempo real contra todos los participantes. Responde misiones de comercio Electrónico, sube al ranking y gana premios.
+      </p>
+
+      <div class="feature-pills">
+        <div class="pill"><span class="icon">⚡</span> Tiempo real</div>
+        <div class="pill"><span class="icon">🎯</span> 10 tipos de misiones</div>
+        <div class="pill"><span class="icon">🏅</span> Ranking en vivo</div>
+        <div class="pill"><span class="icon">🎁</span> Premios reales</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-val">10<span>+</span></div>
+          <div class="stat-lbl">Misiones</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">5<span>★</span></div>
+          <div class="stat-lbl">Rondas</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val"><span>∞</span></div>
+          <div class="stat-lbl">Competidores</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de unirse -->
+    <div class="join-card">
+      <div class="join-card-header">
+        <div class="join-card-icon">🛒</div>
+        <div class="join-card-title">Únete a la Competencia</div>
+        <div class="join-card-sub">Introduce el código del staff para entrar</div>
+      </div>
+
+      <div class="input-group-dark">
+        <label class="label-dark">Código de partida</label>
+        <input
+          type="text"
+          class="input-dark input-code"
+          id="game-code-input"
+          placeholder="UAA-XXXX"
+          maxlength="8"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+
+      <div class="input-group-dark">
+        <label class="label-dark">Tu nombre</label>
+        <input
+          type="text"
+          class="input-dark"
+          id="player-name-input"
+          placeholder="¿Cómo te llamas?"
+          maxlength="20"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <button class="btn-join" id="join-btn">
+        ENTRAR A LA PARTIDA →
+      </button>
+
+      <div class="join-footer">
+        El código lo proporciona el staff del stand UAA
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Ticker bar ── -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track" id="ticker">
+      <span class="ticker-item">FERIA UAA 2026</span>
+      <span class="ticker-item">RETO E-COMMERCE</span>
+      <span class="ticker-item">COMPITE EN TIEMPO REAL</span>
+      <span class="ticker-item">GANA PREMIOS</span>
+      <span class="ticker-item">Licenciatura en Comercio Electrónico</span>
+      <span class="ticker-item">FERIA UAA 2026</span>
+      <span class="ticker-item">RETO E-COMMERCE</span>
+      <span class="ticker-item">COMPITE EN TIEMPO REAL</span>
+      <span class="ticker-item">GANA PREMIOS</span>
+      <span class="ticker-item">Licenciatura en Comercio Electrónico</span>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const codeInput = document.getElementById('game-code-input');
+  const nameInput = document.getElementById('player-name-input');
+  const joinBtn   = document.getElementById('join-btn');
+  const errMsg    = document.getElementById('error-msg');
+
+  // Auto-formato: UAA-XXXX
+  codeInput.addEventListener('input', () => {
+    let v = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (v.length > 3) v = v.slice(0, 3) + '-' + v.slice(3);
+    if (v.length > 8) v = v.slice(0, 8);
+    codeInput.value = v;
+    if (v.length === 8) nameInput.focus();
+  });
+
+  codeInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') nameInput.focus();
+  });
+  nameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') joinBtn.click();
+  });
+
+  // Pre-rellenar desde URL
+  const urlCode = new URLSearchParams(window.location.search).get('code');
+  if (urlCode) {
+    codeInput.value = urlCode.toUpperCase();
+    nameInput.focus();
+  }
+
+  // Partículas decorativas
+  const EMOJIS = ['🛒','💳','🏆','⭐','🎁','💰','📱','🛍️'];
+  function spawnParticle() {
+    const el = document.createElement('div');
+    el.className = 'particle';
+    el.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.bottom = '-40px';
+    el.style.animationDuration = (3 + Math.random() * 3) + 's';
+    el.style.fontSize = (1 + Math.random() * 1.2) + 'rem';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  }
+  setInterval(spawnParticle, 1800);
+
+  // JOIN
+  joinBtn.addEventListener('click', async () => {
+    errMsg.textContent = '';
+    const code = codeInput.value.trim().toUpperCase();
+    const name = nameInput.value.trim();
+
+    if (!code || code.length < 7) {
+      errMsg.textContent = 'Ingresa el código completo: UAA-XXXX';
+      codeInput.focus();
+      return;
+    }
+    if (!name || name.length < 2) {
+      errMsg.textContent = 'Tu nombre necesita al menos 2 caracteres';
+      nameInput.focus();
+      return;
+    }
+
+    joinBtn.disabled = true;
+    joinBtn.textContent = 'Conectando...';
+
+    const { data, error } = await App.Api.post('/api/games/join', {
+      game_code:   code,
+      player_name: name,
+    });
+
+    if (error) {
+      const msgs = {
+        'Game not found or not waiting': 'Partida no encontrada. ¿El código es correcto?',
+        'Game is full': 'La partida está llena. Pide al staff que abra otra.',
+        'Name already taken in this game': 'Ese nombre ya está en uso, elige otro.',
+      };
+      errMsg.textContent = msgs[error] || 'Error: ' + error;
+      joinBtn.disabled = false;
+      joinBtn.textContent = 'ENTRAR A LA PARTIDA →';
+      return;
+    }
+
+    // Guardar sesión
+    App.Session.set('uaa_player_token',    data.player_token);
+    App.Session.set('uaa_player_id',       data.player_id);
+    App.Session.set('uaa_player_name',     name);
+    App.Session.set('uaa_avatar_color',    data.avatar_color);
+    App.Session.set('uaa_avatar_initials', data.avatar_initials);
+    App.Session.set('uaa_game_code',       code);
+
+    joinBtn.textContent = '¡Entrando! 🚀';
+    setTimeout(() => {
+      window.location.href = 'lobby.html?code=' + encodeURIComponent(code);
+    }, 400);
+  });
+</script>
+
+<!-- Acceso admin discreto -->
+<a href="admin.html" id="adminGear" title="Administrador" style="
+  position:fixed; bottom:20px; right:20px; width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px; color:rgba(255,255,255,0.25); font-size:18px;
+  text-decoration:none; transition:all 0.2s; z-index:999;
+" onmouseover="this.style.color='rgba(255,255,255,0.6)';this.style.background='rgba(255,255,255,0.1)'"
+   onmouseout="this.style.color='rgba(255,255,255,0.25)';this.style.background='rgba(255,255,255,0.05)'">
+  &#9881;
+</a>
+</body>
+</html>
+

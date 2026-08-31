@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
+  <g fill="none" stroke="#2B5CE6" stroke-opacity="0.22" stroke-width="1.1">
+    <!-- radial spokes from top-left corner (0,0) -->
+    <line x1="0" y1="0" x2="520" y2="0"/>
+    <line x1="0" y1="0" x2="500" y2="130"/>
+    <line x1="0" y1="0" x2="440" y2="255"/>
+    <line x1="0" y1="0" x2="340" y2="360"/>
+    <line x1="0" y1="0" x2="255" y2="440"/>
+    <line x1="0" y1="0" x2="130" y2="500"/>
+    <line x1="0" y1="0" x2="0" y2="520"/>
+    <!-- concentric web arcs -->
+    <path d="M70 0 A70 70 0 0 1 0 70"/>
+    <path d="M150 0 A150 150 0 0 1 0 150"/>
+    <path d="M240 0 A240 240 0 0 1 0 240"/>
+    <path d="M340 0 A340 340 0 0 1 0 340"/>
+    <path d="M450 0 A450 450 0 0 1 0 450"/>
+  </g>
+</svg>

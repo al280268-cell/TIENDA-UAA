@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>E-COMMERCE CHALLENGE · UAA</title>
+<!-- Fuentes por CDN -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:        #0d0b26;
+    --ink-2:      #18153d;
+    --violet:     #7c3aed;
+    --violet-600: #6d28d9;
+    --cyan:       #22d3ee;
+    --gold:       #fbbf24;
+    --gold-600:   #f59e0b;
+    --emerald:    #10b981;
+    --rose:       #f43f5e;
+
+    --surface:    #f5f6fc;
+    --card:       #ffffff;
+    --line:       #e7e8f2;
+    --text:       #1c1b33;
+    --muted:      #6b6a86;
+
+    --grad-hero:  linear-gradient(135deg,#2e1065 0%,#5b21b6 45%,#0d9488 120%);
+    --grad-btn:   linear-gradient(135deg,#7c3aed 0%,#6d28d9 55%,#4f46e5 100%);
+    --grad-gold:  linear-gradient(135deg,#fde68a 0%,#fbbf24 45%,#f59e0b 100%);
+
+    --sh-sm: 0 1px 2px rgba(20,18,53,.06), 0 2px 8px rgba(20,18,53,.06);
+    --sh-md: 0 8px 24px rgba(20,18,53,.10);
+    --sh-lg: 0 18px 48px rgba(20,18,53,.18);
+    --r: 16px; --r-lg: 22px; --r-pill: 999px;
+
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    color:var(--text);
+    background:var(--surface);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{ font-family:var(--font-display); letter-spacing:-.02em; }
+  button, input, select{ font-family:inherit; }
+
+  #app{ min-height:100dvh; display:flex; flex-direction:column; }
+
+  /* HUD SUPERIOR EXTENDIDO CON VIDAS Y MISIONES */
+  .hud{
+    position:sticky; top:0; z-index:40;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:10px clamp(12px,3vw,24px);
+    background:rgba(13,11,38,.94);
+    backdrop-filter:saturate(140%) blur(8px);
+    color:#fff; border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .hud.hidden{ display:none; }
+  .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .brand-logo{
+    width:36px;height:36px;border-radius:10px;flex:0 0 auto;
+    background:var(--grad-btn); display:grid;place-items:center;
+    font-family:var(--font-display); font-weight:700; font-size:15px;
+    box-shadow:0 4px 14px rgba(124,58,237,.5);
+  }
+  .brand-txt{ line-height:1.1; min-width:0; }
+  .brand-txt b{ font-family:var(--font-display); font-size:14px; display:block; }
+  .brand-txt small{ font-size:11px; color:var(--cyan); font-weight:600; letter-spacing:.02em; }
+
+  .hud-spacer{ flex:1 1 auto; }
+
+  .hud-stat-chip{
+    display:flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    padding:6px 12px; border-radius:var(--r-pill); font-family:var(--font-display); font-weight:700; font-size:14px;
+  }
+
+  .lives-chip{ border-color:rgba(244,63,94,.4); background:rgba(244,63,94,.12); }
+  .coin-chip{
+    background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(245,158,11,.1));
+    border-color:rgba(251,191,36,.4);
+  }
+  .coin{
+    width:22px;height:22px;border-radius:50%;flex:0 0 auto;
+    background:var(--grad-gold); color:#7a4a00; font-size:11px; font-weight:800;
+    display:grid; place-items:center;
+    box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6), 0 2px 6px rgba(245,158,11,.5);
+  }
+  .coin-chip.pulse{ animation:chipPulse .5s ease; }
+  @keyframes chipPulse{ 0%{transform:scale(1)} 35%{transform:scale(1.15)} 100%{transform:scale(1)} }
+
+  .cart-chip{ position:relative; cursor:pointer; }
+  .cart-badge{
+    min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);
+    background:var(--cyan); color:#062c34; font-weight:800; font-size:11px; display:grid;place-items:center;
+  }
+  .icon-btn{
+    width:36px;height:36px;border-radius:var(--r-pill);
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    color:#fff; font-size:15px; cursor:pointer; display:grid;place-items:center;
+    transition:background .2s, transform .1s;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,.18); }
+  .icon-btn:active{ transform:scale(.94); }
+
+  .progress-row{
+    display:flex; align-items:center; gap:12px;
+    padding:8px clamp(12px,3vw,24px);
+    background:rgba(13,11,38,.94); color:#fff;
+    position:sticky; top:57px; z-index:39;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .progress-row.hidden{ display:none; }
+  .progress-label{ font-size:12px; color:#c7c6e8; font-weight:600; white-space:nowrap; }
+  .progress-track{ flex:1; height:8px; border-radius:var(--r-pill); background:rgba(255,255,255,.12); overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; border-radius:var(--r-pill); background:linear-gradient(90deg,var(--cyan),var(--violet)); transition:width .5s ease; }
+  .progress-pct{ font-family:var(--font-display); font-weight:700; font-size:13px; min-width:3ch; text-align:right; }
+
+  /* LAYOUT DE PANTALLAS */
+  main{ flex:1 1 auto; position:relative; }
+  .screen{ display:none; animation:screenIn .35s cubic-bezier(.2,.8,.2,1) both; }
+  .screen.active{ display:block; }
+  @keyframes screenIn{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
+
+  .wrap{ max-width:1080px; margin:0 auto; padding:clamp(18px,4vw,36px) clamp(14px,3vw,28px); }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--violet-600);
+  }
+  .eyebrow::before{ content:""; width:20px; height:2px; background:var(--cyan); border-radius:2px; }
+
+  .section-title{ font-size:clamp(22px,3.8vw,32px); margin:.3em 0 .2em; line-height:1.1; }
+  .lead{ color:var(--muted); font-size:15px; max-width:65ch; margin:0 0 12px; line-height:1.45; }
+
+  /* BOTONES */
+  .btn{
+    -webkit-appearance:none; appearance:none; border:0; cursor:pointer;
+    font-weight:700; font-size:15px; border-radius:14px;
+    padding:14px 24px; min-height:52px; color:#fff; background:var(--grad-btn);
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 10px 24px rgba(109,40,217,.32); transition:transform .12s, box-shadow .2s, filter .2s;
+    text-decoration:none;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 14px 28px rgba(109,40,217,.4); }
+  .btn:active{ transform:translateY(0); }
+  .btn.lg{ font-size:17px; padding:16px 30px; min-height:60px; border-radius:16px; }
+  .btn.gold{ background:var(--grad-gold); color:#5a3600; box-shadow:0 10px 24px rgba(245,158,11,.4); }
+  .btn.gold:hover{ box-shadow:0 14px 28px rgba(245,158,11,.5); }
+  .btn.ghost{ background:#fff; color:var(--violet-600); box-shadow:var(--sh-sm); border:1.5px solid var(--line); }
+  .btn.ghost:hover{ box-shadow:var(--sh-md); }
+  .btn.danger{ background:linear-gradient(135deg,#f43f5e,#e11d48); color:#fff; box-shadow:0 10px 24px rgba(244,63,94,.3); }
+  .btn.wide{ width:100%; }
+  .btn:disabled{ filter:grayscale(.6) opacity(.5); cursor:not-allowed; transform:none; box-shadow:none; }
+
+  /* HERO Y LANDING */
+  #s-landing{ background:var(--ink); color:#fff; min-height:100dvh; }
+  #s-landing.active{ display:flex; }
+  .hero{
+    position:relative; overflow:hidden; width:100%;
+    display:flex; align-items:center; justify-content:center;
+    padding:clamp(24px,5vw,50px) clamp(16px,4vw,32px);
+  }
+  .hero::before{ content:""; position:absolute; inset:0; z-index:0; background:var(--grad-hero); opacity:.92; }
+  .hero-inner{ position:relative; z-index:1; max-width:840px; text-align:center; }
+  .hero-badge{
+    display:inline-flex; align-items:center; gap:8px; margin-bottom:18px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    padding:6px 14px 6px 8px; border-radius:var(--r-pill); font-size:13px; font-weight:600;
+  }
+  .hero-badge .dot{ width:22px;height:22px;border-radius:6px; background:#fff; color:var(--violet-600); display:grid;place-items:center; font-family:var(--font-display); font-weight:700; font-size:12px; }
+  .hero h1{ font-size:clamp(32px,6.5vw,62px); line-height:1.02; margin:0 0 8px; font-weight:800; }
+  .hero h1 .flash{ background:linear-gradient(120deg,#fde68a,#22d3ee); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero .kicker{ font-family:var(--font-display); font-size:clamp(16px,2.4vw,22px); font-weight:600; color:#e9e6ff; margin:0 0 24px; }
+  .hero-feats{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:0 auto 28px; max-width:680px; }
+  .feat{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16);
+    padding:10px 16px; border-radius:14px; font-weight:600; font-size:14px;
+  }
+
+  /* PANELES Y TARJETAS */
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--sh-sm); padding:clamp(16px,3vw,24px); }
+  .split{ display:grid; grid-template-columns:1.1fr .9fr; gap:20px; align-items:start; }
+  @media (max-width:820px){ .split{ grid-template-columns:1fr; } }
+
+  .grid-products{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; margin-top:16px; }
+  .pcard{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg);
+    overflow:hidden; box-shadow:var(--sh-sm); transition:transform .18s, box-shadow .2s;
+    display:flex; flex-direction:column;
+  }
+  .pcard:hover{ transform:translateY(-3px); box-shadow:var(--sh-md); }
+  .pcard .art{ aspect-ratio:16/11; display:grid; place-items:center; font-size:58px; }
+  .pcard .body{ padding:12px 14px 14px; display:flex; flex-direction:column; gap:4px; flex:1; }
+  .pcard .cat{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--violet-600); }
+  .pcard .name{ font-family:var(--font-display); font-weight:600; font-size:16px; }
+  .pcard .desc{ font-size:12px; color:var(--muted); line-height:1.35; flex:1; }
+  .pcard .foot{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+  .price{ font-family:var(--font-display); font-weight:700; font-size:17px; }
+
+  .btn-mini{
+    border:0; cursor:pointer; background:var(--grad-btn); color:#fff;
+    padding:9px 14px; border-radius:11px; font-weight:700; font-size:13px; width:100%;
+    box-shadow:0 4px 12px rgba(109,40,217,.2); transition:transform .12s;
+  }
+  .btn-mini:hover{ transform:translateY(-1px); }
+
+  /* RETOS Y MISIONES */
+  .missions-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-top:16px; }
+  .mcard{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg);
+    padding:18px; display:flex; flex-direction:column; gap:10px; position:relative; box-shadow:var(--sh-sm);
+  }
+  .mcard.completed{ border-color:var(--emerald); background:#f0fdf4; }
+  .mcard.locked{ opacity:.7; background:#fafafa; }
+  .mcard-header{ display:flex; align-items:center; justify-content:space-between; }
+  .mcard-icon{ font-size:32px; }
+  .mstatus{ font-size:11px; font-weight:800; padding:4px 10px; border-radius:var(--r-pill); text-transform:uppercase; }
+  .mstatus.st-locked{ background:#e2e8f0; color:#475569; }
+  .mstatus.st-avail{ background:#e0f2fe; color:#0369a1; }
+  .mstatus.st-done{ background:#dcfce7; color:#15803d; }
+
+  .challenge-box{ background:#fff; border:1.5px solid var(--line); border-radius:var(--r-lg); padding:20px; margin-top:16px; }
+  .qopts{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  .qbtn{
+    text-align:left; border:1.5px solid var(--line); background:#fff; cursor:pointer;
+    padding:14px 16px; border-radius:14px; font-size:14px; font-weight:500; display:flex; gap:12px; align-items:center;
+    transition:all .16s;
+  }
+  .qbtn .key{ width:28px;height:28px;flex:0 0 auto;border-radius:8px;background:#f1effb;color:var(--violet-600);font-weight:800;display:grid;place-items:center;font-family:var(--font-display); }
+  .qbtn:hover{ border-color:#c9bbf5; background:#fbfaff; }
+  .qbtn.correct{ border-color:var(--emerald); background:#ecfdf5; }
+  .qbtn.correct .key{ background:var(--emerald); color:#fff; }
+  .qbtn.wrong{ border-color:var(--rose); background:#fff1f3; }
+  .qbtn.wrong .key{ background:var(--rose); color:#fff; }
+
+  /* CARRETO Y DETALLE */
+  .toast-inline{
+    display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:12px;
+    background:#eef2ff; border:1px solid #e0defc; color:#3f3d63; font-size:13px; line-height:1.4; margin-top:12px;
+  }
+  .toast-inline.notice{ background:#fff8ec; border-color:#f7e6c2; color:#7a5a12; }
+  .toast-inline.danger{ background:#fff1f2; border-color:#fecdd3; color:#9f1239; }
+
+  .pd-art{ border-radius:var(--r-lg); aspect-ratio:4/3; display:grid; place-items:center; font-size:100px; box-shadow:var(--sh-sm); }
+  .pd-name{ font-size:clamp(22px,3vw,28px); margin:.2em 0; }
+  .pd-price{ font-family:var(--font-display); font-weight:700; font-size:28px; color:var(--violet-600); }
+
+  .line{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .line .thumb{ width:50px;height:50px;border-radius:10px;display:grid;place-items:center;font-size:26px;flex:0 0 auto; }
+  .totals .row{ display:flex; justify-content:space-between; padding:6px 0; color:var(--muted); font-size:14px; }
+  .totals .row.grand{ color:var(--text); font-family:var(--font-display); font-weight:700; font-size:18px; border-top:1.5px solid var(--line); margin-top:6px; padding-top:10px; }
+
+  /* FORMULARIOS Y PAGO */
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12px; font-weight:600; margin-bottom:4px; color:#4a4869; }
+  .field input, .field select{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px;
+    font-size:14px; background:#fff;
+  }
+  .field input:focus, .field select:focus{ outline:0; border-color:var(--violet); box-shadow:0 0 0 3px rgba(124,58,237,.14); }
+  .field.err input{ border-color:var(--rose); }
+
+  .pays{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:8px; }
+  @media (max-width:560px){ .pays{ grid-template-columns:1fr; } }
+  .pay{
+    cursor:pointer; border:1.5px solid var(--line); background:#fff; border-radius:14px; padding:16px 12px;
+    text-align:center; transition:all .16s; display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .pay:hover{ border-color:#c9bbf5; }
+  .pay.sel{ border-color:var(--violet); background:#f6f3ff; box-shadow:0 6px 16px rgba(124,58,237,.15); }
+
+  /* REWARD SHOP & PROGRESOS */
+  .rewards-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-top:16px; }
+  .rcard{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--sh-sm); padding:18px 16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .rcard .re{ font-size:46px; }
+  .rcard .rn{ font-family:var(--font-display); font-weight:600; font-size:16px; }
+  .rcard .rc{ display:inline-flex; align-items:center; gap:4px; font-family:var(--font-display); font-weight:700; color:var(--gold-600); }
+  .rcard.soldout{ opacity:.55; filter:grayscale(.8); }
+  .rcard.special-card{ background:linear-gradient(160deg,#1e1b4b,#311042); color:#fff; border-color:transparent; }
+  .rcard.special-card .rn{ color:#fff; }
+
+  .prog-tracker{ background:#f0efff; border:1px solid #dcd7fe; border-radius:var(--r-lg); padding:16px; margin-bottom:20px; }
+  .prog-tracker-title{ font-family:var(--font-display); font-weight:700; font-size:15px; margin-bottom:10px; color:var(--violet-600); }
+  .prog-items{ display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; font-size:13px; font-weight:600; }
+
+  /* RANKING & STAFF PANEL */
+  .ranking-table{ width:100%; border-collapse:collapse; margin-top:10px; }
+  .ranking-table th, .ranking-table td{ padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); font-size:14px; }
+  .ranking-table th{ color:var(--muted); font-size:12px; text-transform:uppercase; }
+
+  #s-result{ background:var(--ink); color:#fff; min-height:100dvh; }
+  #s-result .wrap{ text-align:center; }
+  .result-emoji{ font-size:64px; animation:pop .5s cubic-bezier(.2,1.4,.4,1) both; }
+  @keyframes pop{ from{transform:scale(.2); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+  /* CAPAS Y MODALES */
+  #fx{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
+  .coin-toast{
+    position:fixed; left:50%; top:70px; transform:translateX(-50%); z-index:62;
+    background:var(--grad-gold); color:#5a3600; font-family:var(--font-display); font-weight:700; font-size:16px;
+    padding:8px 18px; border-radius:var(--r-pill); box-shadow:var(--sh-lg);
+    display:flex; align-items:center; gap:6px; animation:toastUp 1.4s ease forwards;
+  }
+  @keyframes toastUp{ 0%{opacity:0; transform:translate(-50%,10px) scale(.9);} 15%{opacity:1; transform:translate(-50%,0) scale(1);} 80%{opacity:1;} 100%{opacity:0; transform:translate(-50%,-20px);} }
+
+  .confetti{ position:fixed; top:-20px; width:10px; height:14px; z-index:60; }
+
+  #modal-layer{
+    position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center; padding:16px;
+    background:rgba(13,11,38,.7); backdrop-filter:blur(4px);
+  }
+  #modal-layer.open{ display:flex; animation:screenIn .2s ease; }
+  .modal{ background:#fff; border-radius:var(--r-lg); max-width:440px; width:100%; padding:26px 22px; text-align:center; box-shadow:var(--sh-lg); }
+  .modal .me{ font-size:56px; }
+  .modal h3{ font-size:22px; margin:8px 0 6px; }
+  .modal p{ color:var(--muted); font-size:14px; margin:0 0 18px; line-height:1.4; }
+
+  .qr-box{ width:160px; height:160px; margin:14px auto; border:2px dashed var(--violet); border-radius:16px; display:grid; place-items:center; background:#f9f8ff; padding:8px; }
+  .qr-box img{ width:100%; height:100%; object-fit:contain; }
+
+  .staff-badge{ position:fixed; bottom:14px; right:14px; z-index:50; }
+  .center{ text-align:center; }
+  .mt{ margin-top:16px; } .mt-lg{ margin-top:24px; }
+  .row-btns{ display:flex; gap:10px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HUD SUPERIOR -->
+  <header class="hud hidden" id="hud">
+    <div class="brand">
+      <div class="brand-logo">EC</div>
+      <div class="brand-txt">
+        <b>Comercio Electrónico</b>
+        <small>UAA · Stand Challenge</small>
+      </div>
+    </div>
+    <div class="hud-spacer"></div>
+
+    <div class="hud-stat-chip lives-chip" id="livesChip" title="Vidas restantes">
+      <span id="livesIcons">❤️ ❤️ ❤️</span>
+    </div>
+
+    <div class="hud-stat-chip coin-chip" id="coinChip">
+      <span class="coin">E</span>
+      <span id="coinCount">0</span>
+      <span style="font-size:11px;opacity:.8">Coins</span>
+    </div>
+
+    <button class="hud-stat-chip cart-chip icon-btn" id="missionsBtn" title="Misiones" onclick="go('missions')">🎯</button>
+    <button class="icon-btn" id="soundBtn" title="Sonido">🔊</button>
+  </header>
+
+  <div class="progress-row hidden" id="progressRow">
+    <span class="progress-label">Progreso</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+
+  <main>
+
+    <!-- PANTALLA 0 · LANDING -->
+    <section class="screen active" id="s-landing">
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-badge"><span class="dot">EC</span> UAA · Feria Universitaria</div>
+          <h1>E-COMMERCE<br><span class="flash">CHALLENGE</span></h1>
+          <p class="kicker">¿CREES QUE PUEDES CONSEGUIR UN PREMIO?</p>
+          <p style="color:#cfccf0; margin-bottom:24px;">Completa el reto. Gana E-Coins. Desbloquea recompensas.</p>
+          
+          <div class="hero-feats">
+            <div class="feat">🪙 E-Coins</div>
+            <div class="feat">❤️ 3 Vidas</div>
+            <div class="feat">🎯 Retos reales</div>
+            <div class="feat">🎁 Premios físicos</div>
+          </div>
+
+          <button class="btn lg gold" id="startBtn">INICIAR MISIÓN →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANTALLA MISIONES / HUB -->
+    <section class="screen" id="s-missions">
+      <div class="wrap">
+        <span class="eyebrow">Panel de Misiones</span>
+        <h2 class="section-title">Centro de Misiones</h2>
+        <p class="lead">Completa las misiones para acumular E-Coins y desbloquear la Reward Shop.</p>
+
+        <div class="missions-grid" id="missionsGrid"></div>
+
+        <div class="mt-lg center">
+          <button class="btn gold lg" onclick="go('store')">🛒 IR A LA TIENDA Y SIMULACIÓN</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETO 1: DETECTIVE DIGITAL -->
+    <section class="screen" id="s-ret-detective">
+      <div class="wrap" style="max-width:720px;">
+        <span class="eyebrow">Misión 1 · Detective Digital</span>
+        <h2 class="section-title">Detecta la tienda sospechosa</h2>
+        <p class="lead">Analiza las siguientes 3 ofertas. Una de ellas tiene claras señales de fraude o poco confiable. ¿Cuál es?</p>
+
+        <div class="qopts">
+          <button class="qbtn" onclick="answerChallenge('detective', 'A', this)">
+            <span class="key">A</span>
+            <div><b>TechStore Oficial</b> — Laptop Gamer $18,500 MXN. Reseñas: 4.8/5 (1,200 ventas). Pago con SSL y Garantía.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('detective', 'B', this)">
+            <span class="key">B</span>
+            <div><b>MegaGamer_Remates99</b> — Laptop Gamer Último Modelo $1,200 MXN. Depósito a cuenta personal, sin dirección física, fotos borrosas.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('detective', 'C', this)">
+            <span class="key">C</span>
+            <div><b>Laptops de México</b> — Laptop Gamer $17,900 MXN. Reseñas: 4.5/5. Envío con guía rastreable.</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETO 2: ENCUENTRA LA MEJOR COMPRA -->
+    <section class="screen" id="s-ret-bestbuy">
+      <div class="wrap" style="max-width:720px;">
+        <span class="eyebrow">Misión 2 · Comprador Estratégico</span>
+        <h2 class="section-title">Encuentra la mejor relación Calidad/Precio</h2>
+        <p class="lead">Quieres comprar unos audífonos con cancelación de ruido. ¿Cuál es la opción más inteligente?</p>
+
+        <div class="qopts">
+          <button class="qbtn" onclick="answerChallenge('bestbuy', 'A', this)">
+            <span class="key">A</span>
+            <div><b>Audífonos UltraX:</b> $2,500 MXN, Cancelación Activa, 4.8/5 estrellas (450 opiniones), Envío gratis en 2 días.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('bestbuy', 'B', this)">
+            <span class="key">B</span>
+            <div><b>Audífonos VIP Lux:</b> $8,900 MXN, Cancelación Activa, 4.2/5 estrellas (12 opiniones), Envío $250.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('bestbuy', 'C', this)">
+            <span class="key">C</span>
+            <div><b>Audífonos Mini:</b> $150 MXN, Sin cancelación de ruido, 2.1/5 estrellas (85 opiniones), Envío de $100 tarda 30 días.</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETO 3: CARRITO TRAMPOSO -->
+    <section class="screen" id="s-ret-cart">
+      <div class="wrap" style="max-width:720px;">
+        <span class="eyebrow">Misión 3 · El Carrito Tramposo</span>
+        <h2 class="section-title">Detecta el error en el checkout</h2>
+        <p class="lead">Observa el desglose de este pedido. ¿Hay algún problema?</p>
+
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="line"><b>Producto: Manta Térmica</b> — $399 MXN</div>
+          <div class="line"><b>Costo de Envío Estándar:</b> $49 MXN</div>
+          <div class="totals"><div class="row grand"><span>TOTAL MOSTRADO:</span><span>$499 MXN</span></div></div>
+        </div>
+
+        <div class="qopts">
+          <button class="qbtn" onclick="answerChallenge('cart_trick', 'A', this)">
+            <span class="key">A</span>
+            <div>El total mostrado es incorrecto ($399 + $49 debería ser $448, no $499).</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('cart_trick', 'B', this)">
+            <span class="key">B</span>
+            <div>El envío es demasiado caro.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('cart_trick', 'C', this)">
+            <span class="key">C</span>
+            <div>No hay ningún error, todo está sumado correctamente.</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETO 4: ENVÍO INTELIGENTE -->
+    <section class="screen" id="s-ret-shipping">
+      <div class="wrap" style="max-width:720px;">
+        <span class="eyebrow">Misión 4 · Envío Inteligente</span>
+        <h2 class="section-title">Selección Óptima de Logística</h2>
+        <p class="lead">El cliente necesita recibir un regalo en <b>máximo 3 días</b> pero no quiere gastar dinero de más. Opciones:</p>
+
+        <div class="qopts">
+          <button class="qbtn" onclick="answerChallenge('shipping', 'A', this)">
+            <span class="key">A</span>
+            <div><b>Envío Gratis:</b> $0 MXN — Tarda 7 a 10 días hábiles.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('shipping', 'B', this)">
+            <span class="key">B</span>
+            <div><b>Envío Estándar:</b> $49 MXN — Tarda 3 días hábiles.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('shipping', 'C', this)">
+            <span class="key">C</span>
+            <div><b>Envío Express Super Premium:</b> $299 MXN — Tarda 1 día hábil.</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETO 5: PAGO SEGURO -->
+    <section class="screen" id="s-ret-payment">
+      <div class="wrap" style="max-width:720px;">
+        <span class="eyebrow">Misión 5 · Pago Seguro</span>
+        <h2 class="section-title">Ciberseguridad en Pasarelas</h2>
+        <p class="lead">¿Cuál de las siguientes situaciones representa un RIESGO ALTO de seguridad al pagar?</p>
+
+        <div class="qopts">
+          <button class="qbtn" onclick="answerChallenge('payment', 'A', this)">
+            <span class="key">A</span>
+            <div>La página redirige a un portal conocido (PayPal / Stripe) con candado verde SSL (https://).</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('payment', 'B', this)">
+            <span class="key">B</span>
+            <div>La tienda requiere que ingreses tu PIN o Contraseña Secreta de tu app bancaria directamente en un formulario común.</div>
+          </button>
+          <button class="qbtn" onclick="answerChallenge('payment', 'C', this)">
+            <span class="key">C</span>
+            <div>El banco te envía un código Token de 6 dígitos por SMS para autorizar la transacción.</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISIÓN SOCIAL: INSTAGRAM -->
+    <section class="screen" id="s-m-social">
+      <div class="wrap center" style="max-width:540px;">
+        <span class="eyebrow">Misión Social · Instagram</span>
+        <h2 class="section-title">📱 Conecta en Redes</h2>
+        <p class="lead">Síguenos en Instagram para apoyar al stand y desbloquea <b>+25 E-Coins</b>.</p>
+
+        <div class="panel mt">
+          <div style="font-size:18px; font-weight:700; color:var(--violet);" id="instaHandleDisplay">@comercio_uaa</div>
+          <div class="qr-box" id="instaQrContainer">
+            <!-- QR generado dinámicamente -->
+          </div>
+          <button class="btn ghost wide" onclick="openInstagramLink()">📱 ABRIR INSTAGRAM</button>
+
+          <div style="margin-top:20px; border-top:1px solid var(--line); padding-top:16px;">
+            <p style="font-size:14px; color:var(--muted);">¿Ya nos sigues? Muéstraselo al personal del stand.</p>
+            <button class="btn gold wide" onclick="requestStaffValidation('instagram')">✓ VALIDAR CON STAFF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISIÓN FUTURO ASPIRANTE -->
+    <section class="screen" id="s-m-aspirante">
+      <div class="wrap" style="max-width:620px;">
+        <span class="eyebrow">Misión Especial · Futuro UAA</span>
+        <h2 class="section-title">🎓 ¿Te interesa Comercio Electrónico?</h2>
+        <p class="lead">Completa esta breve encuesta e infórmate sobre la carrera para ganar <b>+25 E-Coins</b>.</p>
+
+        <div class="panel mt">
+          <p style="font-weight:600; font-size:14px; margin-bottom:10px;">¿Qué temas te gustaría conocer?</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; text-align:left;" id="aspOptions">
+            <label><input type="checkbox" value="Plan de estudios"> Plan de estudios</label>
+            <label><input type="checkbox" value="Campo laboral"> Campo laboral</label>
+            <label><input type="checkbox" value="Emprendimiento"> Emprendimiento</label>
+            <label><input type="checkbox" value="Marketing digital"> Marketing digital</label>
+            <label><input type="checkbox" value="Tecnología"> Tecnología</label>
+            <label><input type="checkbox" value="Comercio electrónico"> Comercio electrónico</label>
+          </div>
+
+          <div style="margin-top:18px;">
+            <p style="font-size:13px; color:var(--muted);">Escanea el QR para revisar la información oficial de la carrera:</p>
+            <div class="qr-box" id="careerQrContainer"></div>
+            <button class="btn ghost wide" onclick="finishCareerScan()">YA LO REVISÉ</button>
+          </div>
+
+          <div id="aspValidationBlock" style="display:none; margin-top:18px; border-top:1px solid var(--line); padding-top:14px;" class="center">
+            <p style="font-size:14px; color:var(--muted);">Muéstrale esta pantalla al staff del stand:</p>
+            <button class="btn gold wide" onclick="requestStaffValidation('career')">✓ VALIDAR CON STAFF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIMULADOR TIENDA (PANTALLA 1) -->
+    <section class="screen" id="s-store">
+      <div class="wrap">
+        <span class="eyebrow">Simulación · Parte 1</span>
+        <h2 class="section-title">Explora la Tienda</h2>
+        <p class="lead">Selecciona un producto para iniciar tu simulación de compra estratégica (+5 E-Coins por explorar).</p>
+        <div class="grid-products" id="storeGrid"></div>
+      </div>
+    </section>
+
+    <!-- SIMULADOR DETALLE (PANTALLA 2) -->
+    <section class="screen" id="s-product">
+      <div class="wrap">
+        <span class="eyebrow">Simulación · Parte 2</span>
+        <div class="split mt">
+          <div><div class="pd-art" id="pdArt">🎧</div></div>
+          <div>
+            <h2 class="pd-name" id="pdName">Producto</h2>
+            <div class="pd-price" id="pdPrice">$0</div>
+            <p class="lead" id="pdDesc" style="margin-top:10px"></p>
+
+            <button class="btn wide lg" id="addCartBtn" onclick="addToCartSim()">🛒 Agregar al carrito (+5 E-Coins)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIMULADOR CARRITO (PANTALLA 3) -->
+    <section class="screen" id="s-cart">
+      <div class="wrap">
+        <span class="eyebrow">Simulación · Parte 3</span>
+        <h2 class="section-title">Tu Carrito de Compras</h2>
+        <div class="split mt">
+          <div class="panel" id="cartPanel"></div>
+          <div class="panel">
+            <h3 style="margin:0 0 4px; font-size:18px;">Pregunta de Carrito</h3>
+            <p style="color:var(--muted); font-size:13px;">¿Cuál es la ventaja clave de un carrito de compras interactivo?</p>
+            <div class="qopts">
+              <button class="qbtn" onclick="answerCartQ('A', this)"><span class="key">A</span> Permite modificar cantidades y revisar costos antes de pagar.</button>
+              <button class="qbtn" onclick="answerCartQ('B', this)"><span class="key">B</span> Cambia los colores de la pantalla automáticamente.</button>
+              <button class="qbtn" onclick="answerCartQ('C', this)"><span class="key">C</span> Obliga al cliente a comprar inmediatamente sin pensar.</button>
+            </div>
+            <button class="btn wide mt" id="toShipping" disabled onclick="go('shipping')">Continuar al envío →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIMULADOR ENVÍO (PANTALLA 4) -->
+    <section class="screen" id="s-shipping">
+      <div class="wrap" style="max-width:600px">
+        <span class="eyebrow">Simulación · Parte 4</span>
+        <h2 class="section-title">Datos de Envío</h2>
+        <div class="panel mt">
+          <div class="field"><label>Nombre completo</label><input id="fName" placeholder="Tu nombre"></div>
+          <div class="field"><label>Correo</label><input id="fMail" placeholder="correo@ejemplo.com"></div>
+          <div class="field"><label>Dirección</label><input id="fAddr" placeholder="Av. Universidad 940"></div>
+          <button class="btn wide lg mt" onclick="submitShipping()">Guardar y Continuar →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIMULADOR PAGO (PANTALLA 5) -->
+    <section class="screen" id="s-payment">
+      <div class="wrap" style="max-width:640px">
+        <span class="eyebrow">Simulación · Parte 5</span>
+        <h2 class="section-title">Selección de Método de Pago</h2>
+        <p class="lead">Elege el método correcto para esta transacción (+10 E-Coins si eliges pasarela digital segura):</p>
+        <div class="pays">
+          <div class="pay" onclick="selectPayMethod('Pasarela Digital', this)"><span style="font-size:32px">💳</span><b>Pasarela Digital SSL</b></div>
+          <div class="pay" onclick="selectPayMethod('Transferencia', this)"><span style="font-size:32px">🏦</span><b>Transferencia SPEI</b></div>
+          <div class="pay" onclick="selectPayMethod('Efectivo OXXO', this)"><span style="font-size:32px">🏪</span><b>Pago en Efectivo</b></div>
+        </div>
+        <button class="btn wide lg mt" id="toConfirm" disabled onclick="go('confirm')">Revisar Pedido →</button>
+      </div>
+    </section>
+
+    <!-- SIMULADOR CONFIRMAR (PANTALLA 6) -->
+    <section class="screen" id="s-confirm">
+      <div class="wrap" style="max-width:600px">
+        <span class="eyebrow">Simulación · Final</span>
+        <h2 class="section-title">Confirmar Compra</h2>
+        <div class="panel mt" id="summaryPanel"></div>
+        <button class="btn wide lg mt-lg gold" onclick="completeCheckoutProcess()">✓ FINALIZAR COMPRA (+20 E-Coins)</button>
+      </div>
+    </section>
+
+    <!-- RESULTADO FINAL -->
+    <section class="screen" id="s-result">
+      <div class="wrap">
+        <div class="result-emoji">🎉</div>
+        <h2 style="font-size:36px; margin:10px 0 4px;">¡LO LOGRASTE!</h2>
+        <p style="color:#c7c6e8; margin-top:0;">Has superado el E-Commerce Challenge.</p>
+        
+        <div style="font-family:var(--font-display); font-size:48px; font-weight:800; color:var(--gold);" id="finalCoinsDisplay">0 E-Coins</div>
+
+        <div class="panel" style="background:rgba(255,255,255,.08); color:#fff; border-color:rgba(255,255,255,.15); max-width:500px; margin:20px auto; text-align:left;">
+          <div style="margin-bottom:8px;">🪙 <b>E-Coins totales:</b> <span id="resCoins">0</span></div>
+          <div style="margin-bottom:8px;">🎯 <b>Retos completados:</b> <span id="resChallenges">0</span> / 5</div>
+          <div style="margin-bottom:8px;">📱 <b>Instagram Verificado:</b> <span id="resInsta">No</span></div>
+          <div style="margin-bottom:8px;">🎓 <b>Misión Carrera:</b> <span id="resCareer">No</span></div>
+        </div>
+
+        <button class="btn lg gold" onclick="go('rewards')">🏆 IR A REWARD SHOP Y CANJEAR</button>
+      </div>
+    </section>
+
+    <!-- REWARD SHOP -->
+    <section class="screen" id="s-rewards">
+      <div class="wrap">
+        <span class="eyebrow">Tienda de Premios</span>
+        <h2 class="section-title">Reward Shop</h2>
+        
+        <div class="prog-tracker">
+          <div class="prog-tracker-title">TU PROGRESO PARA PREMIOS</div>
+          <div class="prog-items">
+            <div>🪙 <span id="progCoins">0</span> E-Coins</div>
+            <div>🛒 Compra: <span id="progBuy">❌</span></div>
+            <div>🔎 Retos: <span id="progRetos">0</span>/5</div>
+            <div>📱 Instagram: <span id="progInsta">❌</span></div>
+            <div>🎓 Carrera: <span id="progCarr">❌</span></div>
+          </div>
+        </div>
+
+        <div id="rewardClaimedNotice" class="toast-inline notice" style="display:none; margin-bottom:16px;">
+          🎉 <b>¡PREMIO DESBLOQUEADO!</b> Ya tienes un premio registrado. Puedes seguir jugando pero ya no puedes canjear otro premio.
+        </div>
+
+        <div class="rewards-grid" id="rewardsGrid"></div>
+
+        <div class="panel mt-lg">
+          <h3 style="margin-top:0;">🏆 TOP DEL DÍA (RANKING)</h3>
+          <table class="ranking-table" id="rankingTable">
+            <thead>
+              <tr><th>Posición</th><th>Jugador</th><th>E-Coins</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="center mt-lg">
+          <button class="btn ghost" onclick="go('careerPromo')">Terminar y Conocer la Carrera →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANTALLA PROMOCIÓN DE CARRERA FINAL -->
+    <section class="screen" id="s-careerPromo">
+      <div class="wrap center">
+        <div style="font-size:52px">🚀</div>
+        <h2 class="section-title">¿Te gustó la experiencia?</h2>
+        <p class="lead" style="margin:0 auto 20px;">Esto es solo una pequeña parte de lo que puedes crear estudiando <b>Comercio Electrónico</b> en la Universidad Autónoma de Aguascalientes.</p>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; text-align:left;">
+          <div class="panel"><div style="font-size:32px">💻</div><h4>Tecnología</h4><p style="font-size:12px; color:var(--muted)">Desarrollo e-commerce, bases de datos y plataformas modernas.</p></div>
+          <div class="panel"><div style="font-size:32px">📈</div><h4>Marketing Digital</h4><p style="font-size:12px; color:var(--muted)">Estrategia de contenido, Meta Ads, SEO y analítica web.</p></div>
+          <div class="panel"><div style="font-size:32px">🛒</div><h4>E-Commerce</h4><p style="font-size:12px; color:var(--muted)">Modelos de negocio, logística, pasarelas y optimización de conversión.</p></div>
+        </div>
+
+        <div class="panel" style="display:flex; gap:20px; align-items:center; justify-content:center; flex-wrap:wrap;">
+          <div>
+            <p style="font-weight:700; margin:0;">📱 Instagram Oficial</p>
+            <div class="qr-box" id="finalInstaQr"></div>
+          </div>
+          <div>
+            <p style="font-weight:700; margin:0;">🎓 Plan de Estudios UAA</p>
+            <div class="qr-box" id="finalCareerQr"></div>
+          </div>
+        </div>
+
+        <div class="mt-lg">
+          <button class="btn gold lg" onclick="resetVisitorState()">🔄 NUEVO VISITANTE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISIÓN FALLIDA -->
+    <section class="screen" id="s-failed">
+      <div class="wrap center" style="max-width:500px;">
+        <div style="font-size:72px;">💀</div>
+        <h2 style="font-size:36px; color:var(--rose); margin:10px 0;">MISIÓN FALLIDA</h2>
+        <p class="lead">Te quedaste sin oportunidades.</p>
+
+        <div class="row-btns mt-lg" style="justify-content:center;">
+          <button class="btn danger" onclick="retryChallenge()">INTENTAR DE NUEVO</button>
+          <button class="btn ghost" onclick="resetVisitorState()">VOLVER AL INICIO</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ACCESO PANEL STAFF -->
+<div class="staff-badge">
+  <button class="btn ghost" style="padding:6px 12px; min-height:auto; font-size:12px;" onclick="openStaffAuth()">⚙️ STAFF</button>
+</div>
+
+<!-- CAPAS FLOTANTES -->
+<div id="fx"></div>
+
+<!-- MODAL GENÉRICO -->
+<div id="modal-layer">
+  <div class="modal">
+    <div class="me" id="modalEmoji">🎁</div>
+    <h3 id="modalTitle">Título</h3>
+    <p id="modalText">Texto explicativo</p>
+    <button class="btn wide" id="modalBtn">Continuar</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ===============================
+// CONFIGURACIÓN DE LA FERIA
+// ===============================
+const CONFIG = {
+  INSTAGRAM_HANDLE: "@comercio_uaa",
+  INSTAGRAM_URL: "https://www.instagram.com/",
+  CAREER_URL: "https://www.uaa.mx/",
+  STAFF_PIN: "2026",
+  CURRENT_DAY: 1, // 1 o 2
+
+  // Inventario Día 1
+  INVENTORY_DAY_1: {
+    r1: 5, // Pluma
+    r2: 3, // Libreta
+    r3: 2, // Taza
+    r4: 1, // Especial
+    r5: 1  // Master
+  },
+
+  // Inventario Día 2
+  INVENTORY_DAY_2: {
+    r1: 5,
+    r2: 3,
+    r3: 2,
+    r4: 1,
+    r5: 1
+  },
+
+  // Recompensas
+  REWARDS_CONFIG: [
+    { id: "r1", name: "Pluma UAA", cost: 30, emoji: "🖊️" },
+    { id: "r2", name: "Libreta EC", cost: 80, emoji: "📒" },
+    { id: "r3", name: "Taza Cerámica", cost: 120, emoji: "☕" },
+    { id: "r4", name: "Premio Especial", cost: 200, emoji: "🎒" },
+    { id: "r5", name: "E-COMMERCE MASTER", cost: 200, emoji: "🏆", isSpecial: true }
+  ]
+};
+
+// ===============================
+// ESTADO Y PERSISTENCIA
+// ===============================
+let state = {
+  coins: 0,
+  lives: 3,
+  challenges: {
+    detective: false,
+    bestbuy: false,
+    cart_trick: false,
+    shipping: false,
+    payment: false
+  },
+  missions: {
+    instagram: false,
+    career: false,
+    sim_completed: false
+  },
+  cart: null,
+  shippingData: null,
+  paymentMethod: null,
+  hasClaimedReward: false,
+  claimedRewardName: "",
+  visitorId: ""
+};
+
+let globalStats = {
+  participants: 0,
+  completions: 0,
+  instaVerified: 0,
+  careerInterested: 0,
+  rewardsClaimed: 0,
+  inventory: {},
+  ranking: []
+};
+
+// ===============================
+// INICIALIZACIÓN
+// ===============================
+function initApp() {
+  loadGlobalStats();
+  state.visitorId = "Jugador #" + String(globalStats.participants + 1).padStart(3, '0');
+  
+  // Render de QRs con API pública libre de CORS
+  const instaQr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(CONFIG.INSTAGRAM_URL)}`;
+  const careerQr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(CONFIG.CAREER_URL)}`;
+  
+  document.getElementById('instaQrContainer').innerHTML = `<img src="${instaQr}" alt="QR Instagram">`;
+  document.getElementById('careerQrContainer').innerHTML = `<img src="${careerQr}" alt="QR Carrera">`;
+  document.getElementById('finalInstaQr').innerHTML = `<img src="${instaQr}" alt="QR Instagram">`;
+  document.getElementById('finalCareerQr').innerHTML = `<img src="${careerQr}" alt="QR Carrera">`;
+  
+  document.getElementById('instaHandleDisplay').textContent = CONFIG.INSTAGRAM_HANDLE;
+
+  renderStoreGrid();
+  updateHUD();
+}
+
+function loadGlobalStats() {
+  const stored = localStorage.getItem('uaa_ecc_stats');
+  if (stored) {
+    try {
+      globalStats = JSON.parse(stored);
+    } catch(e){}
+  } else {
+    // Inicializar inventario según día
+    const baseInv = (CONFIG.CURRENT_DAY === 1) ? CONFIG.INVENTORY_DAY_1 : CONFIG.INVENTORY_DAY_2;
+    globalStats.inventory = { ...baseInv };
+    saveGlobalStats();
+  }
+}
+
+function saveGlobalStats() {
+  localStorage.setItem('uaa_ecc_stats', JSON.stringify(globalStats));
+}
+
+// ===============================
+// NAVEGACIÓN Y HUD
+// ===============================
+function go(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('s-' + screenId);
+  if (target) target.classList.add('active');
+  
+  const isLanding = (screenId === 'landing');
+  document.getElementById('hud').classList.toggle('hidden', isLanding);
+
+  if (screenId === 'missions') renderMissionsScreen();
+  if (screenId === 'rewards') renderRewardsScreen();
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateHUD() {
+  document.getElementById('coinCount').textContent = state.coins;
+  let hearts = "";
+  for (let i = 0; i < 3; i++) {
+    hearts += (i < state.lives) ? "❤️ " : "🖤 ";
+  }
+  document.getElementById('livesIcons').textContent = hearts.trim();
+}
+
+function addCoins(amount) {
+  state.coins += amount;
+  updateHUD();
+  
+  const chip = document.getElementById('coinChip');
+  chip.classList.remove('pulse'); void chip.offsetWidth; chip.classList.add('pulse');
+
+  const toast = document.createElement('div');
+  toast.className = 'coin-toast';
+  toast.innerHTML = `<span class="coin">E</span> +${amount} E-Coins`;
+  document.getElementById('fx').appendChild(toast);
+  setTimeout(() => toast.remove(), 1400);
+}
+
+function loseLife(reasonText) {
+  state.lives--;
+  updateHUD();
+
+  if (state.lives <= 0) {
+    go('failed');
+  } else {
+    showModal('💔 ¡Opps!', `${reasonText}<br><br><b>Perdiste 1 vida.</b> Te quedan ${state.lives} vidas.`, 'Entendido');
+  }
+}
+
+// ===============================
+// RETOS DE E-COMMERCE
+// ===============================
+function answerChallenge(type, option, btn) {
+  const isCorrectMap = {
+    detective: 'B',
+    bestbuy: 'A',
+    cart_trick: 'A',
+    shipping: 'B',
+    payment: 'B'
+  };
+
+  const rewardsMap = {
+    detective: 15,
+    bestbuy: 10,
+    cart_trick: 15,
+    shipping: 10,
+    payment: 10
+  };
+
+  const explanations = {
+    detective: 'La opción B tiene un precio ridículamente bajo, exige depósito personal y fotos de mala calidad (Señales de fraude).',
+    bestbuy: 'La opción A tiene excelente relación entre precio, calidad comprobada y velocidad de envío.',
+    cart_trick: 'El total estaba mal calculado. $399 + $49 es igual a $448.',
+    shipping: 'El envío estándar es el equilibrio perfecto entre cumplir los 3 días requeridos y el menor costo posible.',
+    payment: 'Jamás debes ingresar contraseñas bancarias o PINs personales en pasarelas web.'
+  };
+
+  if (option === isCorrectMap[type]) {
+    btn.classList.add('correct');
+    if (!state.challenges[type]) {
+      state.challenges[type] = true;
+      addCoins(rewardsMap[type]);
+      showModal('🎯 ¡EXCELENTE!', `Respuesta correcta.<br>${explanations[type]}<br><br><b>+${rewardsMap[type]} E-Coins</b>`, 'Continuar', () => go('missions'));
+    }
+  } else {
+    btn.classList.add('wrong');
+    loseLife(explanations[type]);
+  }
+}
+
+// ===============================
+// MISIONES HUB
+// ===============================
+function renderMissionsScreen() {
+  const grid = document.getElementById('missionsGrid');
+  grid.innerHTML = '';
+
+  const list = [
+    { id: 'detective', name: '🔎 Detective Digital', desc: 'Detecta la tienda sospechosa', coins: 15, isDone: state.challenges.detective, target: 'ret-detective' },
+    { id: 'bestbuy', name: '🛒 Comprador Estratégico', desc: 'Encuentra la mejor compra', coins: 10, isDone: state.challenges.bestbuy, target: 'ret-bestbuy' },
+    { id: 'cart_trick', name: '🧮 Carrito Tramposo', desc: 'Detecta el error en el checkout', coins: 15, isDone: state.challenges.cart_trick, target: 'ret-cart' },
+    { id: 'shipping', name: '📦 Envío Inteligente', desc: 'Selecciona la mejor logística', coins: 10, isDone: state.challenges.shipping, target: 'ret-shipping' },
+    { id: 'payment', name: '🔒 Pago Seguro', desc: 'Identifica riesgos en pasarelas', coins: 10, isDone: state.challenges.payment, target: 'ret-payment' },
+    { id: 'insta', name: '📱 Conecta en IG', desc: 'Síguenos en Instagram', coins: 25, isDone: state.missions.instagram, target: 'm-social' },
+    { id: 'career', name: '🎓 Futuro E-Commerce', desc: 'Conoce la carrera de la UAA', coins: 25, isDone: state.missions.career, target: 'm-aspirante' }
+  ];
+
+  list.forEach(m => {
+    const card = document.createElement('div');
+    card.className = `mcard ${m.isDone ? 'completed' : ''}`;
+    card.innerHTML = `
+      <div class="mcard-header">
+        <span class="mcard-icon">${m.name.split(' ')[0]}</span>
+        <span class="mstatus ${m.isDone ? 'st-done' : 'st-avail'}">${m.isDone ? '✅ COMPLETADA' : '⚡ DISPONIBLE'}</span>
+      </div>
+      <div>
+        <b style="font-size:15px">${m.name}</b>
+        <p style="font-size:12px; color:var(--muted); margin:4px 0 8px;">${m.desc}</p>
+        <small style="color:var(--gold-600); font-weight:700;">+${m.coins} E-Coins</small>
+      </div>
+      <button class="btn-mini mt" ${m.isDone ? 'disabled' : ''} onclick="go('${m.target}')">
+        ${m.isDone ? 'Completado' : 'Iniciar Misión'}
+      </button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ===============================
+// ACCIONES MISIONES SOCIALES
+// ===============================
+function openInstagramLink() {
+  window.open(CONFIG.INSTAGRAM_URL, '_blank');
+}
+
+function finishCareerScan() {
+  document.getElementById('aspValidationBlock').style.display = 'block';
+}
+
+function requestStaffValidation(type) {
+  openStaffAuth((pinCorrect) => {
+    if (pinCorrect) {
+      if (type === 'instagram' && !state.missions.instagram) {
+        state.missions.instagram = true;
+        addCoins(25);
+        globalStats.instaVerified++;
+        saveGlobalStats();
+        showModal('✅ VERIFICADO', 'El staff ha verificado tu seguimiento en Instagram.<br><br><b>+25 E-Coins</b>', 'Genial', () => go('missions'));
+      } else if (type === 'career' && !state.missions.career) {
+        state.missions.career = true;
+        addCoins(25);
+        globalStats.careerInterested++;
+        saveGlobalStats();
+        showModal('✅ VERIFICADO', 'El staff ha validado tu interés en la carrera.<br><br><b>+25 E-Coins</b>', 'Genial', () => go('missions'));
+      }
+    }
+  });
+}
+
+// ===============================
+// SIMULACIÓN TIENDA DE COMPRA
+// ===============================
+const STORE_ITEMS = [
+  { id: 'p1', name: 'Audífonos Bluetooth', price: 499, emoji: '🎧' },
+  { id: 'p2', name: 'Mochila Tech UAA', price: 799, emoji: '🎒' },
+  { id: 'p3', name: 'Termo Inoxidable', price: 299, emoji: '🥤' }
+];
+
+function renderStoreGrid() {
+  const g = document.getElementById('storeGrid');
+  g.innerHTML = '';
+  STORE_ITEMS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'pcard';
+    card.innerHTML = `
+      <div class="art" style="background:#f0eeff">${p.emoji}</div>
+      <div class="body">
+        <div class="name">${p.name}</div>
+        <div class="foot">
+          <span class="price">$${p.price} MXN</span>
+        </div>
+        <button class="btn-mini" onclick="selectSimProduct('${p.id}')">Elegir este producto</button>
+      </div>
+    `;
+    g.appendChild(card);
+  });
+}
+
+function selectSimProduct(id) {
+  const p = STORE_ITEMS.find(x => x.id === id);
+  state.cart = { ...p, qty: 1 };
+  addCoins(5); // +5 por explorar y elegir
+  document.getElementById('pdArt').textContent = p.emoji;
+  document.getElementById('pdName').textContent = p.name;
+  document.getElementById('pdPrice').textContent = '$' + p.price + ' MXN';
+  document.getElementById('pdDesc').textContent = 'Excelente elección para el simulador de compra.';
+  go('product');
+}
+
+function addToCartSim() {
+  addCoins(5); // +5 por agregar correctamente
+  const p = state.cart;
+  document.getElementById('cartPanel').innerHTML = `
+    <div class="line">
+      <div class="thumb" style="background:#f0eeff">${p.emoji}</div>
+      <div><b>${p.name}</b><br><small>$${p.price} MXN</small></div>
+    </div>
+    <div class="totals"><div class="row grand"><span>Total</span><span>$${p.price} MXN</span></div></div>
+  `;
+  go('cart');
+}
+
+function answerCartQ(option, btn) {
+  if (option === 'A') {
+    btn.classList.add('correct');
+    addCoins(10);
+    document.getElementById('toShipping').disabled = false;
+  } else {
+    btn.classList.add('wrong');
+    loseLife('El carrito sirve para confirmar productos y montos antes de comprometer el pago.');
+  }
+}
+
+function submitShipping() {
+  const n = document.getElementById('fName').value.trim();
+  if (!n) {
+    showModal('⚠️ CAMPO REQUERIDO', 'Ingresa tu nombre para continuar con el envío simulado.', 'Entendido');
+    return;
+  }
+  state.shippingData = { name: n };
+  addCoins(15); // +15 por checkout sin errores
+  go('payment');
+}
+
+function selectPayMethod(method, el) {
+  document.querySelectorAll('.pay').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  state.paymentMethod = method;
+  document.getElementById('toConfirm').disabled = false;
+  
+  if (method === 'Pasarela Digital') {
+    addCoins(10);
+  }
+}
+
+function completeCheckoutProcess() {
+  state.missions.sim_completed = true;
+  addCoins(20);
+  globalStats.completions++;
+  
+  // Guardar en Ranking
+  globalStats.ranking.push({ id: state.visitorId, coins: state.coins });
+  globalStats.ranking.sort((a,b) => b.coins - a.coins);
+  saveGlobalStats();
+
+  document.getElementById('finalCoinsDisplay').textContent = state.coins + " E-Coins";
+  document.getElementById('resCoins').textContent = state.coins;
+  
+  const countRetos = Object.values(state.challenges).filter(Boolean).length;
+  document.getElementById('resChallenges').textContent = countRetos;
+  document.getElementById('resInsta').textContent = state.missions.instagram ? 'Sí' : 'No';
+  document.getElementById('resCareer').textContent = state.missions.career ? 'Sí' : 'No';
+
+  go('result');
+}
+
+// ===============================
+// REWARD SHOP Y PREMIOS
+// ===============================
+function renderRewardsScreen() {
+  // Actualizar rastreador
+  document.getElementById('progCoins').textContent = state.coins;
+  document.getElementById('progBuy').textContent = state.missions.sim_completed ? '✓' : '❌';
+  
+  const countRetos = Object.values(state.challenges).filter(Boolean).length;
+  document.getElementById('progRetos').textContent = countRetos;
+  document.getElementById('progInsta').textContent = state.missions.instagram ? '✓' : '❌';
+  document.getElementById('progCarr').textContent = state.missions.career ? '✓' : '❌';
+
+  if (state.hasClaimedReward) {
+    document.getElementById('rewardClaimedNotice').style.display = 'flex';
+  }
+
+  const grid = document.getElementById('rewardsGrid');
+  grid.innerHTML = '';
+
+  CONFIG.REWARDS_CONFIG.forEach(r => {
+    const stock = globalStats.inventory[r.id] || 0;
+    const card = document.createElement('div');
+    
+    if (r.isSpecial) {
+      // PREMIO ESPECIAL E-COMMERCE MASTER
+      const meetsRetos = countRetos >= 3;
+      const meetsAll = (state.coins >= 200) && state.missions.instagram && state.missions.career && state.missions.sim_completed && meetsRetos;
+
+      card.className = `rcard special-card ${stock <= 0 ? 'soldout' : ''}`;
+      card.innerHTML = `
+        <div class="re">${r.emoji}</div>
+        <div class="rn">${r.name}</div>
+        <div class="rc" style="color:var(--gold)"><span class="coin">E</span>${r.cost} E-Coins</div>
+        <small style="font-size:11px; margin:4px 0; color:#ddd;">Disponibles: ${stock}</small>
+        <button class="btn-mini" style="background:var(--grad-gold); color:#5a3600;" 
+          ${(!meetsAll || stock <= 0 || state.hasClaimedReward) ? 'disabled' : ''} 
+          onclick="claimReward('${r.id}')">
+          ${stock <= 0 ? 'AGOTADO' : (meetsAll ? '🔓 DESBLOQUEADO' : '🔒 BLOQUEADO')}
+        </button>
+      `;
+    } else {
+      const canAfford = state.coins >= r.cost;
+      card.className = `rcard ${stock <= 0 ? 'soldout' : ''}`;
+      card.innerHTML = `
+        <div class="re">${r.emoji}</div>
+        <div class="rn">${r.name}</div>
+        <div class="rc"><span class="coin">E</span>${r.cost} E-Coins</div>
+        <small style="font-size:11px; color:var(--muted)">Disponibles: ${stock}</small>
+        <button class="btn-mini" 
+          ${(!canAfford || stock <= 0 || state.hasClaimedReward) ? 'disabled' : ''} 
+          onclick="claimReward('${r.id}')">
+          ${stock <= 0 ? 'AGOTADO' : 'CANJEAR'}
+        </button>
+      `;
+    }
+    grid.appendChild(card);
+  });
+
+  // Render Ranking
+  const tbody = document.querySelector('#rankingTable tbody');
+  tbody.innerHTML = '';
+  const topList = globalStats.ranking.slice(0, 5);
+  if (topList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">No hay registros aún hoy.</td></tr>';
+  } else {
+    topList.forEach((rk, idx) => {
+      const tr = document.createElement('tr');
+      const medal = idx === 0 ? '🥇 ' : (idx === 1 ? '🥈 ' : (idx === 2 ? '🥉 ' : ''));
+      tr.innerHTML = `<td>${medal}#${idx+1}</td><td>${rk.id}</td><td><b>${rk.coins}</b> E-Coins</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+function claimReward(rewardId) {
+  if (state.hasClaimedReward) {
+    showModal('⚠️ LÍMITE ALCANZADO', 'Ya has canjeado un premio previamente. Solo se permite 1 premio por visitante.', 'Entendido');
+    return;
+  }
+
+  const r = CONFIG.REWARDS_CONFIG.find(x => x.id === rewardId);
+  const stock = globalStats.inventory[rewardId] || 0;
+
+  if (stock <= 0) {
+    showModal('AGOTADO', 'Lo sentimos, este premio se ha agotado.', 'Entendido');
+    return;
+  }
+
+  if (state.coins < r.cost) {
+    showModal('E-COINS INSUFICIENTES', `Necesitas ${r.cost} E-Coins para este premio.`, 'Entendido');
+    return;
+  }
+
+  // Descontar inventario y otorgar
+  globalStats.inventory[rewardId]--;
+  globalStats.rewardsClaimed++;
+  state.hasClaimedReward = true;
+  state.claimedRewardName = r.name;
+  saveGlobalStats();
+
+  renderRewardsScreen();
+
+  showModal('🎉 ¡PREMIO DESBLOQUEADO!', `Has canjeado exitosamente: <b>${r.name}</b>.<br><br>Acércate con nuestro staff en el stand para recibirlo de inmediato.`, '¡Genial!', () => go('careerPromo'));
+}
+
+// ===============================
+// REINICIO DE VISITANTE
+// ===============================
+function resetVisitorState() {
+  globalStats.participants++;
+  saveGlobalStats();
+
+  state = {
+    coins: 0,
+    lives: 3,
+    challenges: { detective: false, bestbuy: false, cart_trick: false, shipping: false, payment: false },
+    missions: { instagram: false, career: false, sim_completed: false },
+    cart: null,
+    shippingData: null,
+    paymentMethod: null,
+    hasClaimedReward: false,
+    claimedRewardName: "",
+    visitorId: "Jugador #" + String(globalStats.participants + 1).padStart(3, '0')
+  };
+
+  updateHUD();
+  go('landing');
+}
+
+function retryChallenge() {
+  state.lives = 3;
+  state.coins = 0;
+  updateHUD();
+  go('missions');
+}
+
+// ===============================
+// PANEL Y AUTENTICACIÓN DE STAFF
+// ===============================
+function openStaffAuth(callback) {
+  const pin = prompt("Ingrese el PIN del Staff:");
+  if (pin === CONFIG.STAFF_PIN) {
+    if (callback) {
+      callback(true);
+    } else {
+      openStaffControlPanel();
+    }
+  } else if (pin !== null) {
+    alert("PIN incorrecto.");
+    if (callback) callback(false);
+  }
+}
+
+function openStaffControlPanel() {
+  const rem = Object.values(globalStats.inventory).reduce((a,b)=>a+b, 0);
+  const info = `
+  --- CONTROL DEL STAND (STAFF) ---
+  Participantes Totales: ${globalStats.participants}
+  Compras Completadas: ${globalStats.completions}
+  Instagram Verificados: ${globalStats.instaVerified}
+  Interesados en Carrera: ${globalStats.careerInterested}
+  Premios Entregados: ${globalStats.rewardsClaimed}
+  Premios Restantes: ${rem}
+
+  Opciones de acción:
+  1. Validar Instagram de visitante actual
+  2. Validar Interés de Carrera de visitante actual
+  3. Reiniciar Estadísticas Globales (Cuidado)
+  `;
+  
+  const opt = prompt(info + "\nEscriba el número de acción a ejecutar (o Cancele):");
+  if (opt === '1') {
+    state.missions.instagram = true;
+    addCoins(25);
+    globalStats.instaVerified++;
+    saveGlobalStats();
+    alert("Instagram Validado +25 E-Coins otorgados.");
+  } else if (opt === '2') {
+    state.missions.career = true;
+    addCoins(25);
+    globalStats.careerInterested++;
+    saveGlobalStats();
+    alert("Carrera Validada +25 E-Coins otorgados.");
+  } else if (opt === '3') {
+    if (confirm("¿Seguro que deseas reiniciar TODAS las estadísticas del stand?")) {
+      localStorage.removeItem('uaa_ecc_stats');
+      loadGlobalStats();
+      alert("Estadísticas reiniciadas.");
+    }
+  }
+}
+
+// ===============================
+// AUXILIARES UI MODAL & SONIDO
+// ===============================
+function showModal(title, textHtml, btnText = 'Continuar', onClose) {
+  document.getElementById('modalTitle').innerHTML = title;
+  document.getElementById('modalText').innerHTML = textHtml;
+  document.getElementById('modalBtn').textContent = btnText;
+  
+  const layer = document.getElementById('modal-layer');
+  layer.classList.add('open');
+
+  const handler = () => {
+    layer.classList.remove('open');
+    document.getElementById('modalBtn').removeEventListener('click', handler);
+    if (onClose) onClose();
+  };
+
+  document.getElementById('modalBtn').addEventListener('click', handler);
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  go('missions');
+});
+
+document.getElementById('soundBtn').addEventListener('click', () => {
+  const btn = document.getElementById('soundBtn');
+  btn.textContent = (btn.textContent === "🔊") ? "🔇" : "🔊";
+});
+
+// Inicializar al cargar ventana
+window.onload = initApp;
+</script>
+</body>
+</html>

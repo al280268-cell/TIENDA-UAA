@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Premio del Campeón — UAA</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Space+Grotesk:wght@500;700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sp-red:#E62429; --sp-blue:#1B2B8F; --sp-blue2:#2B5CE6;
+    --sp-dark:#07070F; --gold:#FFD700; --green:#00E676; --amber:#F59E0B;
+    --muted:rgba(240,244,255,0.55); --text:#F0F4FF;
+    --font:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+    --bang:'Bangers',cursive;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh; font-family:var(--body);
+    background: var(--sp-dark); color:var(--text);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px 16px; position:relative; overflow-x:hidden;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 700px 500px at 50% -10%, rgba(230,36,41,0.25), transparent),
+      radial-gradient(ellipse 600px 400px at 0% 100%, rgba(27,43,143,0.2), transparent);
+    z-index:0;
+  }
+  body::after {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.6;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0 L80 80 M80 0 L0 80 M40 0 L40 80 M0 40 L80 40' stroke='rgba(230,36,41,0.07)' stroke-width='1'/%3E%3Ccircle cx='0' cy='0' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3Ccircle cx='80' cy='80' r='38' fill='none' stroke='rgba(230,36,41,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+  }
+
+  @keyframes popIn { from{opacity:0;transform:scale(0.85) translateY(20px);}to{opacity:1;transform:none;} }
+  @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+  @keyframes confettiFall { to{transform:translateY(110vh) rotate(720deg); opacity:0;} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 rgba(230,36,41,0);} 50%{box-shadow:0 0 30px rgba(230,36,41,0.5);} }
+
+  .page {
+    position:relative; z-index:1;
+    display:flex; flex-direction:column; align-items:center;
+    gap:24px; width:100%; max-width:960px;
+  }
+
+  /* ── WINNER HEADER ── */
+  .winner-intro { text-align:center; animation:popIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+  .trophy-big { font-size:5rem; display:block; animation:float 2.5s ease-in-out infinite; }
+  .winner-title {
+    font-family:var(--bang); font-size:clamp(2.5rem,8vw,4rem);
+    letter-spacing:3px; color:var(--gold);
+    text-shadow:0 0 40px rgba(255,215,0,0.5);
+    margin:8px 0;
+  }
+  .winner-sub { color:var(--muted); font-size:.95rem; max-width:440px; margin:0 auto 16px; line-height:1.6; }
+  .only-badge {
+    display:inline-block; background:rgba(255,215,0,0.1);
+    border:1px solid rgba(255,215,0,0.3); border-radius:999px;
+    padding:8px 20px; font-weight:800; font-size:.85rem; color:var(--gold);
+  }
+
+  /* ── COUNTDOWN ── */
+  .countdown-wrap {
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+    border-radius:999px; padding:10px 22px; font-size:.9rem; color:var(--muted); font-weight:600;
+    transition:.3s;
+  }
+  .countdown-num { font-size:1.6rem; font-weight:900; color:var(--gold); font-family:var(--bang); letter-spacing:2px; min-width:2ch; text-align:center; }
+  .countdown-wrap.urgent { border-color:rgba(230,36,41,0.5); background:rgba(230,36,41,0.08); }
+  .countdown-wrap.urgent .countdown-num { color:var(--sp-red); }
+
+  /* ── PRIZE CARDS ── */
+  .prizes-row {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap:18px; width:100%;
+  }
+  .prize-card {
+    position:relative; border-radius:20px; overflow:hidden;
+    padding:28px 20px; text-align:center; cursor:pointer;
+    border:2px solid transparent;
+    transition:transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    animation:popIn 0.5s both;
+    background:linear-gradient(135deg,#1a1a2e,#16213e);
+    min-height:260px; display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  .prize-card:nth-child(1) { background:linear-gradient(135deg,#6B1A1A,#E62429,#FF6B35); animation-delay:.05s; }
+  .prize-card:nth-child(2) { background:linear-gradient(135deg,#0D2137,#1B2B8F,#2B5CE6); animation-delay:.1s; }
+  .prize-card:nth-child(3) { background:linear-gradient(135deg,#064E3B,#059669,#10B981); animation-delay:.15s; }
+  .prize-card:nth-child(4) { background:linear-gradient(135deg,#3B0764,#7C3AED,#A855F7); animation-delay:.2s; }
+  .prize-card:hover { transform:translateY(-8px) scale(1.02); box-shadow:0 20px 50px rgba(0,0,0,0.4); }
+  .prize-card.selected { border-color:var(--gold); box-shadow:0 0 0 4px rgba(255,215,0,0.3), 0 20px 50px rgba(0,0,0,0.3); animation:pulse 1.5s infinite; }
+  .prize-card.claimed { pointer-events:none; opacity:0.5; }
+
+  .prize-selected-check {
+    position:absolute; top:12px; right:12px;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--gold); color:#000; font-weight:900; font-size:1rem;
+    display:none; align-items:center; justify-content:center;
+  }
+  .prize-card.selected .prize-selected-check { display:flex; }
+
+  .prize-exclusive {
+    font-size:.65rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase;
+    background:rgba(255,255,255,0.15); border-radius:999px; padding:3px 10px;
+    color:rgba(255,255,255,0.8);
+  }
+  .prize-emoji { font-size:3.8rem; display:block; animation:float 3s ease-in-out infinite; flex:1; }
+  .prize-name { font-family:var(--font); font-weight:900; font-size:1.1rem; color:#fff; }
+  .prize-desc { font-size:.8rem; color:rgba(255,255,255,0.65); line-height:1.5; }
+  .btn-prize {
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+    color:#fff; font-family:var(--font); font-weight:800; font-size:.82rem;
+    padding:10px 20px; border-radius:999px; cursor:pointer; transition:.2s;
+    width:100%;
+  }
+  .btn-prize:hover { background:rgba(255,255,255,0.25); }
+
+  /* ── SUCCESS SCREEN ── */
+  .success-screen {
+    display:none; text-align:center; width:100%; max-width:480px;
+    animation:popIn 0.5s ease;
+    background:rgba(13,15,28,0.9); border:1px solid rgba(255,215,0,0.3);
+    border-radius:24px; padding:40px 32px;
+  }
+  .success-big { font-size:5rem; margin-bottom:12px; display:block; animation:float 2.5s ease-in-out infinite; }
+  .success-title { font-family:var(--bang); font-size:2.2rem; letter-spacing:2px; margin-bottom:8px; color:var(--gold); }
+  .success-sub { color:var(--muted); font-size:.88rem; margin-bottom:20px; line-height:1.6; }
+  .claim-code-box {
+    font-family:var(--bang); font-size:2.4rem; letter-spacing:4px; color:var(--gold);
+    background:rgba(255,215,0,0.08); border:2px solid rgba(255,215,0,0.35);
+    border-radius:14px; padding:16px 24px; margin-bottom:12px;
+  }
+  .claim-note { font-size:.8rem; color:var(--muted); margin-bottom:24px; }
+  .btn-to-results {
+    display:inline-block; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+    color:var(--text); text-decoration:none; font-weight:700; padding:13px 26px;
+    border-radius:12px; transition:.2s; font-family:var(--font);
+  }
+  .btn-to-results:hover { background:rgba(255,255,255,0.15); }
+
+  /* ── CONFIRM MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.75);
+    display:none; align-items:center; justify-content:center; z-index:1000;
+    backdrop-filter:blur(8px);
+  }
+  .modal-overlay.show { display:flex; }
+  .modal-card {
+    background:#111527; border:1px solid rgba(230,36,41,0.3);
+    border-radius:24px; padding:36px; text-align:center; max-width:400px; width:90%;
+    animation:popIn .3s ease;
+  }
+  .modal-emoji { font-size:4rem; display:block; margin-bottom:12px; }
+  .modal-title { font-family:var(--font); font-weight:900; font-size:1.5rem; margin-bottom:8px; }
+  .modal-sub { color:var(--muted); font-size:.88rem; margin-bottom:16px; line-height:1.55; }
+  .modal-prize-name { font-family:var(--bang); font-size:1.8rem; letter-spacing:1px; color:var(--gold); margin-bottom:24px; }
+  .modal-btns { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .btn-confirm {
+    background:linear-gradient(135deg,var(--sp-red),#C0001F); color:#fff;
+    border:none; border-radius:12px; padding:14px 28px; font-weight:800;
+    font-family:var(--font); cursor:pointer; transition:.2s; flex:1; min-width:160px;
+  }
+  .btn-confirm:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(230,36,41,0.4); }
+  .btn-cancel {
+    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+    color:var(--muted); border-radius:12px; padding:14px 24px; font-weight:700;
+    font-family:var(--font); cursor:pointer; transition:.2s; flex:1; min-width:140px;
+  }
+  .btn-cancel:hover { color:var(--text); }
+
+  .confetti-piece {
+    position:fixed; width:10px; height:10px; border-radius:2px;
+    animation:confettiFall 6s ease-in forwards; z-index:9999; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Winner Intro -->
+  <div class="winner-intro" id="winner-intro">
+    <span class="trophy-big">🏆</span>
+    <div class="winner-title">¡ERES EL CAMPEÓN!</div>
+    <p class="winner-sub">Has obtenido el primer lugar entre todos los competidores. Solo tú puedes elegir tu premio.</p>
+    <div class="only-badge">⭐ Premio exclusivo para el ganador</div>
+  </div>
+
+  <!-- Countdown -->
+  <div class="countdown-wrap" id="countdown-wrap">
+    <span>⏱</span>
+    <span>Tiempo para elegir:</span>
+    <span class="countdown-num" id="countdown-num">30</span>
+    <span>segundos</span>
+  </div>
+
+  <!-- Prize Cards -->
+  <div class="prizes-row" id="prizes-row">
+    <div class="prize-card" id="pc-pelota" onclick="selectPrize('pelota','⚽ PELOTA UAA','⚽')">
+      <div class="prize-selected-check">✓</div>
+      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
+      <span class="prize-emoji">⚽</span>
+      <div class="prize-name">PELOTA UAA</div>
+      <div class="prize-desc">Pelota deportiva oficial con el escudo de la UAA.</div>
+      <button class="btn-prize">ELEGIR PELOTA</button>
+    </div>
+
+    <div class="prize-card" id="pc-cilindro" onclick="selectPrize('cilindro','🥤 CILINDRO UAA','🥤')">
+      <div class="prize-selected-check">✓</div>
+      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
+      <span class="prize-emoji">🥤</span>
+      <div class="prize-name">CILINDRO UAA</div>
+      <div class="prize-desc">Termo deportivo oficial, perfecto para mantenerte hidratado.</div>
+      <button class="btn-prize">ELEGIR CILINDRO</button>
+    </div>
+
+    <div class="prize-card" id="pc-gallo" onclick="selectPrize('gallo','🐓 LLAVERO GALLO','🐓')">
+      <div class="prize-selected-check">✓</div>
+      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
+      <span class="prize-emoji">🐓</span>
+      <div class="prize-name">LLAVERO GALLO</div>
+      <div class="prize-desc">Llavero metálico de la mascota oficial de la UAA.</div>
+      <button class="btn-prize">ELEGIR LLAVERO</button>
+    </div>
+
+    <div class="prize-card" id="pc-stickers" onclick="selectPrize('stickers','✨ STICKERS UAA','✨')">
+      <div class="prize-selected-check">✓</div>
+      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
+      <span class="prize-emoji">✨</span>
+      <div class="prize-name">STICKERS UAA</div>
+      <div class="prize-desc">Paquete de stickers universitarios para decorar tu laptop.</div>
+      <button class="btn-prize">ELEGIR STICKERS</button>
+    </div>
+  </div>
+
+  <!-- Success Screen -->
+  <div class="success-screen" id="success-screen">
+    <span class="success-big" id="success-emoji">🏆</span>
+    <div class="success-title">¡PREMIO CONFIRMADO!</div>
+    <p class="success-sub">Tu recompensa ha sido registrada. Muestra este código al staff de UAA.</p>
+    <div class="claim-code-box" id="claim-code-display">UAA-XXXX</div>
+    <div class="claim-note">📸 Toma una captura de pantalla para mostrarlo</div>
+    <a href="results.html" class="btn-to-results">Ver Resultados Finales →</a>
+  </div>
+
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-card">
+    <span class="modal-emoji" id="modal-emoji">🏆</span>
+    <div class="modal-title">¿Confirmar tu elección?</div>
+    <p class="modal-sub">Una vez confirmado no podrás cambiar tu premio.</p>
+    <div class="modal-prize-name" id="modal-prize-name">–</div>
+    <div class="modal-btns">
+      <button class="btn-confirm" onclick="confirmPrize()">✓ CONFIRMAR PREMIO</button>
+      <button class="btn-cancel" onclick="cancelSelection()">← Regresar a elegir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const S = {
+  gameCode:    sessionStorage.getItem('uaa_game_code')    || '',
+  playerId:    sessionStorage.getItem('uaa_player_id')    || '',
+  playerToken: sessionStorage.getItem('uaa_player_token') || '',
+  myPoints:    parseInt(sessionStorage.getItem('uaa_my_points') || '0'),
+  selectedId:  null, selectedName: null, selectedEmoji: null,
+};
+
+// Access gate
+const myRank = parseInt(sessionStorage.getItem('uaa_my_rank') || '0');
+if (!S.gameCode || !S.playerId) { window.location.href = 'index.html'; }
+if (myRank !== 1) {
+  document.body.innerHTML =
+    '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;font-family:\'Space Grotesk\',sans-serif;background:#07070F;color:#F0F4FF">' +
+    '<div style="font-size:3.4rem;margin-bottom:12px">🥈</div>' +
+    '<div style="font-weight:900;font-size:1.7rem;margin-bottom:10px">Tienda solo para el campeón</div>' +
+    '<p style="color:#8b8ba7;max-width:440px;margin:0 auto 26px;line-height:1.6">Esta tienda está disponible únicamente para el ganador del primer lugar. ¡Sigue intentando!</p>' +
+    '<a href="results.html" style="background:#E62429;color:#fff;text-decoration:none;font-weight:800;padding:14px 28px;border-radius:12px;font-family:inherit">← Ver Resultados</a>' +
+    '</div>';
+  throw new Error('prize shop is winner-only');
+}
+
+// Countdown
+let timeLeft = 30;
+const numEl = document.getElementById('countdown-num');
+const wrapEl = document.getElementById('countdown-wrap');
+const countdownInterval = setInterval(() => {
+  timeLeft--;
+  numEl.textContent = timeLeft;
+  if (timeLeft <= 10) wrapEl.classList.add('urgent');
+  if (timeLeft <= 0) {
+    clearInterval(countdownInterval);
+    const prizes = ['pelota','cilindro','gallo','stickers'];
+    const rand = prizes[Math.floor(Math.random() * prizes.length)];
+    const names  = { pelota:'⚽ PELOTA UAA', cilindro:'🥤 CILINDRO UAA', gallo:'🐓 LLAVERO GALLO', stickers:'✨ STICKERS UAA' };
+    const emojis = { pelota:'⚽', cilindro:'🥤', gallo:'🐓', stickers:'✨' };
+    selectPrize(rand, names[rand], emojis[rand]);
+    setTimeout(confirmPrize, 500);
+  }
+}, 1000);
+
+function selectPrize(id, name, emoji) {
+  S.selectedId = id; S.selectedName = name; S.selectedEmoji = emoji;
+  document.querySelectorAll('.prize-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('pc-' + id).classList.add('selected');
+  document.getElementById('modal-emoji').textContent = emoji;
+  document.getElementById('modal-prize-name').textContent = name;
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function cancelSelection() { document.getElementById('confirm-modal').classList.remove('show'); }
+
+async function confirmPrize() {
+  clearInterval(countdownInterval);
+  document.getElementById('confirm-modal').classList.remove('show');
+  let code = null;
+  try {
+    const r = await fetch('/api/rewards/claim', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.playerToken},
+      body: JSON.stringify({ reward_id:S.selectedId, game_code:S.gameCode, player_id:S.playerId })
+    });
+    const d = await r.json();
+    code = d.claim_code || null;
+  } catch(e) {}
+  if (!code) code = 'UAA-' + Math.random().toString(36).slice(2,8).toUpperCase();
+  showSuccess(code);
+}
+
+function showSuccess(code) {
+  document.getElementById('winner-intro').style.display   = 'none';
+  document.getElementById('countdown-wrap').style.display = 'none';
+  document.getElementById('prizes-row').style.display     = 'none';
+  document.getElementById('success-emoji').textContent       = S.selectedEmoji || '🏆';
+  document.getElementById('claim-code-display').textContent  = code;
+  document.getElementById('success-screen').style.display    = 'block';
+  confetti();
+}
+
+function confetti() {
+  const colors = ['#FFD700','#FF6B35','#00E676','#00D4FF','#E62429','#C77DFF','#fff'];
+  for (let i=0; i<100; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `left:${Math.random()*100}vw;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${3+Math.random()*4}s;animation-delay:${Math.random()*2}s;border-radius:${Math.random()>0.5?'50%':'2px'};`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 7000);
+    }, i * 35);
+  }
+}
+confetti();
+</script>
+</body>
+</html>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misión - TIENDA UAA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0D0F14;
+      --surface: #161B27;
+      --card: #1E2535;
+      --border: rgba(255,255,255,0.07);
+      --red: #C41230;
+      --red-dim: rgba(196,18,48,0.12);
+      --red-glow: rgba(196,18,48,0.35);
+      --gold: #F59E0B;
+      --green: #10B981;
+      --blue: #3B82F6;
+      --text: #F1F5F9;
+      --muted: rgba(241,245,249,0.45);
+      --font: 'Space Grotesk', sans-serif;
+      --body: 'Inter', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      position: sticky; top: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 1.2rem;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; transition: background 0.2s;
+    }
+    .back-btn:hover { background: var(--card); color: var(--text); }
+    .mission-badge {
+      font-family: var(--font); font-weight: 700; font-size: 0.85rem;
+      background: var(--red-dim); color: var(--red);
+      padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(196,18,48,0.3);
+    }
+    .header-stats { display: flex; gap: 12px; font-family: var(--font); font-weight: 600; font-size: 0.9rem;}
+    .points { color: var(--gold); }
+    .timer { color: var(--text); background: var(--card); padding: 2px 8px; border-radius: 6px; }
+
+    /* Content Area */
+    .content {
+      flex: 1;
+      padding: 24px 16px 80px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .loading-state { text-align: center; padding: 40px; color: var(--muted); }
+
+    /* Common Components */
+    .intro-card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 20px; border-radius: 12px; margin-bottom: 24px;
+      border-left: 4px solid var(--blue);
+    }
+    .question { font-family: var(--font); font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; }
+    
+    .btn-option {
+      display: block; width: 100%; text-align: left;
+      background: var(--card); color: var(--text); font-family: var(--body); font-size: 1rem;
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; margin-bottom: 12px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-option:hover { border-color: var(--red); background: #232a3b; }
+    .btn-option.selected { border-color: var(--gold); background: rgba(245,158,11,0.1); }
+    .btn-option:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .tip { font-size: 0.85rem; color: var(--gold); margin-top: 16px; display: flex; align-items: center; gap: 8px;}
+
+    /* specific types */
+    /* fraud */
+    .product-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;}
+    .product-card { background: var(--surface); border: 1px solid var(--border); padding: 12px; border-radius: 8px; display: flex; gap: 12px;}
+    .product-img { width: 60px; height: 60px; background: var(--card); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2rem;}
+    .product-info { flex: 1; }
+    .product-title { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem;}
+    .product-price { color: var(--green); font-family: var(--font); font-weight: 700;}
+    .product-seller { font-size: 0.8rem; color: var(--muted); }
+    
+    /* cart */
+    .budget-bar { height: 8px; background: var(--card); border-radius: 4px; overflow: hidden; margin-bottom: 20px;}
+    .budget-fill { height: 100%; background: var(--gold); transition: width 0.3s;}
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;}
+    .cart-btn { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-family: var(--font); font-weight: 700; margin-top: 16px;}
+    .cart-btn:disabled { background: var(--card); color: var(--muted); }
+
+    /* speed */
+    .big-timer { font-size: 4rem; font-family: var(--font); font-weight: 900; text-align: center; color: var(--red); margin: 20px 0;}
+    .target-card { text-align: center; background: var(--surface); padding: 20px; border-radius: 12px; border: 2px dashed var(--border); margin-bottom: 24px;}
+
+    /* Feedback Overlay */
+    .feedback-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 15, 20, 0.95); backdrop-filter: blur(8px);
+      z-index: 1000; display: none; flex-direction: column;
+      align-items: center; justify-content: center; padding: 24px; text-align: center;
+    }
+    .feedback-overlay.active { display: flex; animation: fadeIn 0.3s; }
+    
+    .feedback-icon { font-size: 4rem; margin-bottom: 16px; }
+    .feedback-icon.correct { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .feedback-icon.incorrect { animation: shake 0.5s; }
+    
+    .feedback-title { font-family: var(--font); font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+    .feedback-title.correct { color: var(--green); }
+    .feedback-title.incorrect { color: var(--red); }
+    
+    .feedback-pts { font-family: var(--font); font-size: 1.2rem; font-weight: 700; margin-bottom: 32px; }
+    
+    .edu-card {
+      background: var(--surface); border: 1px solid var(--blue);
+      padding: 24px; border-radius: 16px; text-align: left; width: 100%; max-width: 400px;
+      margin-bottom: 32px;
+    }
+    .edu-title { color: var(--blue); font-family: var(--font); font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+    .edu-desc { font-size: 0.95rem; margin-bottom: 16px; }
+    .edu-concept { background: rgba(59,130,246,0.1); padding: 12px; border-radius: 8px; font-family: var(--font); font-size: 0.9rem; font-weight: 600; color: #60A5FA; border-left: 3px solid var(--blue);}
+    
+    .btn-return {
+      background: var(--text); color: var(--bg); border: none;
+      padding: 16px 32px; border-radius: 12px; font-family: var(--font); font-weight: 700; font-size: 1.1rem;
+      cursor: pointer; text-decoration: none; width: 100%; max-width: 400px;
+      display: inline-block;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="hub.html" class="back-btn">←</a>
+    <div class="mission-badge" id="badgeType">MISIÓN</div>
+    <div class="header-stats">
+      <div class="points">⭐ <span id="navPoints">0</span></div>
+      <div class="timer" id="globalTimer">--:--</div>
+    </div>
+  </div>
+
+  <!-- Visual time bar -->
+  <div id="time-bar-wrap" style="height:5px;background:rgba(255,255,255,0.06);position:sticky;top:50px;z-index:99;">
+    <div id="time-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#00E676,#10B981);transition:width 0.5s linear,background 0.5s;"></div>
+  </div>
+
+  <div class="content" id="missionContainer">
+    <div class="loading-state">Cargando misión...</div>
+  </div>
+
+
+  <div class="feedback-overlay" id="feedbackOverlay">
+    <div class="feedback-icon" id="fbIcon"></div>
+    <div class="feedback-title" id="fbTitle"></div>
+    <div class="feedback-pts" id="fbPts"></div>
+
+
+    <div class="edu-card">
+      <div class="edu-title" id="eduTitle">📚 ¿Qué aprendiste?</div>
+      <div class="edu-desc" id="eduDesc"></div>
+      <div class="edu-concept" id="eduConcept"></div>
+    </div>
+    
+    <a href="hub.html" class="btn-return">VOLVER AL HUB</a>
+  </div>
+
+  <script>
+    const S = {
+      gameCode: sessionStorage.getItem('uaa_game_code'),
+      playerId: sessionStorage.getItem('uaa_player_id'),
+      missionId: sessionStorage.getItem('uaa_mission_id'),
+      missionType: sessionStorage.getItem('uaa_mission_type'),
+      myPoints: parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10)
+    };
+
+    let startTime = Date.now();
+    let answered = false;
+    let localData = null; // Store mission specific data
+    let speedTimer = null;
+
+    const DOM = {
+      navPoints: document.getElementById('navPoints'),
+      badgeType: document.getElementById('badgeType'),
+      globalTimer: document.getElementById('globalTimer'),
+      container: document.getElementById('missionContainer'),
+      feedbackOverlay: document.getElementById('feedbackOverlay')
+    };
+
+    const TITLES = {
+      'ecom_decision': 'DECISIÓN DE NEGOCIO',
+      'fraud_detect': 'DETECTA EL FRAUDE',
+      'store_cart': 'CONSTRUYE TU CARRITO',
+      'speed_search': 'BÚSQUEDA RÁPIDA',
+      'checkout_debug': 'RESCATA EL CHECKOUT'
+    };
+
+    async function api(method, path, body = null) {
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if(body) opts.body = JSON.stringify(body);
+        const res = await fetch(path, opts);
+        if(!res.ok) throw new Error('API Error');
+        return { data: await res.json(), err: null };
+      } catch (err) {
+        return { data: null, err };
+      }
+    }
+
+    async function init() {
+      DOM.navPoints.textContent = S.myPoints;
+      DOM.badgeType.textContent = TITLES[S.missionType] || 'MISIÓN';
+
+      // Redirect defensivo: store_mission va a la tienda
+      if (S.missionType === 'store_mission') {
+        const mid = S.missionId || '';
+        window.location.href = 'store.html' + (mid ? '?mission=' + mid : '');
+        return;
+      }
+
+      // Si no hay misión en sesión, mostrar error claro y regresar
+      if (!S.missionId || !S.missionType) {
+        DOM.container.innerHTML = `
+          <div style="text-align:center;padding:48px 24px;color:var(--muted)">
+            <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+            <div style="font-size:18px;font-weight:600;margin-bottom:8px">Sin misión activa</div>
+            <div style="font-size:14px;margin-bottom:24px">Regresa al mapa y selecciona una misión</div>
+            <button onclick="history.back()" style="background:var(--red);color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:15px">← Volver al mapa</button>
+          </div>`;
+        return;
+      }
+
+      // Mostrar spinner inmediato mientras carga
+      DOM.container.innerHTML = `
+        <div style="text-align:center;padding:64px 24px">
+          <div class="spin" style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 16px"></div>
+          <div style="color:var(--muted);font-size:14px">Cargando misión...</div>
+        </div>`;
+
+      // Intentar cargar desde el backend — timeout de 4s
+      let data = null;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch('/api/missions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ player_id: S.playerId, game_code: S.gameCode, mission_id: S.missionId }),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        const json = await res.json().catch(() => ({}));
+        // El backend devuelve mission_data anidado o directamente
+        data = json.mission_data || json.data || json || null;
+      } catch(e) {
+        // Timeout o error de red — usar mock inmediatamente
+        data = null;
+      }
+
+      // Fallback a mock si la API falló o los datos son inválidos
+      if (!data || Object.keys(data).length === 0) {
+        data = generateMockData(S.missionType);
+      }
+
+      renderMission(S.missionType, data);
+    }
+
+
+    function renderMission(type, data) {
+      if (data.is_multi) {
+        window.multiData = data;
+        window.multiType = type;
+        window.currentMultiIndex = 0;
+        window.multiAnswers = [];
+        renderSubQuestion();
+        
+        const barTime = MISSION_TIMES[type] || 45;
+        startTimerBar(barTime);
+        return;
+      }
+      
+      let html = '';
+      
+      if(type === 'ecom_decision' || type === 'checkout_debug') {
+        const intro = data.scenario || data.context || 'Lee cuidadosamente la siguiente situación y elige la mejor opción para la tienda.';
+        html = `
+          <div class="intro-card">
+            <p>${intro}</p>
+          </div>`;
+        if(data.problem_display) {
+          const pd = data.problem_display;
+          if(typeof pd === 'object') {
+            const issues = (pd.issues || []).map(x => `<li>${x}</li>`).join('');
+            html += `<div class="intro-card">
+              ${pd.title ? `<div style="font-weight:700;margin-bottom:8px;">${pd.title}</div>` : ''}
+              <ul style="margin:0;padding-left:20px;line-height:1.7;">${issues}</ul>
+            </div>`;
+          } else {
+            html += `<div class="intro-card" style="white-space:pre-wrap;font-size:0.9rem;">${pd}</div>`;
+          }
+        }
+        html += `<div class="question">${data.question || '¿Qué deberías hacer?'}</div>`;
+        (data.options || []).forEach((opt, i) => {
+          html += `<button class="btn-option" onclick="selectOption('${opt.id || i}', this)">${opt.text}</button>`;
+        });
+        if(type === 'ecom_decision') html += `<div class="tip">💡 Tip: piensa como un especialista en e-commerce</div>`;
+      }
+      
+      else if(type === 'fraud_detect') {
+        const listings = data.listings || data.products || [];
+        html = `
+          <div class="intro-card">
+            <p>${data.intro || 'Un comprador reportó estas tiendas. Analiza los listados y encuentra cuál tiene señales de fraude.'}</p>
+          </div>
+          <div class="question">${data.question || '¿Cuál es el listado sospechoso?'}</div>
+        `;
+        listings.forEach((p, i) => {
+          const meta = [];
+          if(p.rating)         meta.push('⭐ ' + p.rating);
+          if(p.vendor)         meta.push('Vendedor: ' + p.vendor);
+          if(p.seller)         meta.push('Vendedor: ' + p.seller);
+          if(p.payment)        meta.push('Pago: ' + p.payment);
+          if(p.policy)         meta.push('Devoluciones: ' + p.policy);
+          html += `
+            <button class="btn-option" style="text-align:left;" onclick="selectOption('${p.id || i}', this)">
+              <div style="font-weight:700;margin-bottom:4px;">${p.emoji ? p.emoji + ' ' : ''}${p.name}</div>
+              <div style="color:var(--red);font-weight:600;margin-bottom:6px;">${p.price || ''}</div>
+              <div style="font-size:0.8rem;color:var(--muted);line-height:1.6;">${meta.join('<br>')}</div>
+            </button>`;
+        });
+      }
+      
+      else if(type === 'speed_search') {
+        const tEmoji = data.target_emoji || (data.target && data.target.emoji) || '🎯';
+        const tName  = data.target_name  || (data.target && data.target.name)  || 'Producto';
+        const prods  = data.products || data.options || [];
+        const limit  = data.time_limit_seconds || 12;
+        html = `
+          <div class="target-card">
+            <div style="font-size: 3rem;">${tEmoji}</div>
+            <div style="font-weight:700; margin-top:8px;">${tName}</div>
+            <div class="tip" style="justify-content:center;">¡Encuéntralo entre estos productos!</div>
+          </div>
+          <div class="big-timer" id="speedTimerUI">${limit}</div>
+          <div class="grid-2">
+        `;
+        prods.forEach((opt, i) => {
+          html += `
+            <button class="btn-option" style="text-align:center; padding:24px 12px;" onclick="selectOption('${opt.id || i}', this)">
+              <div style="font-size: 2rem; margin-bottom:8px;">${opt.emoji || '📦'}</div>
+              <div style="font-size:0.85rem;">${opt.name}</div>
+            </button>
+          `;
+        });
+        html += `</div>`;
+
+        let timeLeft = limit;
+        speedTimer = setInterval(() => {
+          if(answered) { clearInterval(speedTimer); return; }
+          timeLeft--;
+          const el = document.getElementById('speedTimerUI');
+          if(el) el.textContent = timeLeft;
+          if(timeLeft <= 0) {
+            clearInterval(speedTimer);
+            submitAnswer('TIMEOUT');
+          }
+        }, 1000);
+      }
+      
+      else if(type === 'store_cart') {
+        // Simplified store cart for this file
+        html = `
+          <div class="intro-card">
+            <p>Presupuesto objetivo: <strong>$${data.budget_min} - $${data.budget_max}</strong></p>
+            <div class="budget-bar"><div class="budget-fill" id="bFill" style="width:0%"></div></div>
+            <div id="bText" style="text-align:right; font-size:0.8rem; color:var(--muted);">$0 / $${data.budget_max}</div>
+          </div>
+          <div class="grid-2">
+        `;
+        data.products.forEach((p, i) => {
+          html += `
+            <div class="product-card" style="flex-direction:column; align-items:center; text-align:center;">
+              <div class="product-img" style="width:100%; height:80px; font-size: 2.5rem;">${p.emoji}</div>
+              <div class="product-title" style="margin-top:8px;">${p.name}</div>
+              <div class="product-price">$${p.price}</div>
+              <button class="cart-btn" style="padding:6px; margin-top:8px;" onclick="addCart(${p.price}, this)">+ Agregar</button>
+            </div>
+          `;
+        });
+        html += `</div>
+          <button class="cart-btn" id="checkoutBtn" disabled onclick="submitAnswer(currentCartTotal)">COMPLETAR COMPRA</button>
+        `;
+        window.currentCartTotal = 0;
+        window.bMin = data.budget_min;
+        window.bMax = data.budget_max;
+      }
+
+      DOM.container.innerHTML = html;
+
+      // Start the visual timer bar
+      const barTime = MISSION_TIMES[type] || 45;
+      startTimerBar(barTime);
+    }
+
+
+    // Cart Logic
+    window.addCart = function(price, btn) {
+      if(answered) return;
+      window.currentCartTotal += price;
+      btn.style.background = 'var(--green)';
+      btn.textContent = 'Agregado';
+      btn.disabled = true;
+      
+      const pct = Math.min(100, (window.currentCartTotal / window.bMax) * 100);
+      document.getElementById('bFill').style.width = pct + '%';
+      document.getElementById('bText').textContent = `$${window.currentCartTotal} / $${window.bMax}`;
+      
+      const cBtn = document.getElementById('checkoutBtn');
+      if(window.currentCartTotal >= window.bMin && window.currentCartTotal <= window.bMax) {
+        cBtn.disabled = false;
+        cBtn.style.background = 'var(--green)';
+      } else {
+        cBtn.disabled = true;
+        cBtn.style.background = 'var(--blue)';
+      }
+    };
+
+    window.selectOption = function(answer, btn) {
+      if(answered) return;
+      
+      const buttons = document.querySelectorAll('.btn-option');
+      buttons.forEach(b => b.disabled = true);
+      btn.classList.add('selected');
+      
+      setTimeout(() => submitAnswer(answer), 150);
+    };
+
+    async function submitAnswer(answer) {
+      if(answered) return;
+      
+      if (window.multiData) {
+        window.multiAnswers.push(answer);
+        if (window.currentMultiIndex < window.multiData.questions.length - 1) {
+          window.currentMultiIndex++;
+          renderSubQuestion();
+          return;
+        }
+        answer = window.multiAnswers;
+      }
+      
+      answered = true;
+      const timeTaken = Math.max(500, Date.now() - startTime);
+
+      // Deshabilitar UI
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(b => b.disabled = true);
+
+      // Call API
+      const res = await api('POST', '/api/missions/validate', {
+        player_id: S.playerId,
+        game_code: S.gameCode,
+        mission_id: S.missionId,
+        mission_type: S.missionType,
+        answer: answer,
+        time_taken_ms: timeTaken
+      });
+
+      // Fallback for visual testing
+      const result = res.data || generateMockResult(answer);
+      
+      showFeedback(result);
+    }
+
+    function showFeedback(result) {
+      const isCorrect = result.correct;
+      const isTimeout = result.timeout || false;
+      const gained = (result.net != null ? result.net
+                     : (result.points_earned != null ? result.points_earned : result.points)) || 0;
+      const explanation = result.explanation || result.educational_text || 'Explicación del concepto.';
+      const concept = result.concept || result.key_concept || 'Concepto Clave';
+
+      if (timerBarInterval) clearInterval(timerBarInterval);
+      const bar = document.getElementById('time-bar');
+      if (bar) bar.style.transition = 'none';
+
+      const icon  = document.getElementById('fbIcon');
+      const title = document.getElementById('fbTitle');
+      const pts   = document.getElementById('fbPts');
+
+      if (isTimeout) {
+        icon.textContent = '⏰'; icon.className = 'feedback-icon incorrect';
+        title.textContent = 'TIEMPO AGOTADO'; title.className = 'feedback-title incorrect';
+        pts.textContent = '-100 puntos'; pts.style.color = '#F59E0B';
+        document.getElementById('eduTitle').textContent = '📚 La respuesta era:';
+        // Penalizar
+        S.myPoints = Math.max(0, S.myPoints - 100);
+        sessionStorage.setItem('uaa_my_points', S.myPoints);
+        DOM.navPoints.textContent = S.myPoints;
+      } else if (isCorrect) {
+        icon.textContent = '✅'; icon.className = 'feedback-icon correct';
+        title.textContent = '¡CORRECTO!'; title.className = 'feedback-title correct';
+        pts.textContent = `+${Math.abs(gained)} puntos`; pts.style.color = '#10B981';
+        document.getElementById('eduTitle').textContent = '📚 ¿Qué aprendiste?';
+        S.myPoints += Math.abs(gained);
+        sessionStorage.setItem('uaa_my_points', S.myPoints);
+        DOM.navPoints.textContent = S.myPoints;
+      } else {
+        icon.textContent = '❌'; icon.className = 'feedback-icon incorrect';
+        title.textContent = 'INCORRECTO'; title.className = 'feedback-title incorrect';
+        pts.textContent = '-50 puntos'; pts.style.color = '#C41230';
+        document.getElementById('eduTitle').textContent = '📚 La respuesta correcta era:';
+        // Penalizar
+        S.myPoints = Math.max(0, S.myPoints - 50);
+        sessionStorage.setItem('uaa_my_points', S.myPoints);
+        DOM.navPoints.textContent = S.myPoints;
+      }
+
+      document.getElementById('eduDesc').textContent = explanation;
+      document.getElementById('eduConcept').textContent = concept;
+
+      DOM.feedbackOverlay.classList.add('active');
+    }
+
+
+    // Mock Data Generators — VERSIÓN DIFÍCIL
+    function generateMockData(type) {
+      if (type === 'ecom_decision') return {
+        context: "TechStore MX tiene 3,200 visitas diarias pero solo 48 ventas. Análisis del embudo: 71% abandona en la página de producto, 18% abandona en el carrito, 11% abandona en el checkout. El costo de adquisición por cliente (CAC) es $180 MXN y el ticket promedio es $340 MXN. El margen neto actual es 22%.",
+        question: "Dado el embudo de conversión, ¿cuál es la acción que generaría el mayor impacto en ventas de forma inmediata?",
+        options: [
+          { id: 'a', text: 'A) Invertir $50,000 en publicidad para aumentar el tráfico de 3,200 a 6,400 visitas diarias' },
+          { id: 'b', text: 'B) Rediseñar las páginas de producto: mejores fotos, descripción detallada y reseñas verificadas de clientes' },
+          { id: 'c', text: 'C) Ofrecer envío gratis en compras mayores a $299 MXN para reducir abandono en checkout' },
+          { id: 'd', text: 'D) Lanzar un programa de puntos de lealtad para retener a los 48 clientes actuales' }
+        ]
+      };
+      if (type === 'fraud_detect') return {
+        intro: "Un comprador te pide consejo antes de comprar un iPhone. Analiza estos tres listados con cuidado — uno tiene señales claras de fraude. Considera precio, vendedor, método de pago y política de devoluciones.",
+        question: "¿Cuál de los siguientes listados es probablemente una estafa?",
+        products: [
+          { id: 'a', name: 'iPhone 15 Pro 256GB', price: '$18,999', rating: '4.8', seller: 'Apple Store Oficial (Verificado)', payment: 'Tarjeta, PayPal, OXXO', policy: '30 días sin preguntas', emoji: '📱' },
+          { id: 'b', name: 'iPhone 15 Pro 256GB NUEVO SELLADO', price: '$4,200', rating: '2.1', seller: 'electronicas_super99 (Sin verificar)', payment: 'Solo transferencia SPEI inmediata', policy: 'Sin devoluciones — Venta final', emoji: '📱' },
+          { id: 'c', name: 'iPhone 15 Pro 256GB Reacondicionado', price: '$13,500', rating: '4.3', seller: 'iRecicla Certificado MX', payment: 'Tarjeta, Mercado Pago', policy: '15 días garantía oficial', emoji: '📱' }
+        ]
+      };
+      if (type === 'store_cart') return {
+        budget_min: 850, budget_max: 980,
+        products: [
+          { id: 'a', name: 'Teclado Mecánico TKL', price: 650, emoji: '⌨️' },
+          { id: 'b', name: 'Mouse Inalámbrico Ergonómico', price: 380, emoji: '🖱️' },
+          { id: 'c', name: 'Mousepad XL Antideslizante', price: 180, emoji: '⬛' },
+          { id: 'd', name: 'Hub USB-C 7 en 1', price: 420, emoji: '🔌' },
+          { id: 'e', name: 'Soporte para Laptop Ajustable', price: 290, emoji: '💻' },
+          { id: 'f', name: 'Cable HDMI 4K 2m', price: 120, emoji: '📺' }
+        ]
+      };
+      if (type === 'speed_search') return {
+        target: { name: 'Webcam Full HD con micrófono integrado', emoji: '📷' },
+        time_limit_seconds: 10,
+        options: [
+          { id: 'a', name: 'Webcam HD 720p sin micrófono', emoji: '📷' },
+          { id: 'b', name: 'Cámara de Seguridad Interior Full HD', emoji: '📷' },
+          { id: 'c', name: 'Webcam Full HD con micrófono integrado', emoji: '📷' },
+          { id: 'd', name: 'Ring Light con soporte para cámara', emoji: '💡' },
+          { id: 'e', name: 'Webcam 4K Ultra HD sin micrófono', emoji: '📷' },
+          { id: 'f', name: 'Micrófono USB condensador cardioide', emoji: '🎤' }
+        ]
+      };
+      return {
+        context: "Un cliente intenta completar su compra en TechMex.mx. Ha añadido 2 productos ($1,240 total). Al llegar al checkout encuentra estos problemas reportados.",
+        problem_display: {
+          title: "Pantalla de Checkout — Problemas detectados:",
+          issues: [
+            "El campo de código postal no acepta el formato '64000' (marca error aunque es válido en México)",
+            "El botón 'Pagar ahora' está deshabilitado aunque todos los campos están llenos correctamente",
+            "No hay opción de 'Guardar dirección para futuras compras'",
+            "El resumen del pedido muestra $1,340 pero el carrito mostraba $1,240 (diferencia de $100)"
+          ]
+        },
+        question: "¿Cuál de estos problemas está causando directamente que el cliente NO PUEDA completar la compra?",
+        options: [
+          { id: 'a', text: 'A) La falta de opción para guardar la dirección' },
+          { id: 'b', text: 'B) El botón de pago deshabilitado a pesar de que todos los campos están completos' },
+          { id: 'c', text: 'C) La validación incorrecta del código postal (rechaza formatos válidos)' },
+          { id: 'd', text: 'D) La diferencia de $100 entre el precio del carrito y el checkout' }
+        ]
+      };
+    }
+
+    function generateMockResult(answer) {
+      const correctAnswers = { ecom_decision: 'b', fraud_detect: 'b', checkout_debug: 'b', speed_search: 'c' };
+      const correct = answer === 'TIMEOUT' ? false : (correctAnswers[S.missionType] === answer || (typeof answer === 'number' && answer >= 850 && answer <= 980));
+      return {
+        correct: correct,
+        timeout: answer === 'TIMEOUT',
+        net: correct ? 150 : -50,
+        explanation: correct
+          ? "¡Correcto! Identificaste el problema más crítico. En e-commerce, siempre hay que atacar el cuello de botella más grande del embudo primero."
+          : "No exactamente. Analiza el embudo de conversión: el mayor punto de fuga determina dónde debe ir el esfuerzo.",
+        concept: correct ? "Optimización de Embudo de Conversión (CRO)" : "Análisis de Funnel de Ventas"
+      };
+    }
+
+    // Timer bar (for missions with fixed time)
+    const MISSION_TIMES = { ecom_decision: 45, fraud_detect: 30, speed_search: 10, checkout_debug: 35, store_cart: 60 };
+    let timerBarInterval = null;
+
+    function renderSubQuestion() {
+      const q = window.multiData.questions[window.currentMultiIndex];
+      const type = window.multiType;
+      const totalQs = window.multiData.questions.length;
+      
+      let html = `<div style="font-size:0.8rem; color:var(--uaa-red); font-weight:700; margin-bottom:12px; text-transform:uppercase;">PREGUNTA ${window.currentMultiIndex + 1} DE ${totalQs}</div>`;
+      
+      if(type === 'ecom_decision' || type === 'checkout_debug' || type === 'speed_search') {
+        const intro = q.scenario || q.context || 'Lee cuidadosamente la siguiente situación y elige la mejor opción.';
+        html += `<div class="intro-card"><p>${intro}</p></div>`;
+        html += `<div class="question">${q.question || '¿Qué deberías hacer?'}</div><div id="opts">`;
+        (q.options || []).forEach((opt, i) => {
+          html += `<button class="btn-option" onclick="selectOption('${opt.id || i}', this)">${opt.text}</button>`;
+        });
+        html += `</div>`;
+      } else if(type === 'fraud_detect') {
+        const listings = q.listings || q.products || [];
+        html += `<div class="intro-card"><p>${q.scenario || q.intro || 'Un comprador reportó estas tiendas. Analiza los listados y encuentra cuál tiene señales de fraude.'}</p></div>`;
+        html += `<div class="question">${q.question || '¿Cuál es el listado sospechoso?'}</div>`;
+        listings.forEach((p, i) => {
+          const meta = [];
+          if(p.rating) meta.push('⭐ ' + p.rating);
+          if(p.sales_count) meta.push('📦 ' + p.sales_count + ' ventas');
+          if(p.delivery_time) meta.push('🚚 ' + p.delivery_time);
+          if(p.trust_badge) meta.push('✔️ ' + p.trust_badge);
+          html += `<div class="btn-option" style="text-align:left;" onclick="selectOption('${p.id || i}', this)">
+            <div style="font-weight:700;margin-bottom:4px;">${p.emoji ? p.emoji + ' ' : ''}${p.name}</div>
+            <div style="color:var(--red);font-weight:600;margin-bottom:6px;">${p.price || ''}</div>
+            <div style="font-size:0.8rem;color:var(--muted);line-height:1.6;">${meta.join('<br>')}</div>
+          </div>`;
+        });
+      }
+      
+      DOM.container.innerHTML = html;
+      window.answered = false;
+    }
+
+    function startTimerBar(seconds) {
+      const bar = document.getElementById('time-bar');
+      if (!bar) return;
+      let elapsed = 0;
+      timerBarInterval = setInterval(() => {
+        elapsed++;
+        const pct = Math.max(0, 100 - (elapsed / seconds * 100));
+        bar.style.width = pct + '%';
+        if (pct < 30) bar.style.background = 'linear-gradient(90deg,#FF1744,#C41230)';
+        else if (pct < 60) bar.style.background = 'linear-gradient(90deg,#FF6B35,#F97316)';
+        if (elapsed >= seconds && !answered) { clearInterval(timerBarInterval); }
+      }, 1000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
+

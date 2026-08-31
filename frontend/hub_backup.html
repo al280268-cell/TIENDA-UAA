@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hub de Misiones — UAA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#060812; --surface:#0D1117; --card:#111827; --card-hover:#162032;
+      --border:rgba(255,255,255,0.06); --border-strong:rgba(255,255,255,0.14);
+      --red:#E62429; --blue:#2B5CE6; --red-dim:rgba(255,23,68,0.12); --red-glow:rgba(255,23,68,0.35);
+      --gold:#FFD700; --green:#00E676; --orange:#FF6B35; --blue:#00D4FF;
+      --purple:#C77DFF;
+      --text:#F0F4FF; --text-secondary:rgba(240,244,255,0.55); --text-muted:rgba(240,244,255,0.3);
+      --font:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:var(--body);background:radial-gradient(700px 400px at 0% -6%,rgba(230,36,41,.15),transparent),radial-gradient(700px 460px at 100% 106%,rgba(43,92,230,.14),transparent),var(--bg);color:var(--text);min-height:100vh;position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:420px;height:420px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.45;pointer-events:none;z-index:0;}
+
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+    @keyframes pulse-ring{0%{transform:scale(1);opacity:0.7;}100%{transform:scale(1.4);opacity:0;}}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    @keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+    @keyframes timer-warn{0%,100%{box-shadow:0 0 0 rgba(255,23,68,0);}50%{box-shadow:0 0 20px rgba(255,23,68,0.5);}}
+
+    /* ── TOP HUD ── */
+    .hud {
+      position:sticky; top:0; z-index:100;
+      background:rgba(6,8,18,0.92);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,23,68,0.2);
+      padding:0 16px;
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      height:60px;
+    }
+    .hud-left { display:flex; align-items:center; gap:12px; }
+    .logo { font-family:var(--font); font-weight:900; font-size:1.2rem;
+      background:linear-gradient(135deg,#FF1744,#FF6B35);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .game-code-badge {
+      background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      color:var(--text-muted); padding:3px 8px; border-radius:4px;
+      font-family:monospace; font-size:11px;
+    }
+    .hud-center {
+      display:flex; flex-direction:column; align-items:center; gap:2px;
+    }
+    .hud-label { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:rgba(255,255,255,0.3); }
+    .hud-timer {
+      font-family:var(--font); font-size:1.3rem; font-weight:900;
+      color:var(--text); font-variant-numeric:tabular-nums;
+      transition:color 0.3s;
+    }
+    .hud-timer.warn { color:var(--red); animation:blink 1s infinite; }
+    .hud-right { display:flex; align-items:center; gap:12px; justify-content:flex-end; }
+    .hud-pts {
+      font-family:var(--font); font-weight:800; font-size:1rem;
+      color:var(--gold);
+      display:flex; align-items:center; gap:5px;
+    }
+    .hud-rank {
+      background:rgba(255,23,68,0.15); border:1px solid rgba(255,23,68,0.3);
+      color:#ff8899; padding:4px 10px; border-radius:8px;
+      font-family:var(--font); font-weight:800; font-size:0.85rem;
+    }
+    .hud-name { font-size:0.82rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px; }
+
+    /* ── Progress Bar ── */
+    .progress-bar-section {
+      background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border);
+      padding:10px 16px;
+    }
+    .progress-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.78rem; }
+    .progress-title { font-weight:700; color:var(--text-secondary); }
+    .progress-count { font-family:var(--font); font-weight:800; font-size:0.9rem; color:var(--text); }
+    .progress-segments { display:flex; gap:5px; height:8px; }
+    .prog-seg { flex:1; border-radius:99px; background:rgba(255,255,255,0.1); overflow:hidden; transition:all 0.4s; }
+    .prog-seg.done { background:var(--green); box-shadow:0 0 8px rgba(0,230,118,0.4); }
+    .prog-seg.active { background:var(--orange); box-shadow:0 0 8px rgba(255,107,53,0.5); animation:blink 1.5s infinite; }
+
+    /* ── Layout ── */
+    .container { max-width:1100px; margin:0 auto; padding:24px 16px; display:flex; flex-direction:column; gap:28px; }
+
+    /* ── Leaderboard Strip ── */
+    .lb-section { display:flex; flex-direction:column; gap:12px; }
+    .section-title { font-family:var(--font); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); margin-bottom:2px; }
+    .lb-chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+    .lb-chip {
+      display:flex; align-items:center; gap:8px;
+      background:var(--card); border:1px solid var(--border);
+      padding:6px 12px 6px 6px; border-radius:24px; white-space:nowrap;
+      transition:all 0.2s;
+    }
+    .lb-chip.me { border-color:var(--red); background:var(--red-dim); }
+    .lb-chip-avatar { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+    .lb-chip-rank { font-family:var(--font); font-weight:900; font-size:0.8rem; }
+    .lb-chip-rank.gold { color:var(--gold); }
+    .lb-chip-rank.silver { color:#B0BEC5; }
+    .lb-chip-rank.bronze { color:#C67C52; }
+    .lb-chip-name { font-size:0.82rem; font-weight:600; }
+    .lb-chip-pts { font-size:0.75rem; color:var(--gold); font-weight:700; }
+
+    /* ── Missions Grid ── */
+    .missions-section { display:flex; flex-direction:column; gap:14px; }
+    .missions-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+    @media(min-width:680px) { .missions-grid { grid-template-columns:1fr 1fr; } }
+
+    /* ── Mission Card ── */
+    .mission-card {
+      background:var(--card); border:1.5px solid var(--border);
+      border-radius:16px; padding:20px;
+      display:flex; flex-direction:column;
+      transition:all 0.25s;
+      animation:slideUp 0.4s ease both;
+      position:relative; overflow:hidden;
+    }
+    .mission-card:hover { background:var(--card-hover); border-color:var(--border-strong); transform:translateY(-3px); box-shadow:0 12px 28px rgba(0,0,0,0.4); }
+    .mission-card.completed { border-color:rgba(0,230,118,0.25); background:rgba(0,230,118,0.04); }
+    .mission-card.in-progress { border-color:rgba(255,107,53,0.3); background:rgba(255,107,53,0.04); }
+    .mission-card.store-mission { grid-column:1/-1; border-color:rgba(255,215,0,0.2); background:rgba(255,215,0,0.04); }
+
+    .card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; gap:12px; }
+    .card-icon { font-size:2rem; flex-shrink:0; }
+    .card-badges { display:flex; flex-direction:column; gap:5px; align-items:flex-end; }
+
+    .status-badge { font-size:0.65rem; font-weight:800; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.06em; }
+    .status-available { background:rgba(255,255,255,0.08); color:var(--text-secondary); }
+    .status-in-progress { background:rgba(255,107,53,0.15); color:var(--orange); }
+    .status-completed { background:rgba(0,230,118,0.12); color:var(--green); }
+
+    .diff-badge { font-size:0.65rem; font-weight:800; padding:3px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.06em; }
+    .diff-media { background:rgba(255,107,53,0.12); color:var(--orange); }
+    .diff-dificil { background:rgba(255,23,68,0.12); color:var(--red); }
+    .diff-extremo { background:rgba(199,125,255,0.12); color:var(--purple); }
+    .diff-especial { background:rgba(255,215,0,0.12); color:var(--gold); }
+    .diff-facil { background:rgba(0,230,118,0.1); color:var(--green); }
+
+    .mission-title { font-family:var(--font); font-size:1.1rem; font-weight:800; margin-bottom:4px; line-height:1.3; }
+    .mission-topic { font-size:0.72rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
+    .mission-desc { font-size:0.85rem; color:var(--text-secondary); flex-grow:1; margin-bottom:16px; line-height:1.55; }
+
+    .card-footer { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .pts-badge { font-family:var(--font); font-weight:800; font-size:1rem; color:var(--gold); }
+    .time-badge { font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+
+    .btn-mission {
+      width:100%; padding:13px;
+      border:none; border-radius:10px;
+      font-family:var(--font); font-weight:800; font-size:0.92rem;
+      text-transform:uppercase; letter-spacing:0.04em;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .btn-start { background:linear-gradient(135deg,#FF1744,#C41230); color:white; box-shadow:0 4px 14px rgba(255,23,68,0.3); }
+    .btn-start:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(255,23,68,0.5); }
+    .btn-continue { background:linear-gradient(135deg,#FF6B35,#EA580C); color:white; box-shadow:0 4px 14px rgba(255,107,53,0.3); }
+    .btn-done { background:rgba(0,230,118,0.1); color:var(--green); border:1px solid rgba(0,230,118,0.2); cursor:default; }
+    .btn-store { background:linear-gradient(135deg,#FFD700,#FF6B35); color:#000; box-shadow:0 4px 14px rgba(255,215,0,0.3); }
+    .btn-store:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(255,215,0,0.5); }
+
+    /* Completed check overlay */
+    .mission-card.completed::after {
+      content:''; position:absolute; top:14px; right:14px;
+      width:22px; height:22px; border-radius:50%;
+      background:var(--green); display:flex; align-items:center; justify-content:center;
+    }
+
+    /* ── Completion Overlay ── */
+    .completion-overlay {
+      position:fixed; inset:0; z-index:999;
+      background:rgba(0,0,0,0.92); backdrop-filter:blur(12px);
+      display:none; flex-direction:column; align-items:center; justify-content:center;
+      gap:16px; text-align:center; padding:40px;
+    }
+    .completion-overlay.active { display:flex; }
+    .co-icon { font-size:5rem; animation:pop 0.6s cubic-bezier(0.175,0.885,0.32,1.275); }
+    .co-title { font-family:var(--font); font-size:2.5rem; font-weight:900; line-height:1.1;
+      background:linear-gradient(135deg,#FFD700,#FF6B35);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .co-sub { color:rgba(255,255,255,0.5); font-size:1rem; max-width:400px; line-height:1.5; }
+    .co-bar-wrap { width:280px; height:6px; background:rgba(255,255,255,0.1); border-radius:99px; overflow:hidden; margin-top:8px; }
+    .co-bar { height:100%; background:linear-gradient(90deg,#FF1744,#FFD700); border-radius:99px; width:0%; }
+  </style>
+</head>
+<body>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-left">
+      <div class="logo">UAA</div>
+      <div class="game-code-badge" id="nav-code">----</div>
+    </div>
+    <div class="hud-center">
+      <div class="hud-label">Tiempo restante</div>
+      <div class="hud-timer" id="nav-timer">--:--</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-name" id="nav-name">Jugador</div>
+      <div class="hud-rank" id="nav-rank">#—</div>
+      <div class="hud-pts">⭐ <span id="nav-pts">0</span></div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-section">
+    
+    <div class="progress-meta">
+      <span class="progress-title">Progreso de misiones</span>
+      <span class="progress-count" id="progress-count">0 / 0</span>
+    </div>
+    <div class="progress-segments" id="progress-segments"></div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- Leaderboard -->
+    <section class="lb-section">
+      <div class="section-title">🏅 Ranking en vivo</div>
+      <div class="lb-chips" id="lb-chips"></div>
+    </section>
+
+    <!-- Missions -->
+    <section class="missions-section">
+      <div class="section-title">🎯 Misiones disponibles</div>
+      <div class="missions-grid" id="missions-grid"></div>
+    </section>
+
+  </div>
+
+  <!-- Completion Overlay -->
+  <div class="completion-overlay" id="completion-overlay">
+    <div class="co-icon">🏆</div>
+    <div class="co-title">MISIONES<br>COMPLETADAS</div>
+    <p class="co-sub">Calculando tu posición en el ranking y determinando al campeón...</p>
+    <div class="co-bar-wrap"><div class="co-bar" id="co-bar"></div></div>
+  </div>
+
+  <a href="admin.html" style="position:fixed;bottom:20px;right:20px;width:34px;height:34px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);text-decoration:none;font-size:16px;transition:all 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'">⚙</a>
+
+  <script>
+    const player = {
+      code:  sessionStorage.getItem('uaa_game_code'),
+      id:    sessionStorage.getItem('uaa_player_id'),
+      name:  sessionStorage.getItem('uaa_player_name') || 'Jugador',
+      pts:   parseInt(sessionStorage.getItem('uaa_my_points') || '0', 10),
+      token: sessionStorage.getItem('uaa_player_token')
+    };
+
+    const MISSION_META = {
+      ecom_decision:  { icon:'🤔', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      fraud_detect:   { icon:'🔍', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
+      speed_search:   { icon:'⚡', diff:'EXTREMO', diffClass:'diff-extremo', pts:'+250 pts', time:'12s' },
+      store_mission:  { icon:'🛒', diff:'ESPECIAL', diffClass:'diff-especial', pts:'+150 pts', time:'libre' },
+      checkout_debug: { icon:'🔧', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'35s' },
+      detective:      { icon:'🕵️', diff:'DIFÍCIL', diffClass:'diff-dificil', pts:'+200 pts', time:'30s' },
+      best_cart:      { icon:'🛒', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      decision:       { icon:'🤔', diff:'MEDIA',   diffClass:'diff-media',   pts:'+150 pts', time:'45s' },
+      speed:          { icon:'⚡', diff:'EXTREMO', diffClass:'diff-extremo', pts:'+250 pts', time:'12s' },
+    };
+
+    const MOCK_MISSIONS = [
+      { mission_id:'m1', mission_type:'ecom_decision', status:'completed', title:'Decisión de Negocio', description:'Analiza el embudo de conversión y elige la estrategia correcta.', topic:'E-Commerce Strategy' },
+      { mission_id:'m2', mission_type:'fraud_detect',  status:'in_progress', title:'Detective E-Commerce', description:'Detecta señales de fraude en listados de productos reales.', topic:'Seguridad Digital' },
+      { mission_id:'m3', mission_type:'speed_search',  status:'available', title:'Búsqueda Relámpago', description:'Encuentra el producto exacto en tiempo récord antes de que se acabe el tiempo.', topic:'UX & Catálogo' },
+      { mission_id:'m5', mission_type:'store_mission', status:'available', title:'La Tienda', description:'Navega por la tienda real, agrega productos al carrito y completa el checkout.', topic:'Customer Journey Completo' },
+      { mission_id:'m4', mission_type:'checkout_debug', status:'available', title:'Rescata el Checkout', description:'Identifica cuál error técnico o de UX está bloqueando al cliente para pagar.', topic:'CRO & Optimización' },
+    ];
+
+    const MOCK_LEADERBOARD = [
+      { id: player.id || 'p1', name: player.name, points: player.pts, color:'#FF1744', initials:(player.name.charAt(0)||'J').toUpperCase() },
+      { id:'p2', name:'Ana L.', points:680, color:'#7C3AED', initials:'A' },
+      { id:'p3', name:'Carlos M.', points:520, color:'#00D4FF', initials:'C' },
+      { id:'p4', name:'Sofia R.', points:340, color:'#00E676', initials:'S' },
+    ].sort((a,b) => b.points - a.points);
+
+    async function api(method, url, body) {
+      const token = player.token || '';
+      try {
+        const opts = { method, headers:{'Content-Type':'application/json'} };
+        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        const data = await res.json().catch(() => ({}));
+        return { data, ok: res.ok };
+      } catch(e) { return { data:null, ok:false }; }
+    }
+
+    function updateHUD() {
+      const codeEl = document.getElementById('nav-code');
+      const nameEl = document.getElementById('nav-name');
+      const ptsEl  = document.getElementById('nav-pts');
+      
+      const pNameEl = document.getElementById('p-name');
+      const pScoreEl = document.getElementById('p-score');
+
+      if (codeEl) codeEl.textContent = player.code || 'DEMO';
+      if (nameEl) nameEl.textContent = player.name;
+      if (ptsEl) ptsEl.textContent = player.pts.toLocaleString();
+      
+      if (pNameEl) pNameEl.textContent = player.name;
+      if (pScoreEl) pScoreEl.textContent = player.pts.toLocaleString() + ' pts';
+    }
+    function renderProgress(missions) {
+      const done = missions.filter(m => m.status === 'completed').length;
+      const total = missions.length;
+      document.getElementById('progress-count').textContent = `${done} / ${total} completadas`;
+      const segsEl = document.getElementById('progress-segments');
+      segsEl.innerHTML = '';
+      missions.forEach(m => {
+        const seg = document.createElement('div');
+        seg.className = 'prog-seg' + (m.status==='completed'?' done':m.status==='in_progress'?' active':'');
+        segsEl.appendChild(seg);
+      });
+    }
+
+function renderLeaderboard(board) {
+      const cont = document.getElementById('lb-chips');
+      cont.innerHTML = '';
+      board.forEach((p, i) => {
+        const isMe = (p.id || p.player_id) === player.id;
+        const rank = i + 1;
+        const rankClass = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
+        const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
+        const color = p.color || p.avatar_color || '#333';
+        const initials = p.initials || p.avatar_initials || '?';
+        const chip = document.createElement('div');
+        chip.className = `lb-chip${isMe?' me':''}`;
+        chip.innerHTML = `
+          <div class="lb-chip-avatar" style="background:${color}">${initials}</div>
+          <span class="lb-chip-rank ${rankClass}">${medal}</span>
+          <span class="lb-chip-name">${p.name}</span>
+          <span class="lb-chip-pts">⭐ ${p.points}</span>`;
+        cont.appendChild(chip);
+      });
+    }
+
+
+    async function startMission(id, type, status) {
+        if (status === 'completed') return;
+        sessionStorage.setItem('uaa_mission_id', id);
+        sessionStorage.setItem('uaa_mission_type', type);
+        if (player.code && player.id && status === 'available') {
+          await api('POST', '/api/missions/start', { player_id:player.id, game_code:player.code, mission_id:id });
+        }
+        if (type === 'store_mission') window.location.href = 'store.html?mission=' + id;
+        else window.location.href = 'game.html?mission=' + id;
+    }
+
+    function renderMissions(missions) {
+      const grid = document.getElementById('missions-grid');
+      grid.innerHTML = '';
+      
+      let completedCount = 0;
+      const quizMissions = missions.filter(m => m.is_quiz);
+      const quizzesDone = quizMissions.filter(m => m.status === 'completed').length;
+      const allQuizzesCompleted = (quizMissions.length > 0 && quizzesDone === quizMissions.length);
+      
+      const storeMissionObj = missions.find(m => m.mission_type === 'store_mission');
+      if (allQuizzesCompleted && storeMissionObj && storeMissionObj.status === 'available') {
+          if (!sessionStorage.getItem('store_auto_triggered_' + storeMissionObj.mission_id)) {
+              sessionStorage.setItem('store_auto_triggered_' + storeMissionObj.mission_id, 'true');
+              alert("¡Felicidades! Has completado todas las materias. Ahora entrarás a tu misión final: El Simulador de E-Commerce de La Tienda UAA.");
+              console.log("Auto-redirecting to Store Mission...");
+              startMission(storeMissionObj.mission_id, storeMissionObj.mission_type, storeMissionObj.status);
+              return;
+          }
+      }
+      
+      missions.forEach((m, i) => {
+        const isStore = m.mission_type === 'store_mission';
+        const isQuiz = m.is_quiz;
+        const isDone = m.status === 'completed';
+        const isProgress = m.status === 'in_progress';
+        
+        if(isDone) completedCount++;
+
+        let statusText  = isDone ? 'COMPLETADA' : isProgress ? 'EN PROGRESO' : 'DISPONIBLE';
+        let statusClass = isDone ? 'status-completed' : isProgress ? 'status-in-progress' : 'status-available';
+
+        let btnClass = 'btn-start', btnText = 'INICIAR MISIÓN →';
+        if (isDone)     { btnClass='btn-done';     btnText='✓ COMPLETADA'; }
+        if (isProgress) { btnClass='btn-continue'; btnText='CONTINUAR MISIÓN →'; }
+        
+        let clickAction = isQuiz ? `window.location.href='mision.html?mission=${m.mission_id}'` : `startMission('${m.mission_id}', '${m.mission_type}', '${m.status}')`;
+        let cardStyle = '';
+
+        if (isStore) {
+          if (!allQuizzesCompleted) {
+             statusText = 'BLOQUEADA';
+             statusClass = 'status-completed';
+             btnText = '🔒 BLOQUEADA';
+             btnClass = 'btn-done';
+             clickAction = "alert('Debes completar todas las misiones de las Áreas de la Carrera para desbloquear La Tienda.')";
+             cardStyle = 'opacity: 0.65; filter: grayscale(0.8);';
+          } else {
+             btnText = isDone ? '✓ COMPLETADA' : 'ENTRAR A LA TIENDA →';
+             if(!isDone) clickAction = "alert('Entrarás al Simulador de E-Commerce de La Tienda UAA. Tu objetivo es realizar una compra.'); startMission('" + m.mission_id + "', '" + m.mission_type + "', '" + m.status + "')";
+             if(!isDone) btnClass = 'btn-store';
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = `mission-card${isDone?' completed':isProgress?' in-progress':''}${isStore?' store-mission':''}`;
+        card.style.animationDelay = `${i * 0.08}s`;
+        if (cardStyle) card.style = card.style.cssText + cardStyle;
+        
+        if (isQuiz) {
+          card.innerHTML = `
+            <div class="card-top">
+              <div style="flex:1">
+                <div class="mission-title"><span style="margin-right:8px">${m.emoji}</span>${m.area}</div>
+                <div class="mission-topic">ÁREA DE LA CARRERA</div>
+              </div>
+              <div class="card-badges">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <span class="diff-badge diff-media">MEDIA</span>
+              </div>
+            </div>
+            <div class="mission-desc">Demuestra tus conocimientos y capacidad en esta área.</div>
+            <div class="card-footer">
+              <span class="pts-badge">+150 pts aprox.</span>
+              <span class="time-badge">⏱ ${m.num_questions} preguntas</span>
+            </div>
+            <button class="${'btn-mission ' + btnClass}" onclick="${clickAction}" ${isDone && !isStore ? 'disabled' : ''}>${btnText}</button>
+          `;
+        } else {
+          const meta = MISSION_META[m.mission_type] || { icon:'🛍️', diff:'ESPECIAL', diffClass:'diff-media', pts:'+150 pts', time:'Libre', desc:'Navega por la tienda real, agrega productos al carrito y completa el checkout.' };
+          card.innerHTML = `
+            <div class="card-top">
+              <div style="flex:1">
+                <div class="mission-title"><span style="margin-right:8px">${meta.icon}</span>${m.title || meta.title || 'La Tienda'}</div>
+                <div class="mission-topic">${m.topic || meta.topic || 'CUSTOMER JOURNEY'}</div>
+              </div>
+              <div class="card-badges">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+                <span class="diff-badge ${meta.diffClass}">${meta.diff}</span>
+              </div>
+            </div>
+            <div class="mission-desc">${m.desc || meta.desc || meta.description || 'Explora la tienda real.'}</div>
+            <div class="card-footer">
+              <span class="pts-badge">${meta.pts}</span>
+              <span class="time-badge">⏱ ${meta.time}</span>
+            </div>
+            <button class="${'btn-mission ' + btnClass}" onclick="${clickAction}" ${isDone && !isStore ? 'disabled' : ''}>${btnText}</button>
+          `;
+        }
+        grid.appendChild(card);
+      });
+    }
+
+    let _redirecting = false;
+    
+    function goToResults() {
+      if (_redirecting) return;
+      _redirecting = true;
+      window.location.href = 'results.html';
+    }
+
+    function renderTimer() {
+      const t = Math.max(0, window._timeLeft ?? 0);
+      const el = document.getElementById('nav-timer');
+      if (!el) return;
+      const mm = Math.floor(t/60).toString().padStart(2,'0');
+      const ss = (t%60).toString().padStart(2,'0');
+      el.textContent = `${mm}:${ss}`;
+      el.classList.toggle('warn', t <= 60);
+      el.style.color = t <= 30 ? '#E62429' : (t <= 60 ? '#F59E0B' : '');
+    }
+
+    async function loadData() {
+
+
+      let missions   = [];
+      let allComplete = false;
+
+      if (player.code && player.id) {
+        let storeMission = null;
+        try {
+          const mRes = await api('GET', `/api/missions/pool/${player.code}/${player.id}`);
+          if (mRes.ok && mRes.data && mRes.data.missions) {
+            storeMission = mRes.data.missions.find(m => m.mission_type === 'store_mission');
+          }
+        } catch(e) {}
+
+        try {
+          const qRes = await api('GET', `/api/quiz/missions/${player.code}/${player.id}`);
+          if (qRes.ok && qRes.data && qRes.data.missions) {
+            missions = qRes.data.missions.map(m => ({
+              ...m,
+              is_quiz: true
+            }));
+          }
+        } catch(e) {}
+
+        if(storeMission) missions.push(storeMission);
+
+        const lRes = await api('GET', `/api/scoring/leaderboard/${player.code}`);
+        let leaderboard = MOCK_LEADERBOARD;
+        if (lRes.ok && Array.isArray(lRes.data) && lRes.data.length > 0) {
+            leaderboard = lRes.data;
+        }
+        renderLeaderboard(leaderboard);
+
+        const sRes = await api('GET', `/api/games/${player.code}/state`);
+        if (sRes.ok && sRes.data && sRes.data.time_remaining !== undefined) {
+          window._timeLeft = sRes.data.time_remaining;
+          renderTimer();
+          if (sRes.data.status === 'finished' || sRes.data.time_remaining <= 0) {
+            goToResults();
+          }
+        }
+
+        const me = leaderboard.find(p => (p.player_id || p.id) === player.id);
+        if (me) {
+          player.pts = me.points;
+          sessionStorage.setItem('uaa_my_points', me.points);
+          updateHUD();
+        }
+      }
+
+      renderProgress(missions);
+      renderMissions(missions);
+    }
+
+    async function init() {
+      if (!player.code || !player.id) console.warn('Sin sesión — usando mock data');
+      updateHUD();
+      await loadData();
+      setInterval(loadData, 5000);
+      setInterval(() => {
+        if (window._timeLeft > 0) {
+          window._timeLeft--;
+          renderTimer();
+        }
+      }, 1000);
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

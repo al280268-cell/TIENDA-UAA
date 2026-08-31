@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedido Confirmado · TIENDA UAA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0C10;
+      --surface: #111318;
+      --card: #191D26;
+      --border: rgba(255,255,255,0.06);
+      --red: #E62429; --blue:#2B5CE6;
+      --green: #10B981;
+      --gold: #F59E0B;
+      --blue: #3B82F6;
+      --text: #F0F2F5;
+      --text-secondary: rgba(240,242,245,0.55);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); overflow-x: hidden;  position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:400px;height:400px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.4;pointer-events:none;z-index:0;}
+
+    @keyframes fadeUpIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes drawCheck {
+      from { stroke-dashoffset: 100; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes fillLine {
+      from { height: 0; }
+      to { height: 100%; }
+    }
+    @keyframes shimmer {
+      from { background-position: -200% 0; }
+      to { background-position: 200% 0; }
+    }
+
+    .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    
+    .container { max-width: 800px; margin: 4rem auto; padding: 0 5%; position: relative; z-index: 10; animation: fadeUpIn 0.8s ease-out forwards; }
+    
+    .hero-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 3rem 2rem; text-align: center; margin-bottom: 2rem; }
+    
+    .check-circle { width: 80px; height: 80px; background: rgba(16,185,129,0.1); border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; }
+    .check-circle::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--green); transform: scale(0); animation: scaleIn 0.5s 0.2s forwards; z-index: 1; }
+    .check-svg { width: 40px; height: 40px; color: white; position: relative; z-index: 2; stroke-dasharray: 100; stroke-dashoffset: 100; animation: drawCheck 0.5s 0.6s forwards; }
+
+    h1 { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+    .order-number { font-family: var(--font-mono); font-size: 1.25rem; color: var(--gold); font-weight: 700; margin-bottom: 1rem; }
+    .msg { color: var(--text-secondary); margin-bottom: 2rem; }
+
+    /* Points Card */
+    .points-card { background: linear-gradient(90deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05)); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; position: relative; overflow: hidden; }
+    .points-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
+    .pts-val { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--gold); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* Timeline */
+    .timeline { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; }
+    .tl-item { display: flex; gap: 1rem; margin-bottom: 1.5rem; position: relative; }
+    .tl-item:last-child { margin-bottom: 0; }
+    .tl-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); position: relative; z-index: 2; transition: 0.3s; }
+    .tl-item.active .tl-dot { border-color: var(--green); background: var(--green); }
+    .tl-line { position: absolute; left: 7px; top: 16px; bottom: -24px; width: 2px; background: var(--border); z-index: 1; }
+    .tl-item:last-child .tl-line { display: none; }
+    .tl-line-fill { position: absolute; left: 0; top: 0; width: 100%; background: var(--green); height: 0; }
+    .tl-item.active .tl-line-fill { animation: fillLine 0.5s 1s forwards; }
+
+    /* Edu Card */
+    .edu-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+    .edu-title { font-family: var(--font-display); font-weight: 700; margin-bottom: 1rem; color: var(--blue); }
+    .edu-list { list-style: none; }
+    .edu-list li { margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px; opacity: 0; transform: translateX(-10px); }
+    
+    .btn { display: block; width: 100%; text-align: center; padding: 1rem; border-radius: 8px; font-family: var(--font-display); font-weight: 700; cursor: pointer; text-decoration: none; transition: 0.3s; margin-bottom: 1rem; }
+    .btn-primary { background: var(--red); color: white; border: none; }
+    .btn-primary:hover { background: #E11D48; transform: translateY(-2px); }
+    .btn-secondary { background: transparent; color: white; border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface); }
+  </style>
+</head>
+<body>
+  
+  <canvas class="confetti" id="confetti"></canvas>
+
+  <!-- ── Modal automático de resultado (competencia) ── -->
+  <div id="resultModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(6,6,14,.9);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
+    <div id="resultModalInner" style="max-width:460px;width:100%;background:linear-gradient(180deg,#14141f,#0c0c16);border:1px solid rgba(230,36,41,.4);border-radius:22px;padding:34px 28px;text-align:center;box-shadow:0 30px 80px -20px rgba(230,36,41,.5);animation:modalPop .35s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden;">
+      <!-- Confetti layer inside modal -->
+      <canvas id="modalConfetti" style="position:absolute;inset:0;pointer-events:none;z-index:0;width:100%;height:100%;"></canvas>
+      <div style="position:relative;z-index:1;">
+        <div id="modalEmoji" style="font-size:3.4rem;line-height:1;margin-bottom:8px;">🎉</div>
+        <div id="modalTitle" style="font-family:var(--font-display);font-weight:900;font-size:1.6rem;letter-spacing:.5px;">¡MISIÓN COMPLETADA!</div>
+        <div id="modalSubtitle" style="color:var(--text-secondary);margin-top:6px;">Excelente trabajo. Completaste el reto de compra.</div>
+        <div style="margin:22px 0;padding:18px;border-radius:14px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--gold);" id="modalPts">⭐ +150 puntos</div>
+        </div>
+        <div style="margin-bottom:8px;color:var(--text-secondary);font-weight:600;">🏆 Tu posición final</div>
+        <div style="font-family:var(--font-display);font-size:3.8rem;font-weight:900;line-height:1;" id="modalRank">#—</div>
+        <div style="color:var(--text-muted);font-size:.9rem;margin-top:4px;" id="modalTotal">de — participantes</div>
+        <!-- Zona de premio (solo visible si rank=1) -->
+        <div id="prizeZone" style="display:none;margin-top:20px;padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(245,158,11,0.18),rgba(255,215,0,0.08));border:2px solid rgba(245,158,11,0.6);">
+          <div style="font-size:2rem;margin-bottom:6px;">🥇</div>
+          <div style="font-family:var(--font-display);font-weight:900;font-size:1.2rem;color:#F59E0B;">¡ERES EL GANADOR!</div>
+          <div style="font-size:.87rem;color:rgba(240,242,245,.7);margin-top:4px;">Muestra esta pantalla al staff para reclamar tu premio.</div>
+        </div>
+        <button id="modalContinue" style="margin-top:26px;width:100%;background:linear-gradient(135deg,var(--red),#a80f14);color:#fff;border:none;border-radius:12px;padding:15px;font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:.5px;cursor:pointer;">VER CLASIFICACIÓN FINAL →</button>
+      </div>
+    </div>
+  </div>
+  <style>
+    @keyframes modalPop{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:none}}
+    @keyframes winnerPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 16px rgba(245,158,11,0)}}
+    #resultModalInner.winner { border-color:rgba(245,158,11,.7); animation:modalPop .35s cubic-bezier(.2,.8,.2,1), winnerPulse 1.5s 1s infinite; }
+  </style>
+
+  <div class="container">
+
+    <!-- Simulation Banner -->
+    <div style="background:linear-gradient(90deg,#78350F,#92400E);border-radius:12px;padding:12px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px;font-size:0.875rem;font-weight:600;">
+      <span style="font-size:1.4rem;">⚠️</span>
+      <div>
+        <div style="font-weight:700;margin-bottom:2px;">SIMULACIÓN EDUCATIVA</div>
+        <div style="color:rgba(255,255,255,0.65);font-size:0.82rem;">Esta compra es ficticia. No se realizó ningún cargo real ni se procesaron datos bancarios.</div>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="check-circle">
+        <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1>¡PEDIDO CONFIRMADO!</h1>
+      <div class="order-number" id="orderNum">#UAA-XXXXXX</div>
+      <div class="msg">Tu pago fue procesado exitosamente</div>
+    </div>
+
+    <div id="simDone" style="background:linear-gradient(135deg,rgba(16,185,129,0.14),rgba(0,212,255,0.10));border:1px solid rgba(16,185,129,0.4);border-radius:18px;padding:26px 24px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:2.6rem;line-height:1;margin-bottom:8px;">🎉</div>
+      <div style="font-family:var(--font-display);font-weight:900;font-size:1.5rem;letter-spacing:0.5px;">¡SIMULACIÓN COMPLETADA!</div>
+      <div style="color:var(--text-secondary);margin-top:6px;max-width:520px;margin-inline:auto;">Has recorrido correctamente el proceso de compra de una tienda en línea.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;margin-top:18px;font-weight:600;font-size:0.95rem;">
+        <span style="color:var(--green)">✓ Producto seleccionado</span>
+        <span style="color:var(--green)">✓ Carrito completado</span>
+        <span style="color:var(--green)">✓ Datos ingresados</span>
+        <span style="color:var(--green)">✓ Checkout completado</span>
+        <span style="color:var(--green)">✓ Pedido confirmado</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:22px;">
+        <a href="simulate.html" class="btn btn-primary" style="min-width:200px" id="btnHome">🏠 VOLVER AL INICIO</a>
+        <button class="btn btn-secondary" style="min-width:200px" id="btnRetry">🔄 PROBAR DE NUEVO</button>
+      </div>
+    </div>
+
+    <div id="missionDone" style="display:none;background:linear-gradient(135deg,rgba(230,36,41,0.16),rgba(43,92,230,0.12));border:1px solid rgba(230,36,41,0.4);border-radius:18px;padding:26px 24px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:2.6rem;line-height:1;margin-bottom:8px;">🏁</div>
+      <div style="font-family:var(--font-display);font-weight:900;font-size:1.5rem;letter-spacing:0.5px;">¡ÚLTIMA MISIÓN COMPLETADA!</div>
+      <div style="color:var(--text-secondary);margin-top:6px;max-width:520px;margin-inline:auto;">Terminaste "La Tienda". Calculando tu posición final…</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:22px;">
+        <a href="results.html" class="btn btn-primary" style="min-width:240px" id="btnSeeRank">🏆 VER MI POSICIÓN</a>
+      </div>
+    </div>
+
+    <div class="points-card">
+      <div>
+        <div style="color:var(--text-secondary); font-size:0.875rem">Misión completada: La Tienda ✓</div>
+        <div style="font-weight:600">Recompensa obtenida</div>
+      </div>
+      <div class="pts-val" id="ptsDisplay">+0 PUNTOS</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="timeline">
+        <h3 style="margin-bottom:1.5rem; font-family:var(--font-display)">Seguimiento del pedido</h3>
+        <div class="tl-item active">
+          <div class="tl-dot"></div><div class="tl-line"><div class="tl-line-fill"></div></div>
+          <div>
+            <div style="font-weight:700">✅ PEDIDO RECIBIDO</div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:3px">Tu pedido fue registrado. En un e-commerce real recibirías confirmación por email con número de folio.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div><div class="tl-line"></div>
+          <div>
+            <div style="font-weight:700">⏳ PREPARANDO</div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:3px">El equipo de almacén verifica inventario, empaca los productos y genera la guía de envío.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div><div class="tl-line"></div>
+          <div>
+            <div style="font-weight:700">🚚 EN CAMINO</div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:3px">El paquete está con el transportista. Recibirías actualizaciones por SMS con el número de rastreo.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div>
+            <div style="font-weight:700">📦 ENTREGADO</div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:3px">¡Tu pedido llegó! Recibirías una encuesta de satisfacción para mejorar el servicio.</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);border-radius:8px;font-size:0.78rem;color:rgba(240,244,255,0.55);">
+          💡 En un e-commerce real, recibirías actualizaciones por SMS y email en cada etapa.
+        </div>
+      </div>
+
+      <div class="edu-card">
+        <div class="edu-title">¿Qué aprendiste en esta misión?</div>
+        <ul class="edu-list" id="eduList">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Customer Journey completo de extremo a extremo</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Catálogo, búsqueda y filtros de productos</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Gestión dinámica del carrito de compras</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Checkout en 4 etapas: datos, envío, pago, confirmación</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Seguimiento de pedido y comunicación postventa</li>
+        </ul>
+        <div style="margin-top:16px;padding:14px;background:rgba(245,158,11,0.08);border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;font-size:0.82rem;color:rgba(240,244,255,0.7);line-height:1.55;">
+          💡 <strong>¿Sabías que...</strong> el 70% de los carritos de compra se abandonan sin completar la compra? Optimizar el checkout es clave para cualquier tienda en línea exitosa.
+        </div>
+      </div>
+    </div>
+
+    <a href="hub.html" class="btn btn-primary" id="btnHub" style="display:none">VOLVER AL MAPA</a>
+    <a href="store.html" class="btn btn-secondary" id="btnStore" style="display:none">Explorar más productos</a>
+
+  </div>
+
+
+
+  <script>
+    const orderNum = sessionStorage.getItem('uaa_last_order') || '#UAA-DEMO01';
+    document.getElementById('orderNum').innerText = orderNum;
+
+    const missionQuery = window.location.search;
+    const cameFromMission = new URLSearchParams(missionQuery).has('mission');
+
+    // Helper de API (definido antes para usarlo en el flujo de competencia)
+    async function api(method, url, body) {
+      const token = sessionStorage.getItem('uaa_player_token') || '';
+      try {
+        const opts = { method, headers: {'Content-Type':'application/json'} };
+        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        const data = await res.json().catch(() => ({}));
+        return { data, ok: res.ok };
+      } catch(e) { return { data: null, ok: false }; }
+    }
+
+    if (cameFromMission) {
+      // ── Modo COMPETENCIA: "La Tienda" es la ÚLTIMA misión ──
+      document.getElementById('simDone').style.display = 'none';
+      document.getElementById('missionDone').style.display = 'block';
+      runCompetitionFinish();
+    } else {
+      // ── Modo SIMULACIÓN puro ──
+      document.getElementById('missionDone').style.display = 'none';
+      sessionStorage.setItem('uaa_sim_completed', 'true');
+      sessionStorage.setItem('uaa_sim_completed_order', orderNum);
+      document.getElementById('btnRetry').addEventListener('click', function () {
+        ['uaa_cart','uaa_sim_completed','uaa_sim_completed_order','uaa_last_order']
+          .forEach(k => sessionStorage.removeItem(k));
+        window.location.href = 'store.html?mode=simulate';
+      });
+    }
+
+    async function runCompetitionFinish() {
+      const pid  = sessionStorage.getItem('uaa_player_id') || '';
+      const code = sessionStorage.getItem('uaa_game_code') || '';
+      const missionId = new URLSearchParams(missionQuery).get('mission');
+
+      // 1) Validar la misión (otorga puntos UNA sola vez; el backend es idempotente)
+      let earned = 150;
+      if (missionId) {
+        const v = await api('POST', '/api/missions/validate', {
+          player_id: pid, game_code: code, mission_id: missionId,
+          mission_type: 'store_mission', answer: 'checkout_completed', time_taken_ms: 30000
+        });
+        if (v.ok && v.data && typeof v.data.net === 'number') earned = v.data.net;
+      }
+
+      // 2) Obtener puntos totales y posición del ranking
+      let rank = null, total = null;
+      const lb = await api('GET', `/api/scoring/leaderboard/${code}`);
+      if (lb.ok && Array.isArray(lb.data)) {
+        total = lb.data.length;
+        const me = lb.data.find(p => p.player_id === pid);
+        if (me) rank = me.rank || (lb.data.indexOf(me) + 1);
+      }
+
+      // 3) Mostrar el modal AUTOMÁTICAMENTE
+      document.getElementById('modalPts').textContent = `⭐ +${earned} puntos`;
+      document.getElementById('modalRank').textContent = rank ? `#${rank}` : '#—';
+      document.getElementById('modalTotal').textContent = total ? `de ${total} participante${total===1?'':'s'}` : '';
+      document.getElementById('modalContinue').addEventListener('click', () => {
+        window.location.href = 'results.html';
+      });
+
+      // 4) Si es 1er lugar → modo ganador
+      if (rank === 1) {
+        document.getElementById('modalEmoji').textContent = '🏆';
+        document.getElementById('modalTitle').textContent = '¡ERES EL CAMPEÓN!';
+        document.getElementById('modalSubtitle').textContent = 'Terminaste en PRIMER LUGAR. ¡Felicitaciones!';
+        document.getElementById('modalRank').style.color = '#F59E0B';
+        document.getElementById('prizeZone').style.display = 'block';
+        document.getElementById('resultModalInner').classList.add('winner');
+        // Confetti especial en el modal
+        const mc = document.getElementById('modalConfetti');
+        const mcCtx = mc.getContext('2d');
+        mc.width = mc.offsetWidth; mc.height = mc.offsetHeight;
+        const wcPieces = Array.from({length:60},()=>({
+          x: Math.random()*mc.width, y: Math.random()*mc.height*-.5,
+          vx:(Math.random()-.5)*4, vy:Math.random()*3+1,
+          size:Math.random()*6+3, color:['#F59E0B','#FFD700','#fff','#E62429'][Math.floor(Math.random()*4)],
+          rot:Math.random()*360, vr:(Math.random()-.5)*6
+        }));
+        function animMC(){
+          mcCtx.clearRect(0,0,mc.width,mc.height);
+          wcPieces.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;if(p.y>mc.height)p.y=-10;
+            mcCtx.save();mcCtx.translate(p.x,p.y);mcCtx.rotate(p.rot*Math.PI/180);
+            mcCtx.fillStyle=p.color;mcCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size);mcCtx.restore();
+          });
+          requestAnimationFrame(animMC);
+        }
+        animMC();
+      }
+
+      setTimeout(() => { document.getElementById('resultModal').style.display = 'flex'; }, 1200);
+    }
+
+    // Points animation
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / 1500, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      document.getElementById('ptsDisplay').innerText = `+${Math.floor(easeProgress * 150)} PUNTOS`;
+      if (progress < 1) window.requestAnimationFrame(step);
+    };
+    setTimeout(() => window.requestAnimationFrame(step), 1000);
+
+    // Edu list animation
+    const items = document.querySelectorAll('#eduList li');
+    items.forEach((item, i) => {
+      setTimeout(() => {
+        item.style.transition = 'all 0.5s ease-out';
+        item.style.opacity = '1';
+        item.style.transform = 'translateX(0)';
+      }, 1500 + (i * 200));
+    });
+
+    // Simple Canvas Confetti
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const pieces = [];
+    const colors = ['#C41230', '#F59E0B', '#10B981', '#FFFFFF'];
+    
+    for(let i=0; i<100; i++) {
+      pieces.push({
+        x: canvas.width / 2,
+        y: canvas.height / 2 + 100,
+        vx: (Math.random() - 0.5) * 20,
+        vy: (Math.random() - 1) * 20 - 5,
+        size: Math.random() * 8 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        vr: (Math.random() - 0.5) * 10
+      });
+    }
+
+    function renderConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let active = false;
+      pieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.5; // gravity
+        p.rotation += p.vr;
+        if(p.y < canvas.height) active = true;
+        
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+        ctx.restore();
+      });
+      if(active) requestAnimationFrame(renderConfetti);
+    }
+    renderConfetti();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>

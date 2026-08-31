@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Simulación de Tienda — UAA E-Commerce</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020B18;
+      --surface: #071524;
+      --card: #0D2037;
+      --border: rgba(0,212,255,0.12);
+      --border-strong: rgba(0,212,255,0.25);
+      --cyan: #00D4FF;
+      --green: #00E676;
+      --teal: #26C6DA;
+      --text: #E8F4FF;
+      --text-secondary: rgba(232,244,255,0.55);
+      --text-muted: rgba(232,244,255,0.3);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh;  position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:400px;height:400px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.4;pointer-events:none;z-index:0;}
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
+    @keyframes pulse-ring { 0% { transform:scale(1); opacity:0.6; } 100% { transform:scale(1.5); opacity:0; } }
+    @keyframes drift {
+      0% { transform: translateY(0) translateX(0) rotate(0deg); opacity:0.7; }
+      100% { transform: translateY(-120px) translateX(30px) rotate(180deg); opacity:0; }
+    }
+
+    /* Background */
+    .bg-canvas { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+    .bg-glow-1 {
+      position:absolute; width:800px; height:600px; border-radius:50%;
+      background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
+      top:-200px; left:50%; transform:translateX(-50%);
+    }
+    .bg-glow-2 {
+      position:absolute; width:500px; height:500px; border-radius:50%;
+      background: radial-gradient(circle, rgba(0,230,118,0.06) 0%, transparent 70%);
+      bottom:0; right:-100px;
+    }
+    .bg-grid {
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+
+    /* Header */
+    .header {
+      position: sticky; top:0; z-index:100;
+      background: rgba(2,11,24,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo-area { display:flex; align-items:center; gap:12px; }
+    .logo-mark {
+      width:40px; height:40px; border-radius:10px;
+      background: linear-gradient(135deg, #00D4FF, #0056A0);
+      display:flex; align-items:center; justify-content:center;
+      font-family: var(--font-display); font-weight:900; font-size:12px; color:white;
+    }
+    .logo-text { font-family: var(--font-display); font-size:0.82rem; font-weight:700; color: var(--text-secondary); letter-spacing:0.05em; text-transform:uppercase; }
+    .mode-badge {
+      background: rgba(0,212,255,0.15); border:1px solid rgba(0,212,255,0.3);
+      color: var(--cyan); padding:6px 16px; border-radius:99px;
+      font-size:0.72rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase;
+    }
+    .back-link {
+      color: var(--text-secondary); font-size:0.85rem; font-weight:600;
+      text-decoration:none; display:flex; align-items:center; gap:6px;
+      padding: 8px 16px; border-radius:8px; border:1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .back-link:hover { color: var(--text); border-color: var(--border-strong); background: rgba(0,212,255,0.05); }
+
+    /* Main page */
+    .page { position:relative; z-index:1; min-height:100vh; }
+
+    /* Hero */
+    .hero {
+      text-align:center; padding: 80px 24px 60px;
+      animation: fadeUp 0.8s ease forwards;
+    }
+    .hero-icon {
+      font-size: 6rem; margin-bottom: 16px;
+      display:inline-block;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 40px rgba(0,212,255,0.5));
+    }
+    .mode-tag {
+      display:inline-flex; align-items:center; gap:8px;
+      background: rgba(0,212,255,0.12); border:1px solid rgba(0,212,255,0.25);
+      color: var(--cyan); padding:8px 20px; border-radius:99px;
+      font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+      margin-bottom:24px;
+    }
+    .hero h1 {
+      font-family: var(--font-display); font-size: clamp(2.2rem, 6vw, 3.5rem);
+      font-weight:900; line-height:1.1; margin-bottom:16px;
+      background: linear-gradient(135deg, #00D4FF 0%, #00E676 60%, #26C6DA 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size:1.1rem; color: var(--text-secondary);
+      max-width: 520px; margin: 0 auto 40px; line-height:1.65;
+    }
+    .cta-btn {
+      display:inline-flex; align-items:center; gap:12px;
+      background: linear-gradient(135deg, #00D4FF, #0097B2);
+      color:white; border:none; padding:1.1rem 2.4rem;
+      font-family: var(--font-display); font-weight:800; font-size:1.05rem;
+      border-radius:14px; cursor:pointer; text-decoration:none;
+      box-shadow: 0 8px 28px rgba(0,212,255,0.35);
+      transition: all 0.3s;
+    }
+    .cta-btn:hover { transform:translateY(-3px); box-shadow: 0 14px 36px rgba(0,212,255,0.5); }
+
+    /* No competition badges */
+    .no-comp-badges {
+      display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+      margin-top: 28px;
+    }
+    .no-badge {
+      display:flex; align-items:center; gap:6px;
+      font-size:0.82rem; font-weight:600;
+      padding:6px 14px; border-radius:99px;
+      border:1px solid rgba(255,255,255,0.1);
+      color: var(--text-secondary);
+    }
+    .no-badge.yes { border-color:rgba(0,230,118,0.3); color: var(--green); background:rgba(0,230,118,0.07); }
+    .no-badge.no  { border-color:rgba(255,255,255,0.1); color: var(--text-muted); }
+
+    /* Flow steps */
+    .flow-section { max-width:900px; margin:0 auto; padding:0 24px 80px; }
+    .flow-title {
+      text-align:center; font-family: var(--font-display);
+      font-size:0.75rem; font-weight:700; color: var(--text-muted);
+      text-transform:uppercase; letter-spacing:0.12em;
+      margin-bottom:32px;
+    }
+    .flow-steps {
+      display:flex; align-items:center; gap:0;
+      justify-content:center; flex-wrap:wrap;
+    }
+    .flow-step {
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      flex:1; min-width:120px; max-width:160px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .flow-step:nth-child(2) { animation-delay:0.1s; }
+    .flow-step:nth-child(4) { animation-delay:0.2s; }
+    .flow-step:nth-child(6) { animation-delay:0.3s; }
+    .flow-step:nth-child(8) { animation-delay:0.4s; }
+    .flow-step:nth-child(10) { animation-delay:0.5s; }
+    .step-icon {
+      width:72px; height:72px; border-radius:18px;
+      background: var(--card); border:2px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-size:2rem; transition: all 0.3s; position:relative;
+    }
+    .step-icon::after {
+      content:''; position:absolute; inset:-4px;
+      border-radius:22px; border:2px solid var(--cyan);
+      opacity:0; transition: opacity 0.3s;
+    }
+    .flow-step:hover .step-icon::after { opacity:1; }
+    .flow-step:hover .step-icon { border-color: var(--cyan); box-shadow: 0 0 24px rgba(0,212,255,0.25); }
+    .step-name { font-family: var(--font-display); font-size:0.85rem; font-weight:700; text-align:center; }
+    .step-desc { font-size:0.72rem; color: var(--text-muted); text-align:center; max-width:120px; }
+    .flow-arrow {
+      font-size:1.5rem; color: var(--border-strong);
+      flex-shrink:0; padding:0 4px;
+      align-self:flex-start; margin-top:22px;
+    }
+
+    /* Info cards */
+    .info-section { max-width:800px; margin:0 auto; padding:0 24px 80px; }
+    .info-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
+    .info-card {
+      background: var(--card); border:1.5px solid var(--border);
+      border-radius:16px; padding:20px;
+      transition: all 0.2s;
+    }
+    .info-card:hover { border-color: var(--border-strong); box-shadow: 0 8px 24px rgba(0,212,255,0.1); }
+    .info-icon { font-size:2rem; margin-bottom:10px; }
+    .info-title { font-family: var(--font-display); font-size:0.95rem; font-weight:800; margin-bottom:6px; }
+    .info-desc { font-size:0.82rem; color: var(--text-secondary); line-height:1.5; }
+  </style>
+</head>
+<body>
+<script>
+  // ── Puerta del simulador: solo disponible si el ADMIN lo activó (estado en servidor) ──
+  (async function(){
+    const isAdmin = !!sessionStorage.getItem('uaa_admin_token');
+    try {
+      const r = await fetch('/api/admin/simulator');
+      const j = await r.json();
+      if (!j.enabled && !isAdmin) {
+        document.documentElement.innerHTML =
+          '<body style="margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#07070e;color:#f0f4ff;font-family:Inter,system-ui,sans-serif;text-align:center;padding:32px;">' +
+          '<div style="font-size:3rem;margin-bottom:12px">🔒</div>' +
+          '<div style="font-weight:900;font-size:1.5rem;margin-bottom:10px;font-family:Space Grotesk,sans-serif">Simulador no disponible</div>' +
+          '<p style="color:#8b93b0;max-width:420px;margin:0 auto 24px;line-height:1.6">Esta herramienta es solo para el staff y está desactivada. Actívala desde el panel de administrador.</p>' +
+          '<a href="inicio.html" style="background:#E62429;color:#fff;text-decoration:none;font-weight:800;padding:14px 28px;border-radius:12px;font-family:Space Grotesk,sans-serif">← Volver al inicio</a>' +
+          '</body>';
+        throw new Error('simulator disabled');
+      }
+    } catch(e){ if(String(e).includes('simulator disabled')) return; /* si el fetch falla, seguimos (modo dev) */ }
+  })();
+</script>
+
+<div class="bg-canvas">
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+  <div class="bg-grid"></div>
+</div>
+
+<div class="page">
+
+  <header class="header">
+    <div class="logo-area">
+      <div class="logo-mark">UAA</div>
+      <span class="logo-text">E-Commerce · Modo Simulación</span>
+    </div>
+    <div class="mode-badge">🛒 Simulación</div>
+    <a href="index.html" class="back-link">← Inicio</a>
+  </header>
+
+  <section class="hero">
+    <div class="mode-tag">
+      <span>🎓</span> Experiencia Educativa
+    </div>
+    <div class="hero-icon">🛒</div>
+    <h1>SIMULACIÓN DE<br>TIENDA EN LÍNEA</h1>
+    <p>
+      Aprende cómo funciona un comercio electrónico real navegando libremente por nuestra tienda virtual.
+      Sin competencia, sin tiempo límite, sin presión.
+    </p>
+    <a href="store.html?mode=simulate" class="cta-btn">
+      ENTRAR A LA TIENDA
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="no-comp-badges">
+      <div class="no-badge no">❌ Sin competencia</div>
+      <div class="no-badge no">❌ Sin ranking</div>
+      <div class="no-badge no">❌ Sin tiempo límite</div>
+      <div class="no-badge yes">✅ Educativo</div>
+      <div class="no-badge yes">✅ A tu ritmo</div>
+      <div class="no-badge yes">✅ Sin datos reales</div>
+    </div>
+  </section>
+
+  <section class="flow-section">
+    <div class="flow-title">Tu recorrido de compra completo</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-icon">📦</div>
+        <div class="step-name">Catálogo</div>
+        <div class="step-desc">Explora los productos disponibles</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-icon">🔍</div>
+        <div class="step-name">Producto</div>
+        <div class="step-desc">Ve el detalle y elige tu cantidad</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-icon">🛒</div>
+        <div class="step-name">Carrito</div>
+        <div class="step-desc">Revisa tus productos y total</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-icon">💳</div>
+        <div class="step-name">Checkout</div>
+        <div class="step-desc">Datos, envío y pago simulado</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-icon">✅</div>
+        <div class="step-name">Confirmación</div>
+        <div class="step-desc">Tu pedido registrado y seguimiento</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="info-section">
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">🔒</div>
+        <div class="info-title">100% Seguro</div>
+        <div class="info-desc">No se procesan datos bancarios reales. Todo es una simulación educativa.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🎓</div>
+        <div class="info-title">Aprende el Customer Journey</div>
+        <div class="info-desc">Experimenta el recorrido completo que hace un comprador en una tienda real.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📱</div>
+        <div class="info-title">Responsive</div>
+        <div class="info-desc">Funciona perfectamente en celular y computadora, igual que las tiendas reales.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🛍️</div>
+        <div class="info-title">Carrito Dinámico</div>
+        <div class="info-desc">Agrega, quita y modifica productos en tiempo real. Ve cómo cambia el total.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout · TIENDA UAA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0C10;
+      --surface: #111318;
+      --card: #191D26;
+      --border: rgba(255,255,255,0.06);
+      --red: #E62429; --blue:#2B5CE6;
+      --green: #10B981;
+      --text: #F0F2F5;
+      --text-secondary: rgba(240,242,245,0.55);
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text);  position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:400px;height:400px;background:url('img/web.svg') no-repeat;background-size:contain;opacity:.4;pointer-events:none;z-index:0;}
+    
+    /* Animations */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes drawCheck {
+      from { stroke-dashoffset: 100; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes shine {
+      from { background-position: -200% center; }
+      to { background-position: 200% center; }
+    }
+
+    .navbar { padding: 1.5rem 5%; border-bottom: 1px solid var(--border); text-align: center; }
+    .logo { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; text-decoration: none; color: white; }
+
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 5%; display: grid; grid-template-columns: 60% 40%; gap: 4rem; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+    /* Stepper */
+    .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 3rem; }
+    .stepper::before { content:''; position:absolute; top:12px; left:0; right:0; height:2px; background:var(--border); z-index:1; }
+    .stepper-progress { position:absolute; top:12px; left:0; height:2px; background:var(--red); z-index:2; transition: width 0.5s ease; width: 0%; }
+    .step { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-secondary); transition: 0.3s; }
+    .step.active { color: white; }
+    .step.completed { color: var(--green); }
+    .step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.3s; }
+    .step.active .step-dot { border-color: var(--red); box-shadow: 0 0 10px rgba(196,18,48,0.5); }
+    .step.completed .step-dot { background: var(--green); border-color: var(--green); color: white; }
+
+    /* Forms */
+    .stage { display: none; animation: fadeIn 0.4s; }
+    .stage.active { display: block; }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+    
+    h2 { font-family: var(--font-display); margin-bottom: 1.5rem; }
+
+    .form-group { position: relative; margin-bottom: 1.5rem; }
+    .form-control { width: 100%; background: var(--surface); border: 1px solid var(--border); color: white; padding: 1.5rem 1rem 0.5rem; border-radius: 8px; font-family: var(--font-body); font-size: 1rem; outline: none; transition: 0.3s; }
+    .form-control:focus { border-color: var(--red); }
+    .form-control.invalid { border-color: var(--red); animation: shake 0.4s; }
+    .form-control.valid { border-color: var(--green); }
+    
+    label { position: absolute; left: 1rem; top: 1rem; color: var(--text-secondary); pointer-events: none; transition: 0.2s; transform-origin: left top; }
+    .form-control:focus ~ label, .form-control:not(:placeholder-shown) ~ label { transform: translateY(-10px) scale(0.75); color: var(--text-secondary); }
+    .form-control:focus ~ label { color: var(--red); }
+    
+    .validation-icon { position: absolute; right: 1rem; top: 1rem; display: none; }
+    .form-control.valid ~ .validation-icon.success { display: block; color: var(--green); }
+    .form-control.invalid ~ .validation-icon.error { display: block; color: var(--red); }
+    
+    .error-msg { color: var(--red); font-size: 0.75rem; margin-top: 0.25rem; display: none; }
+    .form-control.invalid ~ .error-msg { display: block; }
+
+    .btn-next { background: var(--red); color: white; border: none; padding: 1rem 2rem; border-radius: 8px; font-family: var(--font-display); font-weight: 700; cursor: pointer; float: right; transition: 0.3s; }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(196,18,48,0.2); }
+
+    /* Delivery Cards */
+    .delivery-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; display: flex; justify-content: space-between; transition: 0.3s; }
+    .delivery-card:hover { border-color: var(--text-secondary); }
+    .delivery-card.selected { border-color: var(--red); background: rgba(196,18,48,0.05); }
+
+    /* 3D Credit Card */
+    .card-container { display: flex; justify-content: center; margin-bottom: 2rem; perspective: 1000px; }
+    .credit-card { width: 400px; height: 240px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .credit-card.flipped { transform: rotateY(180deg); }
+    .card-face { position: absolute; width: 100%; height: 100%; border-radius: 16px; backface-visibility: hidden; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-front { background: linear-gradient(135deg, #1a237e 0%, #283593 40%, #4527a0 100%); box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+    .card-front::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%); background-size: 200% 100%; animation: shine 3s linear infinite; }
+    .card-back { background: linear-gradient(135deg, #0d47a1, #1565c0); transform: rotateY(180deg); padding: 0; }
+    
+    .card-chip { width: 44px; height: 34px; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 6px; position: relative; overflow: hidden; margin-bottom: 20px; z-index: 2;}
+    .card-chip::before, .card-chip::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: rgba(0,0,0,0.2); }
+    .card-chip::before { top: 33%; } .card-chip::after { top: 66%; }
+    .card-network { position: absolute; top: 24px; right: 24px; font-weight: 700; font-style: italic; font-size: 20px; z-index: 2; }
+    
+    .card-number { font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: 0.15em; color: rgba(255,255,255,0.9); z-index: 2; }
+    .card-bottom { display: flex; justify-content: space-between; z-index: 2; }
+    .card-label { font-size: 9px; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px; }
+    .card-val { font-size: 14px; font-weight: 600; text-transform: uppercase; }
+    
+    .card-stripe { background: #111; height: 50px; margin-top: 24px; }
+    .card-cvv-strip { background: white; height: 40px; margin: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; color: black; font-family: monospace; font-size: 16px; font-weight: bold; }
+
+    /* Summary Pane */
+    .summary-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; position: sticky; top: 2rem; }
+    .summary-pane h3 { font-family: var(--font-display); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    
+    /* Overlay */
+    .payment-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 24px; }
+    .payment-spinner { width: 64px; height: 64px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .progress-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--red); width: 0%; transition: width 2.5s linear; }
+    .success-check { display: none; stroke-dasharray: 100; stroke-dashoffset: 100; color: var(--green); }
+    .success-check.draw { display: block; animation: drawCheck 0.8s forwards; }
+
+    .row { display: flex; gap: 1rem; }
+    .col { flex: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Simulation Banner -->
+  <div style="background:linear-gradient(90deg,#92400E,#B45309);padding:10px 20px;text-align:center;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <span>⚠️</span>
+    <span>SIMULACIÓN EDUCATIVA — Esta compra es ficticia. No se procesarán datos bancarios reales.</span>
+  </div>
+
+  <nav class="navbar">
+    <a href="store.html" class="logo" style="background:linear-gradient(135deg,#FF1744,#C41230);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">TIENDA UAA</a>
+  </nav>
+
+  <div class="container">
+    <div class="main-col">
+      <div class="stepper">
+        <div class="stepper-progress" id="stepperProgress"></div>
+        <div class="step active" id="step-1"><div class="step-dot">1</div><span>Datos</span></div>
+        <div class="step" id="step-2"><div class="step-dot">2</div><span>Entrega</span></div>
+        <div class="step" id="step-3"><div class="step-dot">3</div><span>Pago</span></div>
+        <div class="step" id="step-4"><div class="step-dot">4</div><span>Confirmar</span></div>
+      </div>
+
+      <!-- STAGE 1 -->
+      <div class="stage active" id="stage-1">
+        <h2>Datos personales</h2>
+        <div class="form-group">
+          <input type="text" class="form-control" id="f_name" placeholder=" " onblur="validateField(this)">
+          <label>Nombre completo</label>
+          <div class="error-msg">Campo requerido</div>
+        </div>
+        <div class="form-group">
+          <input type="email" class="form-control" id="f_email" placeholder=" " onblur="validateField(this)">
+          <label>Correo electrónico</label>
+          <div class="error-msg">Email inválido</div>
+        </div>
+        <div class="form-group">
+          <input type="tel" class="form-control" id="f_tel" placeholder=" " onblur="validateField(this)">
+          <label>Teléfono</label>
+          <div class="error-msg">Teléfono inválido</div>
+        </div>
+        <p style="color:var(--text-secondary); font-size:0.875rem; margin-bottom:2rem;">(Solo para esta simulación educativa)</p>
+        <button class="btn-next" onclick="nextStage(1, 2)">Continuar a Entrega</button>
+      </div>
+
+      <!-- STAGE 2 -->
+      <div class="stage" id="stage-2">
+        <h2>Método de entrega</h2>
+        <div class="delivery-card selected" onclick="selectDelivery(this, 'Estándar', 0)">
+          <div>
+            <div style="font-weight:600; margin-bottom:4px">Envío estándar</div>
+            <div style="color:var(--text-secondary); font-size:0.875rem">5-7 días hábiles</div>
+          </div>
+          <div>Sin costo</div>
+        </div>
+        <div class="delivery-card" onclick="selectDelivery(this, 'Express', 99)">
+          <div>
+            <div style="font-weight:600; margin-bottom:4px">Envío express</div>
+            <div style="color:var(--text-secondary); font-size:0.875rem">1-2 días hábiles</div>
+          </div>
+          <div>+$99 MXN</div>
+        </div>
+        <button class="btn-next" onclick="nextStage(2, 3)" style="margin-top:2rem">Continuar a Pago</button>
+      </div>
+
+      <!-- STAGE 3 -->
+      <div class="stage" id="stage-3">
+        <h2>Método de pago</h2>
+        <div class="card-container">
+          <div class="credit-card" id="creditCard">
+            <div class="card-face card-front">
+              <div class="card-network" id="cardNetwork">VISA</div>
+              <div class="card-chip"></div>
+              <div class="card-number" id="ccDisplayNum">•••• •••• •••• ••••</div>
+              <div class="card-bottom">
+                <div>
+                  <div class="card-label">Titular</div>
+                  <div class="card-val" id="ccDisplayName">NOMBRE APELLIDO</div>
+                </div>
+                <div>
+                  <div class="card-label">Expira</div>
+                  <div class="card-val" id="ccDisplayExp">MM/AA</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-face card-back">
+              <div class="card-stripe"></div>
+              <div class="card-cvv-strip" id="ccDisplayCvv">***</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input type="text" class="form-control" id="cc_num" placeholder=" " maxlength="19">
+          <label>Número de tarjeta</label>
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-control" id="cc_name" placeholder=" ">
+          <label>Nombre en la tarjeta</label>
+        </div>
+        <div class="row">
+          <div class="col form-group">
+            <input type="text" class="form-control" id="cc_exp" placeholder=" " maxlength="5">
+            <label>Expiración (MM/AA)</label>
+          </div>
+          <div class="col form-group">
+            <input type="text" class="form-control" id="cc_cvv" placeholder=" " maxlength="4">
+            <label>CVV</label>
+          </div>
+        </div>
+        <p style="color:var(--text-secondary); font-size:0.875rem; margin-bottom:2rem;">🔒 Simulación educativa — No uses datos reales</p>
+        <button class="btn-next" onclick="nextStage(3, 4)">Revisar Pedido</button>
+      </div>
+
+      <!-- STAGE 4 -->
+      <div class="stage" id="stage-4">
+        <h2>Confirmar pedido</h2>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1.5rem; margin-bottom:2rem;">
+          <label style="position:static; pointer-events:auto; display:flex; align-items:center; gap:12px; cursor:pointer; color:white;">
+            <input type="checkbox" id="confirmCheck" style="width:20px; height:20px; pointer-events:auto; cursor:pointer;" onchange="document.getElementById('btnConfirm').disabled = !this.checked">
+            Confirmo que esto es una simulación educativa
+          </label>
+        </div>
+        <button class="btn-next" id="btnConfirm" disabled onclick="confirmOrder()" style="width:100%; padding:1.25rem; font-size:1.125rem;">CONFIRMAR PEDIDO</button>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="summary-pane">
+        <h3>Resumen</h3>
+        <div id="summaryItems" style="margin-bottom:1.5rem;"></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:var(--text-secondary)">
+          <span>Subtotal</span><span id="sumSubtotal">$0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem; color:var(--text-secondary)">
+          <span>Envío</span><span id="sumEnvio">Gratis</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:1rem; font-weight:700; font-size:1.25rem;">
+          <span>Total</span><span id="sumTotal">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="payment-overlay" id="paymentOverlay">
+    <div class="payment-spinner" id="paySpinner"></div>
+    <svg class="success-check" id="payCheck" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div id="payText" style="font-size:20px; font-weight:600">Procesando pago...</div>
+    <div class="progress-bar" id="payProgressCont"><div class="progress-fill" id="payProgress"></div></div>
+  </div>
+
+  <script>
+    let cart = JSON.parse(sessionStorage.getItem('uaa_cart') || '[]');
+    let deliveryCost = 0;
+    
+    // Render summary
+    const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    document.getElementById('sumSubtotal').innerText = `$${subtotal.toLocaleString()}`;
+    document.getElementById('sumTotal').innerText = `$${subtotal.toLocaleString()}`;
+    document.getElementById('summaryItems').innerHTML = cart.map(i => `
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.875rem;">
+        <span style="color:var(--text-secondary)">${i.qty}x ${i.name}</span>
+        <span>$${(i.price*i.qty).toLocaleString()}</span>
+      </div>
+    `).join('');
+
+    function validateField(input) {
+      if(input.value.trim() === '') {
+        input.classList.add('invalid'); input.classList.remove('valid'); return false;
+      }
+      input.classList.remove('invalid'); input.classList.add('valid'); return true;
+    }
+
+    function nextStage(current, next) {
+      if(current === 1) {
+        if(!validateField(document.getElementById('f_name')) || !validateField(document.getElementById('f_email'))) return;
+      }
+      
+      document.getElementById(`stage-${current}`).classList.remove('active');
+      document.getElementById(`stage-${next}`).classList.add('active');
+      
+      document.getElementById(`step-${current}`).classList.add('completed');
+      document.getElementById(`step-${next}`).classList.add('active');
+      
+      document.getElementById('stepperProgress').style.width = ((next-1) * 33.33) + '%';
+    }
+
+    function selectDelivery(el, name, cost) {
+      document.querySelectorAll('.delivery-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      deliveryCost = cost;
+      document.getElementById('sumEnvio').innerText = cost === 0 ? 'Gratis' : `+$${cost}`;
+      document.getElementById('sumTotal').innerText = `$${(subtotal + cost).toLocaleString()}`;
+    }
+
+    // Card logic
+    const ccNum = document.getElementById('cc_num');
+    const ccName = document.getElementById('cc_name');
+    const ccExp = document.getElementById('cc_exp');
+    const ccCvv = document.getElementById('cc_cvv');
+    const card3d = document.getElementById('creditCard');
+
+    ccNum.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '').slice(0, 16);
+      e.target.value = v.replace(/(\d{4})/g, '$1 ').trim();
+      document.getElementById('ccDisplayNum').innerText = v.padEnd(16, '•').replace(/(\d{4})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4');
+      
+      let network = 'VISA';
+      if(v.startsWith('5')) network = 'MASTERCARD';
+      if(v.startsWith('3')) network = 'AMEX';
+      document.getElementById('cardNetwork').innerText = network;
+    });
+
+    ccName.addEventListener('input', e => {
+      document.getElementById('ccDisplayName').innerText = e.target.value.toUpperCase() || 'NOMBRE APELLIDO';
+    });
+
+    ccExp.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '').slice(0,4);
+      if(v.length >= 2) v = v.slice(0,2) + '/' + v.slice(2);
+      e.target.value = v;
+      document.getElementById('ccDisplayExp').innerText = v || 'MM/AA';
+    });
+
+    ccCvv.addEventListener('focus', () => card3d.classList.add('flipped'));
+    ccCvv.addEventListener('blur', () => card3d.classList.remove('flipped'));
+    ccCvv.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '').slice(0,4);
+      e.target.value = v;
+      document.getElementById('ccDisplayCvv').innerText = '*'.repeat(v.length) || '***';
+    });
+
+    function confirmOrder() {
+      const overlay = document.getElementById('paymentOverlay');
+      overlay.style.display = 'flex';
+      
+      setTimeout(() => { document.getElementById('payProgress').style.width = '100%'; }, 50);
+
+      const orderNum = 'UAA-' + Date.now().toString(36).toUpperCase().slice(-6);
+      sessionStorage.setItem('uaa_last_order', orderNum);
+      sessionStorage.setItem('uaa_cart_summary', JSON.stringify(cart));
+      sessionStorage.setItem('uaa_checkout_data', JSON.stringify({ name: document.getElementById('f_name').value }));
+      sessionStorage.setItem('uaa_cart', '[]');
+
+      setTimeout(() => {
+        document.getElementById('paySpinner').style.display = 'none';
+        document.getElementById('payProgressCont').style.display = 'none';
+        document.getElementById('payCheck').classList.add('draw');
+        document.getElementById('payText').innerHTML = `¡Pago aprobado!<br><span style="font-size:14px;color:#aaa">Referencia: ${orderNum}</span>`;
+      }, 2500);
+
+      setTimeout(() => {
+        window.location.href = `order-confirm.html${window.location.search}`;
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

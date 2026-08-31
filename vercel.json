@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/app.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/health",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/admin",
+      "dest": "frontend/admin.html"
+    },
+    {
+      "src": "/lobby",
+      "dest": "frontend/lobby.html"
+    },
+    {
+      "src": "/game",
+      "dest": "frontend/game.html"
+    },
+    {
+      "src": "/results",
+      "dest": "frontend/results.html"
+    },
+    {
+      "src": "/rewards",
+      "dest": "frontend/rewards.html"
+    },
+    {
+      "src": "/",
+      "dest": "frontend/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "env": {
+    "REALTIME_PROVIDER": "@realtime_provider",
+    "ABLY_API_KEY": "@ably_api_key",
+    "ABLY_CLIENT_KEY": "@ably_client_key",
+    "ADMIN_PASSWORD": "@admin_password",
+    "JWT_SECRET": "@jwt_secret",
+    "DATABASE_URL": "@database_url"
+  }
+}
