@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UAA Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1121,13 +1124,11 @@
       showDetailModal('Detalle de Partida', html);
     }
 
-    async function startGame(code) {
-      if (!code || code === '—') { toast('Código de partida inválido', 'error'); return; }
-      confirmAction('Iniciar partida', `¿Iniciar la partida <b style="color:var(--gold)">${code}</b>?`, async () => {
-        const { ok } = await api('POST', `/api/games/${code}/start`);
-        if (ok) { toast('Partida iniciada: ' + code); refreshCurrentSection(); }
-        else { toast('Error al iniciar — verifica que la partida exista', 'error'); }
-      });
+        async function startGame(code) {
+      if (!code || code === '?') { showToast('Codigo invalido', 'error'); return; }
+      const inp = document.getElementById('live-code');
+      if (inp) inp.value = code;
+      await liveLaunch();
     }
 
     async function endGame(code) {
@@ -1421,15 +1422,16 @@
     let _liveTotal = 6;
 
     async function liveLaunch() {
-      _liveCode = (document.getElementById("live-code").value || "").trim().toUpperCase();
-      const dur  = parseInt(document.getElementById("live-duration").value) || 30;
-      const res  = parseInt(document.getElementById("live-results-sec").value) || 5;
+      // Robust element lookup — use fallback values if elements missing
+      _liveCode = (document.getElementById("live-code")?.value || "").trim().toUpperCase();
+      const dur  = parseInt(document.getElementById("live-duration")?.value) || 30;
+      const res  = parseInt(document.getElementById("live-results-sec")?.value) || 5;
       _liveDuration = dur;
 
       const btnLaunch = document.getElementById("btn-launch");
-      btnLaunch.disabled = true;
-      btnLaunch.textContent = "Iniciando…";
-      document.getElementById("live-status-msg").textContent = "";
+      if (btnLaunch) { btnLaunch.disabled = true; btnLaunch.textContent = "Iniciando… (max 15s)"; }
+      const statusEl = document.getElementById("live-status-msg");
+      if (statusEl) statusEl.textContent = "Conectando con el servidor…";
 
       // If no code entered, create a new game automatically
       if (!_liveCode) {
@@ -1440,7 +1442,7 @@
         if (!gok || !gdata?.game_code) {
           showToast("Error al crear partida. Intenta de nuevo.", "error");
           btnLaunch.disabled = false;
-          btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+          if (btnLaunch) { btnLaunch.disabled = false; btnLaunch.textContent = "🚀 CREAR E INICIAR JUEGO"; }
           return;
         }
         _liveCode = gdata.game_code;
@@ -1476,7 +1478,7 @@
               document.getElementById("live-status-msg").textContent = `✅ Juego ${_liveCode} — ${_liveTotal} misiones de ${dur}s`;
               document.getElementById("btn-end-game").style.display = "inline-flex";
               btnLaunch.disabled = false;
-              btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+              if (btnLaunch) { btnLaunch.disabled = false; btnLaunch.textContent = "🚀 CREAR E INICIAR JUEGO"; }
               _connectLivePolling();
               return;
             }
@@ -1485,7 +1487,7 @@
         showToast("Error: " + detail, "error");
         document.getElementById("live-status-msg").innerHTML = `<span style="color:#E62429">❌ ${detail}</span>`;
         btnLaunch.disabled = false;
-        btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+        if (btnLaunch) { btnLaunch.disabled = false; btnLaunch.textContent = "🚀 CREAR E INICIAR JUEGO"; }
         return;
       }
 
@@ -1495,7 +1497,7 @@
         `✅ <strong>${_liveCode}</strong> — ${_liveTotal} misiones × ${dur}s + ${res}s resultados`;
       document.getElementById("btn-end-game").style.display = "inline-flex";
       btnLaunch.disabled = false;
-      btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+      if (btnLaunch) { btnLaunch.disabled = false; btnLaunch.textContent = "🚀 CREAR E INICIAR JUEGO"; }
       _connectLivePolling();
     }
 
