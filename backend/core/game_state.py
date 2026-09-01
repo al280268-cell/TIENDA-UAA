@@ -40,11 +40,14 @@ class GameState:
 
     # ── Kahoot-style mission sync ──────────────────────────────────────────
     current_mission_index: int = -1          # -1 = lobby / not started
-    missions_order: List[str] = field(default_factory=list)  # ordered mission IDs
-    mission_start_ts: Optional[float] = None # Unix ts when round started
-    mission_duration_sec: int = 60           # seconds per round (admin-configurable)
-    mission_locked: bool = False             # True once time is up
+    missions_order: List[str] = field(default_factory=list)
+    mission_start_ts: Optional[float] = None
+    mission_duration_sec: int = 30           # seconds per question/mission
+    mission_locked: bool = False
+    mission_locked_at: Optional[float] = None  # when was it locked (for auto-advance)
     mission_phase: str = "lobby"             # lobby|active|locked|results|finished
+    results_display_sec: int = 5             # seconds to show results before next mission
+
 
 _games: Dict[str, GameState] = {}
 
@@ -149,6 +152,7 @@ def lock_mission_round(code: str) -> dict:
     if not gs:
         return {}
     gs.mission_locked = True
+    gs.mission_locked_at = time.time()
     gs.mission_phase = "locked"
     recalculate_ranks(code)
 

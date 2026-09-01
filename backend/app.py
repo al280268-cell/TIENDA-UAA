@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, FileResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import httpx
 import base64
@@ -48,29 +48,87 @@ async def publish_to_ably(channel: str, event: str, data: dict):
             print(f"[Ably EXCEPTION] {e}")
 
 
-# ── BACKGROUND TIMER: auto-locks missions when time runs out ─────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# BACKGROUND TIMER — Fully automatic Kahoot-style flow
+#
+# State machine:
+#   active  →  (timer hits 0)  →  locked  →  (5s results)  →  active (next)
+#                                                           →  finished (last)
+# ─────────────────────────────────────────────────────────────────────────────
 async def _mission_timer_loop():
-    """Runs every second. Auto-locks active mission rounds when timer hits 0."""
-    await asyncio.sleep(3)  # Wait for app to fully start
+    """Runs every second. Drives the automatic mission progression."""
+    await asyncio.sleep(3)  # Let app fully start
     while True:
         try:
-            from backend.core.game_state import _games, lock_mission_round, get_leaderboard, get_mission_time_remaining
+            from backend.core.game_state import (
+                _games, lock_mission_round, get_leaderboard,
+                get_mission_time_remaining, start_mission_round
+            )
+            now = _time.time()
+
             for code, gs in list(_games.items()):
-                if gs.mission_phase != "active" or gs.mission_locked:
-                    continue
-                remaining = get_mission_time_remaining(code)
-                if remaining <= 0:
-                    # Time is up — lock the round
-                    summary = lock_mission_round(code)
-                    leaderboard = [vars(p) for p in get_leaderboard(code)]
-                    print(f"[Timer] Mission {gs.current_mission_index} locked for game {code}")
-                    await publish_to_ably(f"game:{code}", "mission_locked", {
-                        "mission_index": gs.current_mission_index,
-                        "results": summary.get("results", []),
-                        "leaderboard": leaderboard,
-                    })
+
+                # ── Phase: ACTIVE → check if time is up ──────────────────────
+                if gs.mission_phase == "active" and not gs.mission_locked:
+                    remaining = get_mission_time_remaining(code)
+                    if remaining <= 0:
+                        summary   = lock_mission_round(code)
+                        leaderboard = [vars(p) for p in get_leaderboard(code)]
+                        print(f"[Kahoot] Mission {gs.current_mission_index} LOCKED for game {code}")
+                        await publish_to_ably(f"game:{code}", "mission_locked", {
+                            "mission_index": gs.current_mission_index,
+                            "results":       summary.get("results", []),
+                            "leaderboard":   leaderboard,
+                        })
+
+                # ── Phase: LOCKED → wait results_display_sec then auto-advance ──
+                elif gs.mission_phase == "locked" and gs.mission_locked_at is not None:
+                    waited = now - gs.mission_locked_at
+                    if waited >= gs.results_display_sec:
+                        next_index = gs.current_mission_index + 1
+
+                        if next_index < len(gs.missions_order):
+                            # Auto-advance to next mission
+                            mission_id = gs.missions_order[next_index]
+                            start_mission_round(code, next_index, mission_id)
+                            leaderboard = [vars(p) for p in get_leaderboard(code)]
+                            print(f"[Kahoot] Auto-starting mission {next_index} for game {code}")
+                            await publish_to_ably(f"game:{code}", "mission_started", {
+                                "mission_index":  next_index,
+                                "mission_id":     mission_id,
+                                "duration_sec":   gs.mission_duration_sec,
+                                "start_ts":       gs.mission_start_ts,
+                                "total_missions": len(gs.missions_order),
+                                "leaderboard":    leaderboard,
+                            })
+                        else:
+                            # All missions done — finish the game
+                            gs.status        = "finished"
+                            gs.mission_phase = "finished"
+                            gs.mission_locked = True
+                            recalc_needed = True
+                            from backend.core.game_state import recalculate_ranks
+                            recalculate_ranks(code)
+                            leaderboard = [vars(p) for p in get_leaderboard(code)]
+                            print(f"[Kahoot] Game {code} FINISHED")
+                            await publish_to_ably(f"game:{code}", "game_ended", {
+                                "leaderboard": leaderboard
+                            })
+                            # Persist to DB
+                            try:
+                                from backend.core.database import get_db
+                                async with get_db() as db:
+                                    await db.execute(
+                                        "UPDATE games SET status='finished', ended_at=? WHERE code=?",
+                                        (_time.time(), code)
+                                    )
+                                    await db.commit()
+                            except Exception as e:
+                                print(f"[Timer DB] {e}")
+
         except Exception as e:
             print(f"[Timer ERROR] {e}")
+
         await asyncio.sleep(1)
 
 
@@ -92,9 +150,8 @@ app.include_router(quiz.router)
 async def startup_event():
     await init_db()
     print("Database initialized OK")
-    # Start the background mission timer
     asyncio.create_task(_mission_timer_loop())
-    print("Mission timer loop started")
+    print("Kahoot auto-timer started")
 
 
 @app.get("/health")

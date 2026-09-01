@@ -233,6 +233,60 @@ async def start_game(code: str, admin=Depends(get_admin)):
     return {"success": True}
 
 
+class LaunchRequest(BaseModel):
+    duration_sec: int = 30          # seconds per mission
+    results_sec: int = 5            # seconds to show results between missions
+    missions: Optional[List[str]] = None  # custom mission order; default: m1-m6
+
+# ── LANZAR JUEGO COMPLETO (1 botón = juego automático tipo Kahoot) ────────────
+@router.post("/{code}/launch")
+async def launch_game(code: str, req: LaunchRequest, admin=Depends(get_admin)):
+    """
+    One-click: starts game + mission 1. The background timer handles all
+    subsequent missions automatically. Admin never needs to click 'next'.
+    """
+    gs = await _ensure_in_memory(code)
+    if not gs:
+        raise HTTPException(404, "Game not found in DB")
+    if gs.status == "finished":
+        raise HTTPException(400, "Game already finished")
+
+    # Configure
+    DEFAULT_MISSIONS = ["m1", "m2", "m3", "m4", "m5", "m6"]
+    gs.missions_order        = req.missions or DEFAULT_MISSIONS
+    gs.mission_duration_sec  = req.duration_sec
+    gs.results_display_sec   = req.results_sec
+    gs.status                = "active"
+    gs.started_at            = time.time()
+    gs.time_remaining        = gs.duration_seconds
+
+    async with get_db() as db:
+        await db.execute(
+            "UPDATE games SET status='active', started_at=?, time_remaining=? WHERE code=?",
+            (gs.started_at, gs.time_remaining, code)
+        )
+        await db.commit()
+
+    # Start mission 0 immediately
+    start_mission_round(code, 0, gs.missions_order[0])
+
+    await publish_to_ably(f"game:{code}", "mission_started", {
+        "mission_index":  0,
+        "mission_id":     gs.missions_order[0],
+        "duration_sec":   gs.mission_duration_sec,
+        "start_ts":       gs.mission_start_ts,
+        "total_missions": len(gs.missions_order),
+    })
+
+    return {
+        "success":        True,
+        "mission_id":     gs.missions_order[0],
+        "duration_sec":   gs.mission_duration_sec,
+        "total_missions": len(gs.missions_order),
+        "start_ts":       gs.mission_start_ts,
+    }
+
+
 # ── INICIAR MISIÓN (admin lanza ronda) ───────────────────────────────────────
 @router.post("/{code}/mission/start")
 async def admin_start_mission(code: str, req: MissionStartRequest, admin=Depends(get_admin)):

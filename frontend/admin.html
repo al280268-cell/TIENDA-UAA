@@ -446,50 +446,70 @@
       <!-- ════ SECTION: CONTROL EN VIVO (Kahoot) ════ -->
       <section id="sec-live" class="sec-content">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="font-display" style="font-size:22px;font-weight:800">🎮 Control en Vivo</h2>
+          <h2 class="font-display" style="font-size:22px;font-weight:800">🎮 Control en Vivo — Modo Kahoot</h2>
         </div>
 
-        <!-- Game code input -->
-        <div class="card mb-4">
-          <div class="card-header">Partida a controlar</div>
-          <div class="flex gap-2 flex-wrap items-center" style="padding:12px 0 0">
-            <input type="text" id="live-code" placeholder="Código de partida" style="max-width:160px;text-transform:uppercase"
-              oninput="this.value=this.value.toUpperCase()">
-            <button class="btn btn-primary" onclick="liveStart()">Conectar</button>
-            <span id="live-status-badge" style="font-size:.8rem;color:var(--text-secondary)"></span>
+        <!-- Setup card -->
+        <div class="card mb-4" id="live-setup-card">
+          <div class="card-header">Configurar y Lanzar Partida</div>
+          <div style="padding:14px 0">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+              <div>
+                <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Código de partida</label>
+                <input type="text" id="live-code" placeholder="Ej: UAA-7CKA" style="max-width:160px;text-transform:uppercase"
+                  oninput="this.value=this.value.toUpperCase()">
+              </div>
+              <div>
+                <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Segundos por misión</label>
+                <input type="number" id="live-duration" value="30" min="10" max="300" style="max-width:100px">
+              </div>
+              <div>
+                <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Seg. de resultados</label>
+                <input type="number" id="live-results-sec" value="5" min="3" max="15" style="max-width:80px">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-primary" style="font-size:1rem;padding:12px 28px;font-weight:800" onclick="liveLaunch()" id="btn-launch">
+                🚀 INICIAR JUEGO AUTOMÁTICO
+              </button>
+              <button class="btn" onclick="liveConnect()" id="btn-connect">
+                🔍 Solo ver (ya inició)
+              </button>
+              <button class="btn btn-danger" onclick="liveEndGame()" id="btn-end-game" style="display:none">
+                🏁 Terminar ahora
+              </button>
+            </div>
+            <div id="live-status-msg" style="margin-top:10px;font-size:.85rem;color:var(--text-secondary)"></div>
           </div>
         </div>
 
+        <!-- Live dashboard (only visible when connected) -->
         <div id="live-panel" style="display:none">
-          <!-- KPIs -->
-          <div class="kpi-grid" id="live-kpis" style="margin-bottom:16px"></div>
 
-          <!-- Mission control -->
+          <!-- Status banner -->
+          <div id="live-phase-banner" style="border-radius:12px;padding:14px 18px;margin-bottom:16px;font-family:'Bangers',cursive;font-size:1.4rem;letter-spacing:2px;text-align:center;background:rgba(230,36,41,.15);border:1px solid rgba(230,36,41,.35);color:#FF3B40">
+            LOBBY — Esperando jugadores
+          </div>
+
+          <!-- KPIs -->
+          <div class="kpi-grid mb-4" id="live-kpis"></div>
+
+          <!-- Timer + mission info -->
           <div class="card mb-4">
-            <div class="card-header">⏱ Control de Misiones</div>
-            <div style="padding:14px 0">
-              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-                <div>
-                  <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Duración por misión (seg)</label>
-                  <input type="number" id="live-duration" value="60" min="10" max="300" style="max-width:90px">
-                </div>
-                <div style="align-self:flex-end;display:flex;gap:8px;flex-wrap:wrap">
-                  <button class="btn btn-primary" onclick="liveStartMission()" id="btn-live-start-mission">🚀 INICIAR MISIÓN</button>
-                  <button class="btn btn-danger" onclick="liveLockMission()" id="btn-live-lock">⏹ BLOQUEAR AHORA</button>
-                  <button class="btn" onclick="liveNextMission()" id="btn-live-next">⏭ SIGUIENTE MISIÓN</button>
-                  <button class="btn btn-danger" onclick="liveEndGame()">🏁 TERMINAR PARTIDA</button>
-                </div>
+            <div class="card-header">⏱ Misión Actual</div>
+            <div style="padding:14px 0;text-align:center">
+              <div id="live-timer-display" style="font-size:4rem;font-weight:900;font-family:'Bangers',cursive;letter-spacing:4px;color:#E62429;line-height:1">--</div>
+              <div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">segundos restantes</div>
+              <div id="live-mission-progress" style="height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;max-width:400px;margin:0 auto">
+                <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#00E676,#E62429);transition:width 1s linear;width:0%"></div>
               </div>
-              <div id="live-timer-display" style="text-align:center;font-size:3rem;font-weight:900;color:#E62429;font-family:'Bangers',cursive;letter-spacing:4px;margin:8px 0">--</div>
-              <div id="live-mission-progress" style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
-                <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#E62429,#2B5CE6);transition:width 1s linear;width:0%"></div>
-              </div>
+              <div id="live-mission-label" style="font-size:.85rem;color:var(--text-secondary);margin-top:8px"></div>
             </div>
           </div>
 
-          <!-- Player grid -->
+          <!-- Players grid: who answered -->
           <div class="card mb-4">
-            <div class="card-header">👥 Estado de Jugadores <span id="live-answered-badge" style="font-size:.8rem;font-weight:600;color:var(--text-secondary)"></span></div>
+            <div class="card-header">👥 Jugadores <span id="live-answered-badge" style="font-size:.8rem;font-weight:600;color:var(--text-secondary)"></span></div>
             <div id="live-players-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:12px 0"></div>
           </div>
 
@@ -1319,26 +1339,50 @@
     }
 
     // ════════════════════════════════════════════════
-    // LIVE CONTROL PANEL (Kahoot)
+    // LIVE CONTROL PANEL — Auto Kahoot Mode
     // ════════════════════════════════════════════════
     let _liveInterval = null;
-    let _liveCode = '';
-    let _liveStartTs = null;
-    let _liveDuration = 60;
-    let _liveTimerInterval = null;
+    let _liveCode = "";
+    let _liveDuration = 30;
+    let _liveTotal = 6;
 
-    async function liveStart() {
-      _liveCode = (document.getElementById('live-code').value || '').trim().toUpperCase();
-      if (!_liveCode) { showToast('Ingresa el código de la partida', 'warning'); return; }
-      document.getElementById('live-panel').style.display = 'block';
-      document.getElementById('live-status-badge').textContent = 'Conectado: ' + _liveCode;
+    async function liveLaunch() {
+      _liveCode = (document.getElementById("live-code").value || "").trim().toUpperCase();
+      if (!_liveCode) { showToast("Ingresa el código de partida", "warning"); return; }
+      const dur  = parseInt(document.getElementById("live-duration").value) || 30;
+      const res  = parseInt(document.getElementById("live-results-sec").value) || 5;
+      _liveDuration = dur;
 
-      // Also set missions order from the quiz mission IDs
-      const missions = ['m1','m2','m3','m4','m5','m6'];
-      await api('POST', `/api/games/${_liveCode}/missions/order`, {
-        missions, mission_duration_sec: parseInt(document.getElementById('live-duration').value) || 60
+      document.getElementById("btn-launch").disabled = true;
+      document.getElementById("btn-launch").textContent = "Iniciando…";
+
+      const { data, ok } = await api("POST", `/api/games/${_liveCode}/launch`, {
+        duration_sec: dur, results_sec: res
       });
 
+      if (!ok) {
+        showToast("Error al iniciar: " + (data?.detail || "verifica el código"), "error");
+        document.getElementById("btn-launch").disabled = false;
+        document.getElementById("btn-launch").textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+        return;
+      }
+      _liveTotal = data.total_missions || 6;
+      showToast("¡Juego iniciado! Avanza automáticamente 🚀", "success");
+      document.getElementById("live-status-msg").textContent = `✅ Juego iniciado — ${_liveTotal} misiones de ${dur}s cada una`;
+      document.getElementById("btn-end-game").style.display = "inline-flex";
+      _connectLivePolling();
+    }
+
+    async function liveConnect() {
+      _liveCode = (document.getElementById("live-code").value || "").trim().toUpperCase();
+      if (!_liveCode) { showToast("Ingresa el código", "warning"); return; }
+      document.getElementById("live-status-msg").textContent = "Conectado como observador: " + _liveCode;
+      document.getElementById("btn-end-game").style.display = "inline-flex";
+      _connectLivePolling();
+    }
+
+    function _connectLivePolling() {
+      document.getElementById("live-panel").style.display = "block";
       livePoll();
       if (_liveInterval) clearInterval(_liveInterval);
       _liveInterval = setInterval(livePoll, 2000);
@@ -1346,97 +1390,85 @@
 
     async function livePoll() {
       if (!_liveCode) return;
-      const { data, ok } = await api('GET', `/api/admin/game/${_liveCode}/live`);
+      const { data, ok } = await api("GET", `/api/admin/game/${_liveCode}/live`);
       if (!ok || !data) return;
       renderLivePanel(data);
     }
 
     function renderLivePanel(d) {
-      const round = d.round_status || {};
+      const round    = d.round_status || {};
       const answered = round.answered || 0;
       const total    = round.total_players || 0;
-      const phase    = d.mission_phase || 'lobby';
+      const phase    = d.mission_phase || "lobby";
       const mIdx     = d.current_mission_index ?? -1;
+      const rem      = d.mission_time_remaining || 0;
+      const dur      = d.mission_duration_sec || _liveDuration;
+      const totMis   = d.total_missions || _liveTotal;
+
+      // Phase banner
+      const bannerEl  = document.getElementById("live-phase-banner");
+      const bannerMap = {
+        lobby:    { text: "🏟️ LOBBY — Esperando jugadores", bg: "rgba(43,92,230,.2)", border: "rgba(43,92,230,.5)", color: "#64B5F6" },
+        active:   { text: `🎯 MISIÓN ${mIdx+1} DE ${totMis} — ${rem}s`, bg: "rgba(230,36,41,.15)", border: "rgba(230,36,41,.4)", color: "#FF3B40" },
+        locked:   { text: `⏰ MISIÓN ${mIdx+1} TERMINADA — Mostrando resultados`, bg: "rgba(245,158,11,.15)", border: "rgba(245,158,11,.4)", color: "#F59E0B" },
+        finished: { text: "🏆 ¡JUEGO TERMINADO!", bg: "rgba(0,230,118,.1)", border: "rgba(0,230,118,.4)", color: "#00E676" },
+      };
+      const binfo = bannerMap[phase] || bannerMap.lobby;
+      bannerEl.textContent = binfo.text;
+      bannerEl.style.background = binfo.bg;
+      bannerEl.style.borderColor = binfo.border;
+      bannerEl.style.color = binfo.color;
 
       // KPIs
-      document.getElementById('live-kpis').innerHTML = `
-        <div class="kpi-card"><div class="kpi-value">${mIdx >= 0 ? mIdx + 1 : '—'}</div><div class="kpi-sub">Misión actual / ${d.total_missions || '?'}</div></div>
-        <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-sub">Jugadores conectados</div></div>
+      document.getElementById("live-kpis").innerHTML = `
+        <div class="kpi-card"><div class="kpi-value">${mIdx >= 0 ? mIdx+1 : "—"}/${totMis}</div><div class="kpi-sub">Misión</div></div>
+        <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-sub">Jugadores</div></div>
         <div class="kpi-card"><div class="kpi-value">${answered}/${total}</div><div class="kpi-sub">Respondieron</div></div>
-        <div class="kpi-card"><div class="kpi-value">${phase.toUpperCase()}</div><div class="kpi-sub">Fase</div></div>`;
+        <div class="kpi-card"><div class="kpi-value" style="color:${rem<=10?"#E62429":rem<=20?"#F59E0B":"inherit"}">${rem}s</div><div class="kpi-sub">Tiempo restante</div></div>`;
 
-      // Timer display
-      const rem = d.mission_time_remaining || 0;
-      document.getElementById('live-timer-display').textContent = String(rem).padStart(2, '0') + 's';
-      const pct = _liveDuration > 0 ? ((1 - rem / _liveDuration) * 100) : 0;
-      document.getElementById('live-mission-bar').style.width = pct + '%';
-      if (d.mission_start_ts) {
-        _liveStartTs  = d.mission_start_ts;
-        _liveDuration = d.mission_duration_sec || 60;
-      }
+      // Timer bar
+      document.getElementById("live-timer-display").textContent = String(rem).padStart(2,"0");
+      const pct = dur > 0 ? Math.max(0, Math.min(100, (rem/dur)*100)) : 0;
+      document.getElementById("live-mission-bar").style.width = pct + "%";
+      document.getElementById("live-mission-label").textContent =
+        phase === "active" ? `Misión ${mIdx+1} de ${totMis} — ID: ${d.current_mission_id || "?"}` :
+        phase === "locked" ? `Resultados en pantalla (${d.results_display_sec || 5}s)...` :
+        phase === "finished" ? "¡Partida finalizada!" : "Esperando al administrador...";
 
-      // Players grid
-      document.getElementById('live-answered-badge').textContent = `(${answered}/${total} respondieron)`;
+      // Players
+      document.getElementById("live-answered-badge").textContent = `(${answered}/${total} respondieron)`;
       const players = round.player_statuses || [];
-      document.getElementById('live-players-grid').innerHTML = players.map(p => {
-        const icon = p.answered ? (p.correct ? '✅' : '❌') : '⏳';
-        const bg   = p.answered ? (p.correct ? 'rgba(0,230,118,.1)' : 'rgba(230,36,41,.08)') : 'rgba(255,255,255,.03)';
-        const border = p.answered ? (p.correct ? 'rgba(0,230,118,.4)' : 'rgba(230,36,41,.3)') : 'rgba(255,255,255,.08)';
+      document.getElementById("live-players-grid").innerHTML = players.map(p => {
+        const icon   = p.answered ? (p.correct ? "✅" : "❌") : "⏳";
+        const bg     = p.answered ? (p.correct ? "rgba(0,230,118,.1)" : "rgba(230,36,41,.08)") : "rgba(255,255,255,.03)";
+        const border = p.answered ? (p.correct ? "rgba(0,230,118,.4)" : "rgba(230,36,41,.3)") : "rgba(255,255,255,.08)";
         return `<div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px">
-          <div style="width:34px;height:34px;border-radius:50%;background:${p.avatar_color || '#555'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">${p.avatar_initials || '?'}</div>
+          <div style="width:34px;height:34px;border-radius:50%;background:${p.avatar_color||"#555"};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">${p.avatar_initials||"?"}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-            <div style="font-size:.75rem;color:rgba(240,244,255,.55)">⭐ ${p.points || 0} pts · Rank #${p.rank || '—'}</div>
+            <div style="font-weight:700;font-size:.9rem">${p.name}</div>
+            <div style="font-size:.75rem;color:rgba(240,244,255,.55)">⭐ ${p.points||0} pts · #${p.rank||"—"}</div>
           </div>
-          <div style="font-size:1.3rem">${icon}</div>
+          <span style="font-size:1.4rem">${icon}</span>
         </div>`;
-      }).join('');
+      }).join("");
 
       // Leaderboard
-      const lb = (d.leaderboard || []).slice(0, 8);
-      document.getElementById('live-leaderboard').innerHTML = lb.map((p, i) => `
+      document.getElementById("live-leaderboard").innerHTML = (d.leaderboard||[]).slice(0,8).map((p,i) => `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.05)">
-          <div style="font-weight:900;font-size:1.1rem;min-width:28px;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'rgba(240,244,255,.5)'}">${i+1}</div>
-          <div style="width:32px;height:32px;border-radius:50%;background:${p.avatar_color||'#555'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem">${p.avatar_initials||'?'}</div>
+          <div style="font-weight:900;font-size:1.1rem;min-width:28px;color:${i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":"rgba(240,244,255,.5)"}">${i+1}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:${p.avatar_color||"#555"};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem">${p.avatar_initials||"?"}</div>
           <div style="flex:1;font-weight:700">${p.name}</div>
           <div style="font-weight:800;color:#FFD700">⭐ ${p.points||0}</div>
-        </div>`).join('');
-    }
-
-    async function liveStartMission() {
-      if (!_liveCode) return;
-      const dur = parseInt(document.getElementById('live-duration').value) || 60;
-      _liveDuration = dur;
-      const { ok } = await api('POST', `/api/games/${_liveCode}/mission/start`, { duration_sec: dur });
-      if (ok) showToast('¡Misión iniciada!', 'success');
-      else showToast('Error al iniciar misión', 'error');
-    }
-
-    async function liveLockMission() {
-      if (!_liveCode) return;
-      const { ok } = await api('POST', `/api/games/${_liveCode}/mission/lock`, {});
-      if (ok) showToast('Misión bloqueada', 'success');
-    }
-
-    async function liveNextMission() {
-      if (!_liveCode) return;
-      const dur = parseInt(document.getElementById('live-duration').value) || 60;
-      _liveDuration = dur;
-      // First lock current, then advance
-      await api('POST', `/api/games/${_liveCode}/mission/lock`, {});
-      await new Promise(r => setTimeout(r, 800));
-      const { data, ok } = await api('POST', `/api/games/${_liveCode}/mission/next`, {});
-      if (ok && !data?.game_ended) showToast('¡Siguiente misión iniciada!', 'success');
-      else if (data?.game_ended) showToast('¡Partida terminada!', 'success');
+        </div>`).join("");
     }
 
     async function liveEndGame() {
-      if (!_liveCode || !confirm('¿Terminar la partida?')) return;
-      await api('POST', `/api/games/${_liveCode}/end`, {});
-      showToast('Partida terminada', 'success');
+      if (!_liveCode || !confirm("¿Terminar la partida ahora?")) return;
+      await api("POST", `/api/games/${_liveCode}/end`, {});
+      showToast("Partida terminada", "success");
     }
 
-    // ════════════════════════════════════════════════
+        // ════════════════════════════════════════════════
     // INVENTARIO v2
     // ════════════════════════════════════════════════
     async function loadInventory2() {
