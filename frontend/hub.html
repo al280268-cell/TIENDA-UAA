@@ -573,6 +573,11 @@ async function poll() {
   const state = await api('GET', `/api/games/${P.code}/state`);
   if (!state) return;
 
+  // Determine phase FIRST (before any use of it)
+  const phase = (state.status === 'finished' && state.mission_phase === 'lobby')
+    ? 'finished'
+    : (state.mission_phase || 'lobby');
+
   // Update player points from leaderboard
   const me = (state.players || []).find(p => p.player_id === P.id);
   if (me) {
@@ -580,10 +585,6 @@ async function poll() {
     if (me.rank) { P.rank = me.rank; sessionStorage.setItem('uaa_my_rank', me.rank); }
     updateHUD(phase);
   }
-
-  const phase = (state.status === 'finished' && state.mission_phase === 'lobby')
-    ? 'finished'
-    : (state.mission_phase || 'lobby');
   const mIdx  = state.current_mission_index ?? -1;
   const mId   = state.current_mission_id;
 
