@@ -255,12 +255,12 @@
                 <label style="font-size:.72rem;color:var(--text-secondary);display:block;margin-bottom:3px">Máx. jugadores</label>
                 <input type="number" id="dash-max-players" value="30" min="1" max="100" style="width:70px">
               </div>
-              <button class="btn btn-danger" style="font-size:1.05rem;font-weight:900;padding:11px 26px;letter-spacing:.5px" onclick="liveLaunch()" id="btn-launch">
-                🚀 CREAR E INICIAR JUEGO
+              <button class="btn btn-primary" style="font-size:1rem;font-weight:900;padding:11px 20px;" onclick="liveLaunch()" id="btn-launch">
+                🚀 CREAR NUEVA PARTIDA (LOBBY)
               </button>
               <div>
                 <div id="live-status-msg" style="font-size:.82rem;color:var(--text-secondary)">
-                  Crea la partida y lanza las 6 misiones automáticamente.
+                  1. Crea la partida. 2. Espera que los jugadores entren. 3. Arranca las preguntas.
                 </div>
               </div>
             </div>
@@ -278,6 +278,11 @@
 
         <!-- ─── LIVE MONITORING PANEL (safe from dashboard overwrite) ─── -->
         <div id="live-panel" style="display:none;margin-bottom:28px">
+          <div style="text-align:center; margin-bottom:16px;">
+            <button class="btn btn-danger" style="font-size:1.2rem;font-weight:900;padding:12px 32px;letter-spacing:1px;box-shadow:0 0 15px rgba(230,36,41,0.5);" onclick="startQuestions()" id="btn-start-questions">
+              ▶️ ARRANCAR PREGUNTAS (TODOS LISTOS)
+            </button>
+          </div>
           <div id="live-phase-banner" style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-family:'Bangers',cursive;font-size:1.3rem;letter-spacing:2px;text-align:center;background:rgba(43,92,230,.2);border:1px solid rgba(43,92,230,.4);color:#64B5F6">
             LOBBY — Esperando jugadores
           </div>
@@ -1294,8 +1299,6 @@
     let _liveTotal = 6;
 
     async function liveLaunch() {
-      // Read inputs with safe fallbacks
-      _liveCode = (document.getElementById("live-code")?.value || "").trim().toUpperCase();
       const dur = parseInt(document.getElementById("live-duration")?.value) || 30;
       const res = parseInt(document.getElementById("live-results-sec")?.value) || 5;
       _liveDuration = dur;
@@ -1304,87 +1307,56 @@
         const el = document.getElementById("live-status-msg");
         if (el) el.innerHTML = isErr ? `<span style="color:#E62429;font-weight:700">${msg}</span>` : msg;
       }
-      function setBtnState(loading) {
-        const btn = document.getElementById("btn-launch");
-        if (!btn) return;
-        btn.disabled = loading;
-        btn.textContent = loading ? "Iniciando... (max 15s)" : "\u{1F680} CREAR E INICIAR JUEGO";
-      }
-      setBtnState(true);
-      setStatus("Conectando…");
+      
+      const btn = document.getElementById("btn-launch");
+      if (btn) { btn.disabled = true; btn.textContent = "Creando sala..."; }
+      setStatus("Creando partida nueva (Lobby)…");
 
-      // If no code, create a new game first
+      const maxPl = parseInt(document.getElementById("dash-max-players")?.value) || 30;
+      const { data: gdata, ok: gok } = await api("POST", "/api/games/create", {
+        name: "Feria UAA", max_players: maxPl
+      });
+      
+      if (!gok || !gdata?.game_code) {
+        setStatus("Error al crear partida", true);
+        if (btn) { btn.disabled = false; btn.textContent = "\u{1F680} CREAR NUEVA PARTIDA"; }
+        return;
+      }
+      
+      _liveCode = gdata.game_code;
+      setStatus("\u2705 Partida " + _liveCode + " creada. Los jugadores ya pueden entrar.");
+      if (btn) { btn.disabled = false; btn.textContent = "\u{1F680} CREAR NUEVA PARTIDA"; }
+      
+      const endBtn = document.getElementById("btn-end-game");
+      if (endBtn) endBtn.style.display = "inline-flex";
+      
+      // Connect to see players joining
+      _connectLivePolling();
+    }
+
+    async function startQuestions() {
       if (!_liveCode) {
-        setStatus("Creando partida nueva…");
-        const maxPl = parseInt(document.getElementById("dash-max-players")?.value) || 30;
-        const { data: gdata, ok: gok } = await api("POST", "/api/games/create", {
-          name: "Feria UAA", max_players: maxPl
-        });
-        if (!gok || !gdata?.game_code) {
-          setStatus("Error al crear partida: " + (gdata?.detail || "sin respuesta del servidor"), true);
-          setBtnState(false);
-          return;
-        }
-        _liveCode = gdata.game_code;
-        const inp = document.getElementById("live-code");
-        if (inp) inp.value = _liveCode;
-        setStatus("Partida creada: " + _liveCode + ". Lanzando misiones…");
+        showToast("No hay partida activa", "warning");
+        return;
       }
-
-      // Launch the game
+      const dur = parseInt(document.getElementById("live-duration")?.value) || 30;
+      const res = parseInt(document.getElementById("live-results-sec")?.value) || 5;
+      
+      const btn = document.getElementById("btn-start-questions");
+      if (btn) { btn.disabled = true; btn.textContent = "Arrancando..."; }
+      
       const { data, ok } = await api("POST", `/api/games/${_liveCode}/launch`, {
         duration_sec: dur, results_sec: res
       });
 
       if (!ok) {
-        const detail = (data && data.detail) ? data.detail : "Sin respuesta (servidor dormido?)";
-
-        // If game finished, create new one automatically
-        if (detail.toLowerCase().includes("finish") || detail.toLowerCase().includes("terminad")) {
-          setStatus("Partida ya termino. Creando nueva…");
-          const maxPl = parseInt(document.getElementById("dash-max-players")?.value) || 30;
-          const { data: nd, ok: nok } = await api("POST", "/api/games/create", {
-            name: "Feria UAA", max_players: maxPl
-          });
-          if (nok && nd?.game_code) {
-            _liveCode = nd.game_code;
-            const inp = document.getElementById("live-code");
-            if (inp) inp.value = _liveCode;
-            setStatus("Nueva partida: " + _liveCode + ". Lanzando…");
-            const { data: d2, ok: ok2 } = await api("POST", `/api/games/${_liveCode}/launch`, {
-              duration_sec: dur, results_sec: res
-            });
-            if (ok2) {
-              _liveTotal = d2.total_missions || 6;
-              setStatus("\u2705 Juego iniciado (" + _liveCode + ") - " + _liveTotal + " misiones x " + dur + "s");
-              setBtnState(false);
-              document.getElementById("btn-end-game")?.style && (document.getElementById("btn-end-game").style.display = "inline-flex");
-              _connectLivePolling();
-              return;
-            } else {
-              setStatus("Error al lanzar nueva partida: " + (d2?.detail || "timeout"), true);
-              setBtnState(false);
-              return;
-            }
-          } else {
-            setStatus("Error al crear nueva partida: " + (nd?.detail || "timeout"), true);
-            setBtnState(false);
-            return;
-          }
-        }
-
-        setStatus("Error: " + detail, true);
-        setBtnState(false);
+        showToast("Error al arrancar preguntas", "error");
+        if (btn) { btn.disabled = false; btn.textContent = "\u25B6\uFE0F ARRANCAR PREGUNTAS (TODOS LISTOS)"; }
         return;
       }
-
-      // SUCCESS
-      _liveTotal = data.total_missions || 6;
-      setStatus("\u2705 Juego iniciado! " + _liveCode + " \u2014 " + _liveTotal + " misiones x " + dur + "s automaticas");
-      setBtnState(false);
-      const endBtn = document.getElementById("btn-end-game");
-      if (endBtn) endBtn.style.display = "inline-flex";
-      _connectLivePolling();
+      
+      showToast("¡Preguntas iniciadas!", "success");
+      if (btn) { btn.style.display = "none"; } // Hide once started
     }
 
     async function liveConnect() {
