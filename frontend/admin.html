@@ -12,11 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #07090E;
-      --surface: #0E1117;
-      --card: #161B24;
-      --card-hover: #1C2230;
-      --sidebar: #0B0E14;
+      --bg: #0B0F19;
+      --surface: #111827;
+      --card: #1E293B;
+      --card-hover: #334155;
+      --sidebar: #0F172A;
       --border: rgba(255,255,255,0.06);
       --border-strong: rgba(255,255,255,0.1);
       --red: #C41230;
@@ -123,9 +123,10 @@
     .badge-red { background: var(--red-muted); color: var(--red); border: 1px solid rgba(196,18,48,0.2); }
 
     /* LOGIN SCREEN */
-    #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
-    .login-box { width: 100%; max-width: 360px; padding: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
-    .login-header { margin-bottom: 24px; text-align: center; }
+    #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; }
+    .login-box { width: 100%; max-width: 400px; padding: 48px 40px; background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); }
+    .login-header { margin-bottom: 32px; text-align: center; }
+    .login-header .font-display { font-size: 32px !important; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
     .login-error { color: var(--red); font-size: 13px; margin-bottom: 16px; display: none; text-align: center; }
 
     /* MODALS */
@@ -273,8 +274,6 @@
             </div>
           </div>
 
-        </div>
-
 
         <!-- ─── LIVE MONITORING PANEL (safe from dashboard overwrite) ─── -->
         <div id="live-panel" style="display:none;margin-bottom:28px">
@@ -287,10 +286,10 @@
             LOBBY — Esperando jugadores
           </div>
           <div class="kpi-grid mb-4" id="live-kpis"></div>
-          <div class="card mb-4">
-            <div class="card-header">⏱ Cronómetro</div>
-            <div style="padding:10px 0;text-align:center">
-              <div id="live-timer-display" style="font-size:3.5rem;font-weight:900;font-family:'Bangers',cursive;letter-spacing:4px;color:#E62429;line-height:1">--</div>
+          <div class="card mb-4" style="background: linear-gradient(180deg, var(--card), rgba(0,0,0,0.5)); border: 1px solid rgba(230,36,41,0.2); box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);">
+            <div class="card-header" style="color: rgba(255,255,255,0.7); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">⏱️ Cronómetro Oficial</div>
+            <div style="padding:20px 0;text-align:center">
+              <div id="live-timer-display" style="font-size:6rem;font-weight:900;font-family:'Bangers',cursive;letter-spacing:6px;color:#E62429;line-height:1; text-shadow: 0 0 30px rgba(230,36,41,0.4);">--</div>
               <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:8px">segundos</div>
               <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
                 <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#00E676,#E62429);transition:width 1s linear;width:0%"></div>
