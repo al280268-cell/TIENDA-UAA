@@ -744,6 +744,19 @@ async def validate_mission(req: ValidateRequest):
         row = await cursor.fetchone()
 
         if not row:
+            # Fallback for kahoot mode store_mission simulation
+            if req.mission_type == "store_mission":
+                base_points = 150
+                res = await update_score(req.game_code, req.player_id, base_points, True)
+                return {
+                    "correct": True, "points": base_points, "penalty": 0, "net": base_points,
+                    "explanation": "Simulación de tienda completada.",
+                    "all_complete": True,
+                    "total_points": res.get("total_points", 0),
+                    "streak": res.get("streak", 0),
+                    "new_rank": 1,
+                    "concept": "Customer Journey", "topic": "E-Commerce"
+                }
             return {"correct": False, "points": 0, "penalty": 0, "net": 0,
                     "explanation": "Misión no encontrada.", "all_complete": False,
                     "total_points": 0, "streak": 0, "new_rank": 0,
