@@ -60,7 +60,8 @@ async def list_games(admin=Depends(get_admin)):
 # ── Game detail ───────────────────────────────────────────────────────────────
 @router.get("/game/{code}")
 async def get_game_detail(code: str, admin=Depends(get_admin)):
-    gs = get_game(code)
+    from backend.api.games import _ensure_in_memory
+    gs = await _ensure_in_memory(code)
     if not gs:
         raise HTTPException(404, "Game not found")
     return {
@@ -78,7 +79,8 @@ async def get_game_detail(code: str, admin=Depends(get_admin)):
 @router.get("/game/{code}/live")
 async def get_live_status(code: str, admin=Depends(get_admin)):
     """Full real-time status for the admin control panel."""
-    gs = get_game(code)
+    from backend.api.games import _ensure_in_memory
+    gs = await _ensure_in_memory(code)
     if not gs:
         raise HTTPException(404, "Game not found")
 
@@ -156,6 +158,8 @@ class KickPlayerRequest(BaseModel):
 
 @router.post("/player/kick")
 async def kick_player(req: KickPlayerRequest, admin=Depends(get_admin)):
+    from backend.api.games import _ensure_in_memory
+    await _ensure_in_memory(req.game_code)
     remove_player(req.game_code, req.player_id)
     async with get_db() as db:
         await db.execute("UPDATE players SET status='kicked' WHERE id=?", (req.player_id,))
@@ -171,7 +175,8 @@ class AddTimeRequest(BaseModel):
 
 @router.post("/time/add")
 async def add_time(req: AddTimeRequest, admin=Depends(get_admin)):
-    gs = get_game(req.game_code)
+    from backend.api.games import _ensure_in_memory
+    gs = await _ensure_in_memory(req.game_code)
     if gs and gs.time_remaining is not None:
         gs.time_remaining += req.seconds
         return {"success": True, "time_remaining": gs.time_remaining}
