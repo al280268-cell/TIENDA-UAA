@@ -581,7 +581,9 @@ async function poll() {
     updateHUD(phase);
   }
 
-  const phase = state.mission_phase || 'lobby';
+  const phase = (state.status === 'finished' && state.mission_phase === 'lobby')
+    ? 'finished'
+    : (state.mission_phase || 'lobby');
   const mIdx  = state.current_mission_index ?? -1;
   const mId   = state.current_mission_id;
 

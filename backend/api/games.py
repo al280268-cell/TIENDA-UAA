@@ -53,8 +53,10 @@ async def _ensure_in_memory(code: str):
         })
         gs.status      = row.get("status", "waiting")
         gs.started_at  = row.get("started_at")
-        if gs.status in ("active", "finished"):
-            gs.mission_phase = "lobby"   # safe default after restart
+        if gs.status == "finished":
+            gs.mission_phase = "finished"   # so hub.html redirects to results
+        elif gs.status == "active":
+            gs.mission_phase = "lobby"      # safe default: admin will re-launch
 
         # Reload players from DB
         pcur = await db.execute(
