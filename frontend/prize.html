@@ -192,47 +192,9 @@
   <div class="countdown-wrap" id="countdown-wrap">
     <span>⏱</span>
     <span>Tiempo para elegir:</span>
-    <span class="countdown-num" id="countdown-num">30</span>
-    <span>segundos</span>
-  </div>
-
-  <!-- Prize Cards -->
+    <span class="countdown-num" id="countdow      <!-- Prize Cards — loaded dynamically from API -->
   <div class="prizes-row" id="prizes-row">
-    <div class="prize-card" id="pc-pelota" onclick="selectPrize('pelota','⚽ PELOTA UAA','⚽')">
-      <div class="prize-selected-check">✓</div>
-      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
-      <span class="prize-emoji">⚽</span>
-      <div class="prize-name">PELOTA UAA</div>
-      <div class="prize-desc">Pelota deportiva oficial con el escudo de la UAA.</div>
-      <button class="btn-prize">ELEGIR PELOTA</button>
-    </div>
-
-    <div class="prize-card" id="pc-cilindro" onclick="selectPrize('cilindro','🥤 CILINDRO UAA','🥤')">
-      <div class="prize-selected-check">✓</div>
-      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
-      <span class="prize-emoji">🥤</span>
-      <div class="prize-name">CILINDRO UAA</div>
-      <div class="prize-desc">Termo deportivo oficial, perfecto para mantenerte hidratado.</div>
-      <button class="btn-prize">ELEGIR CILINDRO</button>
-    </div>
-
-    <div class="prize-card" id="pc-gallo" onclick="selectPrize('gallo','🐓 LLAVERO GALLO','🐓')">
-      <div class="prize-selected-check">✓</div>
-      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
-      <span class="prize-emoji">🐓</span>
-      <div class="prize-name">LLAVERO GALLO</div>
-      <div class="prize-desc">Llavero metálico de la mascota oficial de la UAA.</div>
-      <button class="btn-prize">ELEGIR LLAVERO</button>
-    </div>
-
-    <div class="prize-card" id="pc-stickers" onclick="selectPrize('stickers','✨ STICKERS UAA','✨')">
-      <div class="prize-selected-check">✓</div>
-      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
-      <span class="prize-emoji">✨</span>
-      <div class="prize-name">STICKERS UAA</div>
-      <div class="prize-desc">Paquete de stickers universitarios para decorar tu laptop.</div>
-      <button class="btn-prize">ELEGIR STICKERS</button>
-    </div>
+    <div style="color:rgba(255,255,255,.4);font-size:.9rem;padding:20px">Cargando premios...</div>
   </div>
 
   <!-- Success Screen -->
@@ -284,24 +246,67 @@ if (myRank !== 1) {
   throw new Error('prize shop is winner-only');
 }
 
-// Countdown
-let timeLeft = 30;
-const numEl = document.getElementById('countdown-num');
-const wrapEl = document.getElementById('countdown-wrap');
-const countdownInterval = setInterval(() => {
-  timeLeft--;
-  numEl.textContent = timeLeft;
-  if (timeLeft <= 10) wrapEl.classList.add('urgent');
-  if (timeLeft <= 0) {
-    clearInterval(countdownInterval);
-    const prizes = ['pelota','cilindro','gallo','stickers'];
-    const rand = prizes[Math.floor(Math.random() * prizes.length)];
-    const names  = { pelota:'⚽ PELOTA UAA', cilindro:'🥤 CILINDRO UAA', gallo:'🐓 LLAVERO GALLO', stickers:'✨ STICKERS UAA' };
-    const emojis = { pelota:'⚽', cilindro:'🥤', gallo:'🐓', stickers:'✨' };
-    selectPrize(rand, names[rand], emojis[rand]);
-    setTimeout(confirmPrize, 500);
+// ── Load prizes dynamically from API ─────────────────────────────────────────
+let _prizes = [];   // will be populated from API
+
+async function loadPrizes() {
+  const row = document.getElementById('prizes-row');
+  try {
+    const resp = await fetch('/api/rewards');
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    // Only show prizes with stock > 0 and not disabled
+    _prizes = data.filter(p => !p.disabled && (p.stock_remaining == null || p.stock_remaining > 0));
+  } catch (e) {
+    // Fallback to hardcoded UAA prizes if API fails
+    _prizes = [
+      { id:'pelota',   name:'PELOTA UAA',    emoji:'⚽', description:'Pelota deportiva oficial con el escudo de la UAA.' },
+      { id:'cilindro', name:'CILINDRO UAA',  emoji:'🥤', description:'Termo deportivo oficial de la UAA.' },
+      { id:'gallo',    name:'LLAVERO GALLO', emoji:'🐓', description:'Llavero metálico de la mascota oficial.' },
+      { id:'stickers', name:'STICKERS UAA',  emoji:'✨', description:'Paquete de stickers universitarios.' },
+    ];
   }
-}, 1000);
+
+  if (!_prizes.length) {
+    row.innerHTML = '<div style="color:#E62429;font-weight:700;padding:20px;text-align:center">⚠️ No hay premios disponibles en este momento.</div>';
+    return;
+  }
+
+  row.innerHTML = _prizes.map(p => `
+    <div class="prize-card" id="pc-${p.id}" onclick="selectPrize('${p.id}','${p.emoji} ${p.name}','${p.emoji}')">
+      <div class="prize-selected-check">✓</div>
+      <span class="prize-exclusive">PREMIO EXCLUSIVO</span>
+      <span class="prize-emoji">${p.emoji}</span>
+      <div class="prize-name">${p.name}</div>
+      <div class="prize-desc">${p.description || ''}</div>
+      <button class="btn-prize">ELEGIR ${p.name.split(' ')[0]}</button>
+    </div>`).join('');
+}
+
+// ── Countdown ─────────────────────────────────────────────────────────────────
+let timeLeft = 30;
+const numEl  = document.getElementById('countdown-num');
+const wrapEl = document.getElementById('countdown-wrap');
+
+// Load prizes first, then start countdown
+loadPrizes().then(() => {
+  const countdownInterval = setInterval(() => {
+    timeLeft--;
+    if (numEl) numEl.textContent = timeLeft;
+    if (timeLeft <= 10 && wrapEl) wrapEl.classList.add('urgent');
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      // Auto-select a random available prize
+      if (_prizes.length > 0) {
+        const rand = _prizes[Math.floor(Math.random() * _prizes.length)];
+        selectPrize(rand.id, rand.emoji + ' ' + rand.name, rand.emoji);
+        setTimeout(confirmPrize, 500);
+      }
+    }
+  }, 1000);
+});
+
+
 
 function selectPrize(id, name, emoji) {
   S.selectedId = id; S.selectedName = name; S.selectedEmoji = emoji;

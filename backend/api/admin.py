@@ -130,14 +130,25 @@ async def get_inventory(admin=Depends(get_admin)):
 
 class UpdateInventoryRequest(BaseModel):
     reward_id: str
-    stock_remaining: int          # Only current stock changes
+    stock_remaining: int
+    stock_initial: Optional[int] = None   # Can update initial stock too
     disabled: Optional[bool] = None
 
 @router.post("/inventory/update")
 async def update_inventory(req: UpdateInventoryRequest, admin=Depends(get_admin)):
-    """Update only stock_remaining. stock_initial is never changed."""
+    """Update stock_initial, stock_remaining and disabled status independently."""
     async with get_db() as db:
-        if req.disabled is not None:
+        if req.stock_initial is not None and req.disabled is not None:
+            await db.execute(
+                "UPDATE rewards SET stock_initial=?, stock_remaining=?, disabled=? WHERE id=?",
+                (req.stock_initial, req.stock_remaining, 1 if req.disabled else 0, req.reward_id)
+            )
+        elif req.stock_initial is not None:
+            await db.execute(
+                "UPDATE rewards SET stock_initial=?, stock_remaining=? WHERE id=?",
+                (req.stock_initial, req.stock_remaining, req.reward_id)
+            )
+        elif req.disabled is not None:
             await db.execute(
                 "UPDATE rewards SET stock_remaining=?, disabled=? WHERE id=?",
                 (req.stock_remaining, 1 if req.disabled else 0, req.reward_id)
