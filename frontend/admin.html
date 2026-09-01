@@ -204,7 +204,6 @@
       <div class="sidebar-nav">
         <div class="nav-section-label">PRINCIPAL</div>
         <button class="nav-item active" data-section="dashboard" onclick="navTo('dashboard')">Dashboard</button>
-        <button class="nav-item" data-section="live" onclick="navTo('live')">🎮 Control en Vivo</button>
         <button class="nav-item" data-section="games" onclick="navTo('games')">Partidas</button>
         <button class="nav-item" data-section="players" onclick="navTo('players')">Jugadores</button>
         <button class="nav-item" data-section="missions" onclick="navTo('missions')">Misiones</button>
@@ -212,7 +211,7 @@
         <button class="nav-item" data-section="simulator" onclick="navTo('simulator')">Simulador</button>
 
         <div class="nav-section-label" style="margin-top:24px">DATOS</div>
-        <button class="nav-item" data-section="analytics" onclick="navTo('analytics')">Analítica</button>
+        <button class="nav-item" data-section="analytics" onclick="navTo('analytics')">📊 Informes</button>
       </div>
       <div class="sidebar-footer">
         <button class="nav-item" onclick="logout()">✕ Cerrar sesión</button>
@@ -251,9 +250,72 @@
             </div>
           </div>
 
-          <div id="active-game-panel" style="display:none; flex:1;">
-             <!-- Rellenado por JS -->
+          <div id="active-game-panel" style="flex:1;">
+            <!-- ═══ PANEL EN VIVO — aparece al crear/conectar partida ═══ -->
+
+            <!-- Setup row -->
+            <div class="card mb-4" style="border:1px solid rgba(230,36,41,.3)">
+              <div class="card-header" style="color:#FF3B40">🚀 Lanzar Partida Kahoot</div>
+              <div style="padding:12px 0">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+                  <div>
+                    <label style="font-size:.72rem;color:var(--text-secondary);display:block;margin-bottom:3px">Código</label>
+                    <input type="text" id="live-code" placeholder="Auto" style="width:120px;text-transform:uppercase"
+                      oninput="this.value=this.value.toUpperCase()">
+                  </div>
+                  <div>
+                    <label style="font-size:.72rem;color:var(--text-secondary);display:block;margin-bottom:3px">Seg/Misión</label>
+                    <input type="number" id="live-duration" value="30" min="10" max="300" style="width:75px">
+                  </div>
+                  <div>
+                    <label style="font-size:.72rem;color:var(--text-secondary);display:block;margin-bottom:3px">Seg resultados</label>
+                    <input type="number" id="live-results-sec" value="5" min="3" max="15" style="width:65px">
+                  </div>
+                  <button class="btn btn-danger" style="font-weight:800;padding:10px 20px" onclick="liveLaunch()" id="btn-launch">
+                    🚀 CREAR E INICIAR JUEGO
+                  </button>
+                  <button class="btn btn-sm" onclick="liveConnect()" id="btn-connect">🔍 Solo ver</button>
+                  <button class="btn btn-danger btn-sm" onclick="liveEndGame()" id="btn-end-game" style="display:none">🏁 Terminar</button>
+                </div>
+                <div id="live-status-msg" style="font-size:.82rem;color:var(--text-secondary)">
+                  💡 Deja el código vacío para crear nueva partida automáticamente.
+                </div>
+              </div>
+            </div>
+
+            <!-- Live panel (shows after connect) -->
+            <div id="live-panel" style="display:none">
+              <!-- Phase banner -->
+              <div id="live-phase-banner" style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-family:'Bangers',cursive;font-size:1.3rem;letter-spacing:2px;text-align:center;background:rgba(43,92,230,.2);border:1px solid rgba(43,92,230,.4);color:#64B5F6">
+                LOBBY — Esperando jugadores
+              </div>
+              <!-- KPIs -->
+              <div class="kpi-grid mb-4" id="live-kpis"></div>
+              <!-- Timer -->
+              <div class="card mb-4">
+                <div class="card-header">⏱ Cronómetro</div>
+                <div style="padding:10px 0;text-align:center">
+                  <div id="live-timer-display" style="font-size:3.5rem;font-weight:900;font-family:'Bangers',cursive;letter-spacing:4px;color:#E62429;line-height:1">--</div>
+                  <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:8px">segundos</div>
+                  <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+                    <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#00E676,#E62429);transition:width 1s linear;width:0%"></div>
+                  </div>
+                  <div id="live-mission-label" style="font-size:.8rem;color:var(--text-secondary);margin-top:6px"></div>
+                </div>
+              </div>
+              <!-- Players grid -->
+              <div class="card mb-4">
+                <div class="card-header">👥 Jugadores <span id="live-answered-badge" style="font-size:.75rem;color:var(--text-secondary)"></span></div>
+                <div id="live-players-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px 0"></div>
+              </div>
+              <!-- Leaderboard -->
+              <div class="card">
+                <div class="card-header">🏆 Clasificación en Vivo</div>
+                <div id="live-leaderboard" style="padding:6px 0"></div>
+              </div>
+            </div>
           </div>
+
         </div>
 
         <h3 class="section-title" style="margin-top: 48px;">Últimas Partidas</h3>
@@ -596,13 +658,16 @@
     /* ==========================================================================
        API HELPER
        ========================================================================== */
-    async function api(method, url, body) {
+    async function api(method, url, body, timeoutMs) {
       const token = sessionStorage.getItem('uaa_admin_token') || '';
       try {
-        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), timeoutMs || 15000);
+        const opts = { method, headers: { 'Content-Type': 'application/json' }, signal: controller.signal };
         if (token) opts.headers['Authorization'] = 'Bearer ' + token;
         if (body) opts.body = JSON.stringify(body);
         const r = await fetch(url, opts);
+        clearTimeout(tid);
         
         let d = {};
         if (r.headers.get('content-type')?.includes('application/json')) {
@@ -610,9 +675,14 @@
         }
         
         return { data: d, ok: r.ok, status: r.status };
-      } catch(e) { 
-        console.error('API Error:', e);
-        return { data: null, ok: false, status: 0 }; 
+      } catch(e) {
+        if (e && e.name === 'AbortError') {
+          console.warn('[api] Timeout:', url);
+          return { data: { detail: 'El servidor se está iniciando (Render). Espera 30 segundos y vuelve a intentar.' }, ok: false, status: 0 };
+        }
+        console.error('[api] Error:', e);
+        return { data: { detail: String(e) }, ok: false, status: 0 };
+
       }
     }
 
@@ -747,7 +817,7 @@
     }
 
     function refreshCurrentSection() {
-      if (Admin.activeSection === 'dashboard') loadDashboard();
+      if (Admin.activeSection === 'dashboard') { loadDashboard(); livePoll && livePoll(); }
       else if (Admin.activeSection === 'games') loadGames();
       else if (Admin.activeSection === 'players') { /* Only search driven */ }
       else if (Admin.activeSection === 'simulator') loadSimulatorState();
