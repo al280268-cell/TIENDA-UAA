@@ -690,8 +690,11 @@
 
     function formatDate(iso) {
       if (!iso) return '-';
-      const d = new Date(iso);
-      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      // Backend returns Unix timestamp (seconds); JS Date needs milliseconds
+      const ts = typeof iso === 'number' ? iso * 1000 : Date.parse(iso);
+      const d = new Date(ts);
+      if (isNaN(d)) return '-';
+      return d.toLocaleDateString('es-MX') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
 
     function getBadgeStatus(status) {
@@ -917,16 +920,16 @@
       const games = [...data].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
       tbody.innerHTML = games.map(g => {
-        // La API devuelve 'code', normalizamos igual que en dashboard
-        const gc = g.code || g.game_code || '—';
-        const fecha = g.created_at && !g.created_at.startsWith('1970') ? formatDate(g.created_at) : '—';
+        const gc = g.code || g.game_code || '?';
+        const fecha = formatDate(g.created_at);
+        const fin = g.ended_at ? formatDate(g.ended_at) : (g.finished_at ? formatDate(g.finished_at) : '-');
         return `
         <tr>
           <td class="font-mono font-weight-600" style="color:var(--gold)">${gc}</td>
           <td>${getBadgeStatus(g.status)}</td>
           <td>${g.players_count || 0}</td>
           <td>${fecha}</td>
-          <td>${g.finished_at ? formatDate(g.finished_at) : '—'}</td>
+          <td>${fin}</td>
           <td>
             <div class="flex gap-2">
               <button class="btn btn-sm" onclick="viewGameDetail('${gc}')">Ver</button>
