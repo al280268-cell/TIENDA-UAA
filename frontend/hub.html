@@ -306,13 +306,22 @@ async function api(method, url, body) {
 }
 
 // ── HUD ──────────────────────────────────────────────────────────────────────
-function updateHUD() {
+function updateHUD(phase) {
   const stored = parseInt(sessionStorage.getItem('uaa_my_points') || '0');
   if (stored > P.pts) P.pts = stored;
   document.getElementById('nav-code').textContent = P.code || '----';
   document.getElementById('nav-name').textContent = P.name;
-  document.getElementById('nav-pts').textContent  = P.pts.toLocaleString();
-  if (P.rank > 0) document.getElementById('nav-rank').textContent = '#' + P.rank;
+
+  const inLobby = !phase || phase === 'lobby';
+
+  // Hide points and rank while in lobby — don't confuse players
+  document.getElementById('nav-rank').style.display = inLobby ? 'none' : '';
+  document.querySelector('.hud-pts').style.display   = inLobby ? 'none' : '';
+
+  if (!inLobby) {
+    document.getElementById('nav-pts').textContent = P.pts.toLocaleString();
+    if (P.rank > 0) document.getElementById('nav-rank').textContent = '#' + P.rank;
+  }
 }
 
 // ── Screen switching ──────────────────────────────────────────────────────────
@@ -438,11 +447,11 @@ async function chooseAnswer(idx, btn, q) {
   if (typeof r.total_points === 'number') {
     P.pts = r.total_points;
     sessionStorage.setItem('uaa_my_points', P.pts);
-    updateHUD();
+    updateHUD('active');
   } else if (r.net) {
     P.pts = Math.max(0, P.pts + r.net);
     sessionStorage.setItem('uaa_my_points', P.pts);
-    updateHUD();
+    updateHUD('active');
   }
 
   const label = correct
@@ -569,7 +578,7 @@ async function poll() {
   if (me) {
     if (me.points > P.pts) { P.pts = me.points; sessionStorage.setItem('uaa_my_points', P.pts); }
     if (me.rank) { P.rank = me.rank; sessionStorage.setItem('uaa_my_rank', me.rank); }
-    updateHUD();
+    updateHUD(phase);
   }
 
   const phase = state.mission_phase || 'lobby';
@@ -650,7 +659,7 @@ async function poll() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-updateHUD();
+updateHUD('lobby');
 showScreen('screen-lobby');
 poll();
 _pollInterval = setInterval(poll, 2000);
