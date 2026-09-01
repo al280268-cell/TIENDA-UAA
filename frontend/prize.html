@@ -291,10 +291,11 @@ async function loadPrizes() {
 let timeLeft = 30;
 const numEl  = document.getElementById('countdown-num');
 const wrapEl = document.getElementById('countdown-wrap');
+let countdownInterval;
 
 // Load prizes first, then start countdown
 loadPrizes().then(() => {
-  const countdownInterval = setInterval(() => {
+  countdownInterval = setInterval(() => {
     timeLeft--;
     if (numEl) numEl.textContent = timeLeft;
     if (timeLeft <= 10 && wrapEl) wrapEl.classList.add('urgent');
