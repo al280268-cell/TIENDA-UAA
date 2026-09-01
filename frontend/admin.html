@@ -267,48 +267,40 @@
           </div>
         </div>
 
-        <div id="active-game-panel" style="flex:1;">
-            <!-- ═══ PANEL EN VIVO — aparece al crear/conectar partida ═══ -->
-
-            <!-- Botones de control inline -->
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06)">
-              <input type="hidden" id="live-code" value="">
-              <button class="btn btn-sm" onclick="liveConnect()" id="btn-connect">🔍 Solo ver partida</button>
-              <button class="btn btn-danger btn-sm" onclick="liveEndGame()" id="btn-end-game" style="display:none">🏁 Terminar partida</button>
-            </div>
-            <!-- Live panel (shows after connect) -->
-            <div id="live-panel" style="display:none">
-              <!-- Phase banner -->
-              <div id="live-phase-banner" style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-family:'Bangers',cursive;font-size:1.3rem;letter-spacing:2px;text-align:center;background:rgba(43,92,230,.2);border:1px solid rgba(43,92,230,.4);color:#64B5F6">
-                LOBBY — Esperando jugadores
-              </div>
-              <!-- KPIs -->
-              <div class="kpi-grid mb-4" id="live-kpis"></div>
-              <!-- Timer -->
-              <div class="card mb-4">
-                <div class="card-header">⏱ Cronómetro</div>
-                <div style="padding:10px 0;text-align:center">
-                  <div id="live-timer-display" style="font-size:3.5rem;font-weight:900;font-family:'Bangers',cursive;letter-spacing:4px;color:#E62429;line-height:1">--</div>
-                  <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:8px">segundos</div>
-                  <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
-                    <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#00E676,#E62429);transition:width 1s linear;width:0%"></div>
-                  </div>
-                  <div id="live-mission-label" style="font-size:.8rem;color:var(--text-secondary);margin-top:6px"></div>
-                </div>
-              </div>
-              <!-- Players grid -->
-              <div class="card mb-4">
-                <div class="card-header">👥 Jugadores <span id="live-answered-badge" style="font-size:.75rem;color:var(--text-secondary)"></span></div>
-                <div id="live-players-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px 0"></div>
-              </div>
-              <!-- Leaderboard -->
-              <div class="card">
-                <div class="card-header">🏆 Clasificación en Vivo</div>
-                <div id="live-leaderboard" style="padding:6px 0"></div>
-              </div>
+         <div id="active-game-panel" style="flex:1;">
+            <div id="dash-active-status" style="font-size:.85rem;color:rgba(255,255,255,.4);padding:4px 0 8px">
+              Sin partida activa
             </div>
           </div>
 
+        </div>
+
+
+        <!-- ─── LIVE MONITORING PANEL (safe from dashboard overwrite) ─── -->
+        <div id="live-panel" style="display:none;margin-bottom:28px">
+          <div id="live-phase-banner" style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-family:'Bangers',cursive;font-size:1.3rem;letter-spacing:2px;text-align:center;background:rgba(43,92,230,.2);border:1px solid rgba(43,92,230,.4);color:#64B5F6">
+            LOBBY — Esperando jugadores
+          </div>
+          <div class="kpi-grid mb-4" id="live-kpis"></div>
+          <div class="card mb-4">
+            <div class="card-header">⏱ Cronómetro</div>
+            <div style="padding:10px 0;text-align:center">
+              <div id="live-timer-display" style="font-size:3.5rem;font-weight:900;font-family:'Bangers',cursive;letter-spacing:4px;color:#E62429;line-height:1">--</div>
+              <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:8px">segundos</div>
+              <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+                <div id="live-mission-bar" style="height:100%;background:linear-gradient(90deg,#00E676,#E62429);transition:width 1s linear;width:0%"></div>
+              </div>
+              <div id="live-mission-label" style="font-size:.8rem;color:var(--text-secondary);margin-top:6px"></div>
+            </div>
+          </div>
+          <div class="card mb-4">
+            <div class="card-header">👥 Jugadores <span id="live-answered-badge" style="font-size:.75rem;color:var(--text-secondary)"></span></div>
+            <div id="live-players-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px 0"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">🏆 Clasificación en Vivo</div>
+            <div id="live-leaderboard" style="padding:6px 0"></div>
+          </div>
         </div>
 
         <h3 class="section-title" style="margin-top: 48px;">Últimas Partidas</h3>
@@ -879,154 +871,34 @@
     }
 
     function updateActiveGamePanel(games) {
+      // Find most recent waiting/active game
       const activeOrWaiting = games.find(g => g.status === 'waiting' || g.status === 'active');
-      const panel = document.getElementById('active-game-panel');
-      
+      const statusEl = document.getElementById('dash-active-status');
+      const codeInp  = document.getElementById('live-code');
+
       if (activeOrWaiting) {
         const gc = activeOrWaiting.code || activeOrWaiting.game_code || '';
         Admin.activeGame = { game_code: gc, status: activeOrWaiting.status };
-        panel.style.display = 'block';
-        panel.innerHTML = `
-          <div class="card" style="margin-bottom:0; background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.2);">
-            <div class="card-header">
-              <h3 class="font-display text-uppercase" style="font-size:12px; color:var(--gold);">Partida Actual</h3>
-              ${getBadgeStatus(activeOrWaiting.status)}
-            </div>
-            <div class="font-mono text-center" style="font-size: 48px; font-weight: 900; color: var(--gold); letter-spacing: 0.1em; margin: 16px 0; cursor:pointer;" onclick="showCodeModal('${gc}')" title="Clic para ver código grande">
-              ${gc}
-            </div>
-            <div style="font-size:11px;text-align:center;color:var(--text-muted);margin-bottom:16px;">Toca el código para verlo en grande</div>
-            <div class="flex gap-2 justify-center mt-4">
-              <button class="btn btn-ghost btn-sm" onclick="copyAndFlash('${gc}');navigator.clipboard?.writeText('${gc}')">Copiar Código</button>
-              <button class="btn btn-ghost btn-sm" onclick="showCodeModal('${gc}')">Ver en grande</button>
-              ${activeOrWaiting.status === 'waiting' 
-                ? `<button class="btn btn-primary btn-sm" style="font-weight:800" onclick="document.getElementById('live-code').value='${gc}';liveLaunch()">🚀 INICIAR JUEGO</button>`
-                : `<button class="btn btn-danger btn-sm" onclick="endGame('${gc}')">Terminar Partida</button>`
-              }
-            </div>
-          </div>
-        `;
+
+        // Auto-fill the code field if empty
+        if (codeInp && !codeInp.value) codeInp.value = gc;
+
+        // Update status badge
+        if (statusEl) {
+          const color = activeOrWaiting.status === 'active' ? '#00E676' : '#F59E0B';
+          statusEl.innerHTML = `Partida activa: <strong style="color:${color};font-size:1.1em">${gc}</strong>
+            <span style="font-size:.75rem;color:rgba(255,255,255,.5);margin-left:8px">[${activeOrWaiting.status.toUpperCase()}]</span>`;
+        }
+
+        // If game is active and live panel not showing, auto-connect
+        if (activeOrWaiting.status === 'active' && _liveCode === gc) {
+          if (!_liveInterval) _connectLivePolling();
+        }
       } else {
-        Admin.activeGame = null;
-        panel.style.display = 'none';
+        if (statusEl) statusEl.innerHTML = '<span style="color:rgba(255,255,255,.35)">Sin partida activa</span>';
       }
     }
 
-    async function createGame() {
-      const btn = document.getElementById('btn-create-game');
-      btn.disabled = true;
-      btn.textContent = 'Creando...';
-      
-      const maxPlayers = parseInt(document.getElementById('dash-max-players')?.value) || 5;
-      
-      const { data, ok } = await api('POST', '/api/games/create', {
-        name: 'Feria UAA ' + new Date().toLocaleDateString('es'),
-        difficulty: 'normal',
-        max_players: maxPlayers || 30,
-        duration_seconds: 240,
-        rounds: 5,
-        prizes_config: [],
-      });
-
-      btn.disabled = false;
-      btn.textContent = 'CREAR PARTIDA';
-
-      if (!ok || !data?.game_code) {
-        toast('Error al crear partida. Reintenta.', 'error');
-        return;
-      }
-
-      const code = data.game_code;
-      Admin.activeGame = { game_code: code, status: 'waiting' };
-
-      // Auto-fill the Control en Vivo code field
-      const liveInput = document.getElementById('live-code');
-      if (liveInput) {
-        liveInput.value = code;
-        document.getElementById('live-status-msg').textContent =
-          '✅ Partida ' + code + ' lista — ve a "Control en Vivo" y presiona Iniciar';
-      }
-
-      // MOSTRAR CÓDIGO INMEDIATAMENTE en modal grande — crítico para feria
-      showCodeModal(code);
-      loadDashboard();
-    }
-
-    function showCodeModal(code) {
-      // Eliminar modal previo si existe
-      const old = document.getElementById('code-modal-overlay');
-      if (old) old.remove();
-
-      const overlay = document.createElement('div');
-      overlay.id = 'code-modal-overlay';
-      overlay.style.cssText = `
-        position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;
-        display:flex;align-items:center;justify-content:center;
-      `;
-      overlay.innerHTML = `
-        <div style="
-          background:#111318;border:1px solid rgba(255,255,255,0.12);
-          border-radius:16px;padding:48px;text-align:center;
-          max-width:480px;width:90%;
-        ">
-          <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:600;
-            letter-spacing:0.12em;color:rgba(240,242,245,0.4);text-transform:uppercase;
-            margin-bottom:12px;">PARTIDA CREADA — CÓDIGO PARA JUGADORES</div>
-
-          <div id="big-code" style="
-            font-family:'Space Grotesk','JetBrains Mono',monospace;
-            font-size:64px;font-weight:900;letter-spacing:0.08em;
-            color:#F59E0B;cursor:pointer;user-select:all;
-            padding:24px 16px;background:rgba(245,158,11,0.05);
-            border:2px solid rgba(245,158,11,0.2);border-radius:12px;
-            margin-bottom:8px;transition:all 0.15s;
-          " onclick="copyAndFlash('${code}')" title="Clic para copiar">${code}</div>
-
-          <div style="font-size:12px;color:rgba(240,242,245,0.35);margin-bottom:32px;">
-            Toca el código para copiar · Los jugadores lo ingresan en la pantalla de inicio
-          </div>
-
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-            <button onclick="startGame('${code}');document.getElementById('code-modal-overlay').remove();" style="
-              background:#C41230;color:#fff;border:none;padding:14px 28px;
-              border-radius:6px;font-family:'Space Grotesk',sans-serif;font-weight:700;
-              font-size:15px;cursor:pointer;
-            ">INICIAR PARTIDA</button>
-            <button onclick="document.getElementById('code-modal-overlay').remove();" style="
-              background:rgba(255,255,255,0.07);color:rgba(240,242,245,0.7);border:1px solid rgba(255,255,255,0.1);
-              padding:14px 28px;border-radius:6px;font-family:'Space Grotesk',sans-serif;
-              font-weight:600;font-size:15px;cursor:pointer;
-            ">Cerrar</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-      // Cerrar al clic fuera del card
-      overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
-    }
-
-    function copyAndFlash(code) {
-      navigator.clipboard?.writeText(code).catch(() => {});
-      const el = document.getElementById('big-code');
-      if (el) {
-        el.style.background = 'rgba(16,185,129,0.15)';
-        el.style.borderColor = 'rgba(16,185,129,0.4)';
-        el.style.color = '#10B981';
-        const prev = el.textContent;
-        el.textContent = '✓ COPIADO';
-        setTimeout(() => {
-          el.textContent = code;
-          el.style.background = 'rgba(245,158,11,0.05)';
-          el.style.borderColor = 'rgba(245,158,11,0.2)';
-          el.style.color = '#F59E0B';
-        }, 1500);
-      }
-      toast('Código copiado: ' + code);
-    }
-
-    /* ==========================================================================
-       GAMES ACTIONS
-       ========================================================================== */
     async function loadGames() {
       const { data, ok } = await api('GET', '/api/admin/games');
       const tbody = document.querySelector('#games-table tbody');
