@@ -454,8 +454,8 @@
           <div style="padding:14px 0">
             <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
               <div>
-                <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Código de partida</label>
-                <input type="text" id="live-code" placeholder="Ej: UAA-7CKA" style="max-width:160px;text-transform:uppercase"
+                <label style="font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:4px">Código de partida <span style="color:#FFD700">(se llena automáticamente al crear)</span></label>
+                <input type="text" id="live-code" placeholder="EJ: UAA-7CKA" style="max-width:160px;text-transform:uppercase"
                   oninput="this.value=this.value.toUpperCase()">
               </div>
               <div>
@@ -469,7 +469,7 @@
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
               <button class="btn btn-primary" style="font-size:1rem;padding:12px 28px;font-weight:800" onclick="liveLaunch()" id="btn-launch">
-                🚀 INICIAR JUEGO AUTOMÁTICO
+                🚀 CREAR E INICIAR JUEGO
               </button>
               <button class="btn" onclick="liveConnect()" id="btn-connect">
                 🔍 Solo ver (ya inició)
@@ -478,7 +478,9 @@
                 🏁 Terminar ahora
               </button>
             </div>
-            <div id="live-status-msg" style="margin-top:10px;font-size:.85rem;color:var(--text-secondary)"></div>
+            <div id="live-status-msg" style="margin-top:10px;font-size:.85rem;color:var(--text-secondary)">
+              💡 Si dejas el código vacío, se crea una partida nueva automáticamente.
+            </div>
           </div>
         </div>
 
@@ -857,7 +859,7 @@
       const { data, ok } = await api('POST', '/api/games/create', {
         name: 'Feria UAA ' + new Date().toLocaleDateString('es'),
         difficulty: 'normal',
-        max_players: Math.min(maxPlayers, 5),
+        max_players: maxPlayers || 30,
         duration_seconds: 240,
         rounds: 5,
         prizes_config: [],
@@ -873,6 +875,14 @@
 
       const code = data.game_code;
       Admin.activeGame = { game_code: code, status: 'waiting' };
+
+      // Auto-fill the Control en Vivo code field
+      const liveInput = document.getElementById('live-code');
+      if (liveInput) {
+        liveInput.value = code;
+        document.getElementById('live-status-msg').textContent =
+          '✅ Partida ' + code + ' lista — ve a "Control en Vivo" y presiona Iniciar';
+      }
 
       // MOSTRAR CÓDIGO INMEDIATAMENTE en modal grande — crítico para feria
       showCodeModal(code);
@@ -1352,28 +1362,80 @@
 
     async function liveLaunch() {
       _liveCode = (document.getElementById("live-code").value || "").trim().toUpperCase();
-      if (!_liveCode) { showToast("Ingresa el código de partida", "warning"); return; }
       const dur  = parseInt(document.getElementById("live-duration").value) || 30;
       const res  = parseInt(document.getElementById("live-results-sec").value) || 5;
       _liveDuration = dur;
 
-      document.getElementById("btn-launch").disabled = true;
-      document.getElementById("btn-launch").textContent = "Iniciando…";
+      const btnLaunch = document.getElementById("btn-launch");
+      btnLaunch.disabled = true;
+      btnLaunch.textContent = "Iniciando…";
+      document.getElementById("live-status-msg").textContent = "";
 
+      // If no code entered, create a new game automatically
+      if (!_liveCode) {
+        document.getElementById("live-status-msg").textContent = "Creando partida nueva…";
+        const { data: gdata, ok: gok } = await api("POST", "/api/games/create", {
+          name: "Feria UAA", max_players: 30
+        });
+        if (!gok || !gdata?.game_code) {
+          showToast("Error al crear partida. Intenta de nuevo.", "error");
+          btnLaunch.disabled = false;
+          btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+          return;
+        }
+        _liveCode = gdata.game_code;
+        document.getElementById("live-code").value = _liveCode;
+        // Also update dashboard active panel
+        if (typeof Admin !== "undefined") Admin.activeGameCode = _liveCode;
+        document.getElementById("live-status-msg").textContent = "Partida creada: " + _liveCode;
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      // Launch the game
       const { data, ok } = await api("POST", `/api/games/${_liveCode}/launch`, {
         duration_sec: dur, results_sec: res
       });
 
       if (!ok) {
-        showToast("Error al iniciar: " + (data?.detail || "verifica el código"), "error");
-        document.getElementById("btn-launch").disabled = false;
-        document.getElementById("btn-launch").textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+        const detail = data?.detail || "error desconocido";
+        // If already finished, create a new game and try again
+        if (detail.includes("finished") || detail.includes("terminad")) {
+          document.getElementById("live-status-msg").textContent = "La partida ya termino. Creando nueva…";
+          const { data: nd, ok: nok } = await api("POST", "/api/games/create", {
+            name: "Feria UAA", max_players: 30
+          });
+          if (nok && nd?.game_code) {
+            _liveCode = nd.game_code;
+            document.getElementById("live-code").value = _liveCode;
+            const { data: d2, ok: ok2 } = await api("POST", `/api/games/${_liveCode}/launch`, {
+              duration_sec: dur, results_sec: res
+            });
+            if (ok2) {
+              _liveTotal = d2.total_missions || 6;
+              showToast("¡Nuevo juego iniciado!", "success");
+              document.getElementById("live-status-msg").textContent = `✅ Juego ${_liveCode} — ${_liveTotal} misiones de ${dur}s`;
+              document.getElementById("btn-end-game").style.display = "inline-flex";
+              btnLaunch.disabled = false;
+              btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
+              _connectLivePolling();
+              return;
+            }
+          }
+        }
+        showToast("Error: " + detail, "error");
+        document.getElementById("live-status-msg").innerHTML = `<span style="color:#E62429">❌ ${detail}</span>`;
+        btnLaunch.disabled = false;
+        btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
         return;
       }
+
       _liveTotal = data.total_missions || 6;
-      showToast("¡Juego iniciado! Avanza automáticamente 🚀", "success");
-      document.getElementById("live-status-msg").textContent = `✅ Juego iniciado — ${_liveTotal} misiones de ${dur}s cada una`;
+      showToast("¡Juego iniciado! 🚀", "success");
+      document.getElementById("live-status-msg").innerHTML =
+        `✅ <strong>${_liveCode}</strong> — ${_liveTotal} misiones × ${dur}s + ${res}s resultados`;
       document.getElementById("btn-end-game").style.display = "inline-flex";
+      btnLaunch.disabled = false;
+      btnLaunch.textContent = "🚀 INICIAR JUEGO AUTOMÁTICO";
       _connectLivePolling();
     }
 
