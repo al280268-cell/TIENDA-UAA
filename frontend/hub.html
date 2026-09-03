@@ -671,9 +671,6 @@ async function poll() {
     }
   }
 
-
-  }
-
   // Always update timer from server's start_ts (stays in sync)
   if (phase === 'active' && state.mission_start_ts) {
     _missionStartTs  = state.mission_start_ts;
