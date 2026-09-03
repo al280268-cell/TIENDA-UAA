@@ -204,10 +204,67 @@ async def get_game_state_endpoint(code: str):
         "mission_duration_sec":  gs.mission_duration_sec,
         "mission_time_remaining": mission_time_remaining,
         "mission_locked":        gs.mission_locked,
+        # Store simulation phase
+        "store_done_count":  len(gs.store_done_players),
+        "store_total":       len(gs.players),
+        "store_timeout_at":  (gs.store_simulation_started_at + 120) if gs.store_simulation_started_at else None,
+    }
+
+
+class StoreDoneRequest(BaseModel):
+    player_id: str
+
+# ── PLAYER MARKS STORE SIMULATION DONE ───────────────────────────────────────
+@router.post("/{code}/store_done")
+async def mark_store_done(code: str, req: StoreDoneRequest):
+    """Called by each player when they finish the store simulation checkout."""
+    gs = await _ensure_in_memory(code)
+    if not gs:
+        raise HTTPException(404, "Game not found")
+
+    if req.player_id not in gs.players:
+        raise HTTPException(400, "Player not in this game")
+
+    gs.store_done_players.add(req.player_id)
+
+    total   = len(gs.players)
+    done    = len(gs.store_done_players)
+    all_done = done >= total
+
+    return {
+        "success":   True,
+        "done_count": done,
+        "total":     total,
+        "all_done":  all_done,
+    }
+
+
+# ── GET STORE SIMULATION STATUS ───────────────────────────────────────────────
+@router.get("/{code}/store_status")
+async def get_store_status(code: str):
+    """Polling endpoint for players waiting in the store simulation phase."""
+    gs = await _ensure_in_memory(code)
+    if not gs:
+        raise HTTPException(404, "Game not found")
+
+    total    = len(gs.players)
+    done     = len(gs.store_done_players)
+    elapsed  = (time.time() - gs.store_simulation_started_at) if gs.store_simulation_started_at else 0
+    timed_out = elapsed >= 120
+
+    all_done = (total > 0 and done >= total) or timed_out or gs.mission_phase == "finished"
+
+    return {
+        "mission_phase": gs.mission_phase,
+        "all_done":      all_done,
+        "done_count":    done,
+        "total":         total,
+        "seconds_left":  max(0, int(120 - elapsed)),
     }
 
 
 # ── INICIAR PARTIDA (global) ──────────────────────────────────────────────────
+
 @router.post("/{code}/start")
 async def start_game(code: str, admin=Depends(get_admin)):
     gs = await _ensure_in_memory(code)

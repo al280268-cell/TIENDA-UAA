@@ -45,8 +45,12 @@ class GameState:
     mission_duration_sec: int = 30           # seconds per question/mission
     mission_locked: bool = False
     mission_locked_at: Optional[float] = None  # when was it locked (for auto-advance)
-    mission_phase: str = "lobby"             # lobby|active|locked|results|finished
+    mission_phase: str = "lobby"             # lobby|active|locked|results|store_simulation|finished
     results_display_sec: int = 5             # seconds to show results before next mission
+
+    # ── Store simulation phase (all players go at same time, wait for everyone) ─
+    store_done_players: set = field(default_factory=set)   # player_ids who finished the store
+    store_simulation_started_at: Optional[float] = None    # timestamp when sim phase began (for timeout)
 
 
 _games: Dict[str, GameState] = {}

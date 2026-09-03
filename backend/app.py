@@ -102,29 +102,54 @@ async def _mission_timer_loop():
                                 "leaderboard":    leaderboard,
                             })
                         else:
-                            # All missions done — finish the game
-                            gs.status        = "finished"
-                            gs.mission_phase = "finished"
+                            # All quiz missions done — enter store simulation phase
+                            # All players go to store at the same time; wait for all to finish
+                            gs.mission_phase = "store_simulation"
+                            gs.store_simulation_started_at = now
+                            gs.store_done_players = set()
                             gs.mission_locked = True
                             recalc_needed = True
                             from backend.core.game_state import recalculate_ranks
                             recalculate_ranks(code)
                             leaderboard = [vars(p) for p in get_leaderboard(code)]
-                            print(f"[Kahoot] Game {code} FINISHED")
-                            await publish_to_ably(f"game:{code}", "game_ended", {
+                            print(f"[Kahoot] Game {code} → STORE SIMULATION phase")
+                            await publish_to_ably(f"game:{code}", "store_simulation_started", {
                                 "leaderboard": leaderboard
                             })
-                            # Persist to DB
-                            try:
-                                from backend.core.database import get_db
-                                async with get_db() as db:
-                                    await db.execute(
-                                        "UPDATE games SET status='finished', ended_at=? WHERE code=?",
-                                        (_time.time(), code)
-                                    )
-                                    await db.commit()
-                            except Exception as e:
-                                print(f"[Timer DB] {e}")
+
+                # ── Phase: STORE_SIMULATION → wait for all players or timeout ──
+                elif gs.mission_phase == "store_simulation" and gs.store_simulation_started_at is not None:
+                    total_players = len(gs.players)
+                    done_count    = len(gs.store_done_players)
+                    elapsed       = now - gs.store_simulation_started_at
+                    STORE_TIMEOUT = 120  # seconds — give up waiting after 2 minutes
+
+                    all_done   = total_players > 0 and done_count >= total_players
+                    timed_out  = elapsed >= STORE_TIMEOUT
+
+                    if all_done or timed_out:
+                        gs.status        = "finished"
+                        gs.mission_phase = "finished"
+                        from backend.core.game_state import recalculate_ranks
+                        recalculate_ranks(code)
+                        leaderboard = [vars(p) for p in get_leaderboard(code)]
+                        reason = "all_done" if all_done else "timeout"
+                        print(f"[Kahoot] Game {code} FINISHED (store phase {reason})")
+                        await publish_to_ably(f"game:{code}", "game_ended", {
+                            "leaderboard": leaderboard,
+                            "reason": reason
+                        })
+                        # Persist to DB
+                        try:
+                            from backend.core.database import get_db
+                            async with get_db() as db:
+                                await db.execute(
+                                    "UPDATE games SET status='finished', ended_at=? WHERE code=?",
+                                    (_time.time(), code)
+                                )
+                                await db.commit()
+                        except Exception as e:
+                            print(f"[Timer DB] {e}")
 
         except Exception as e:
             print(f"[Timer ERROR] {e}")

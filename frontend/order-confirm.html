@@ -90,7 +90,8 @@
     .btn-primary:hover { background: #E11D48; transform: translateY(-2px); }
     .btn-secondary { background: transparent; color: white; border: 1px solid var(--border); }
     .btn-secondary:hover { background: var(--surface); }
-  </style>
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
   
@@ -281,7 +282,7 @@
       const code = sessionStorage.getItem('uaa_game_code') || '';
       const missionId = new URLSearchParams(missionQuery).get('mission');
 
-      // 1) Validar la misión (otorga puntos UNA sola vez; el backend es idempotente)
+      // 1) Validate store mission (award 150 pts) — idempotent
       let earned = 150;
       if (missionId) {
         const v = await api('POST', '/api/missions/validate', {
@@ -291,54 +292,59 @@
         if (v.ok && v.data && typeof v.data.net === 'number') earned = v.data.net;
       }
 
-      // 2) Obtener puntos totales y posición del ranking
-      let rank = null, total = null;
-      const lb = await api('GET', `/api/scoring/leaderboard/${code}`);
-      if (lb.ok && Array.isArray(lb.data)) {
-        total = lb.data.length;
-        const me = lb.data.find(p => p.player_id === pid);
-        if (me) rank = me.rank || (lb.data.indexOf(me) + 1);
-      }
+      // 2) Tell backend THIS player finished the store
+      await api('POST', `/api/games/${code}/store_done`, { player_id: pid });
 
-      // 3) Mostrar el modal AUTOMÁTICAMENTE
-      document.getElementById('modalPts').textContent = `⭐ +${earned} puntos`;
-      document.getElementById('modalRank').textContent = rank ? `#${rank}` : '#—';
-      document.getElementById('modalTotal').textContent = total ? `de ${total} participante${total===1?'':'s'}` : '';
-      document.getElementById('modalContinue').addEventListener('click', () => {
-        window.location.href = 'results.html';
-      });
+      // 3) Hide the normal sim-done card, show waiting room
+      document.getElementById('simDone').style.display    = 'none';
+      document.getElementById('missionDone').style.display = 'none';
 
-      // 4) Si es 1er lugar → modo ganador
-      if (rank === 1) {
-        document.getElementById('modalEmoji').textContent = '🏆';
-        document.getElementById('modalTitle').textContent = '¡ERES EL CAMPEÓN!';
-        document.getElementById('modalSubtitle').textContent = 'Terminaste en PRIMER LUGAR. ¡Felicitaciones!';
-        document.getElementById('modalRank').style.color = '#F59E0B';
-        document.getElementById('prizeZone').style.display = 'block';
-        document.getElementById('resultModalInner').classList.add('winner');
-        // Confetti especial en el modal
-        const mc = document.getElementById('modalConfetti');
-        const mcCtx = mc.getContext('2d');
-        mc.width = mc.offsetWidth; mc.height = mc.offsetHeight;
-        const wcPieces = Array.from({length:60},()=>({
-          x: Math.random()*mc.width, y: Math.random()*mc.height*-.5,
-          vx:(Math.random()-.5)*4, vy:Math.random()*3+1,
-          size:Math.random()*6+3, color:['#F59E0B','#FFD700','#fff','#E62429'][Math.floor(Math.random()*4)],
-          rot:Math.random()*360, vr:(Math.random()-.5)*6
-        }));
-        function animMC(){
-          mcCtx.clearRect(0,0,mc.width,mc.height);
-          wcPieces.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;if(p.y>mc.height)p.y=-10;
-            mcCtx.save();mcCtx.translate(p.x,p.y);mcCtx.rotate(p.rot*Math.PI/180);
-            mcCtx.fillStyle=p.color;mcCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size);mcCtx.restore();
-          });
-          requestAnimationFrame(animMC);
+      const waitDiv = document.createElement('div');
+      waitDiv.id = 'waiting-room';
+      waitDiv.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(43,92,230,0.12),rgba(0,212,255,0.08));border:1px solid rgba(43,92,230,0.3);border-radius:20px;margin-bottom:24px;">
+          <div style="font-size:3rem;margin-bottom:12px;animation:spin 2s linear infinite;display:inline-block">⏳</div>
+          <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;margin-bottom:8px;">¡MISIÓN COMPLETADA!</div>
+          <div style="color:rgba(240,242,245,0.75);margin-bottom:6px;">Ganaste <strong style="color:var(--gold)">+${earned} puntos</strong> por completar la tienda.</div>
+          <div style="color:rgba(240,242,245,0.55);font-size:0.9rem;margin-bottom:24px;">Esperando a que todos los participantes terminen…</div>
+          <div id="wait-progress" style="font-size:1.1rem;font-weight:700;color:#00D4FF;margin-bottom:6px;">? / ? completados</div>
+          <div id="wait-timer" style="font-size:0.8rem;color:rgba(240,242,245,0.35);">Tiempo límite: —s</div>
+          <div style="margin-top:20px;height:6px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;max-width:260px;margin-inline:auto;">
+            <div id="wait-bar" style="height:100%;background:linear-gradient(90deg,#00D4FF,#3B82F6);width:0%;transition:width 0.5s ease;border-radius:99px;"></div>
+          </div>
+        </div>
+      `;
+      document.querySelector('.container').insertBefore(waitDiv, document.querySelector('.points-card'));
+
+      // 4) Poll until all done or timeout
+      let pollInterval = setInterval(async () => {
+        const st = await api('GET', `/api/games/${code}/store_status`);
+        if (!st.ok || !st.data) return;
+
+        const { done_count, total, seconds_left, all_done } = st.data;
+        document.getElementById('wait-progress').textContent = `${done_count} / ${total} completados`;
+        document.getElementById('wait-timer').textContent    = `Tiempo límite: ${seconds_left}s`;
+        const pct = total > 0 ? Math.round(done_count / total * 100) : 0;
+        document.getElementById('wait-bar').style.width = pct + '%';
+
+        if (all_done) {
+          clearInterval(pollInterval);
+          // Small delay so everyone sees the 100% bar
+          setTimeout(() => { window.location.href = 'results.html'; }, 1500);
         }
-        animMC();
-      }
+      }, 3000);
 
-      setTimeout(() => { document.getElementById('resultModal').style.display = 'flex'; }, 1200);
+      // Safety: if server says finished already, redirect immediately
+      const immediate = await api('GET', `/api/games/${code}/store_status`);
+      if (immediate.ok && immediate.data?.all_done) {
+        clearInterval(pollInterval);
+        setTimeout(() => { window.location.href = 'results.html'; }, 1000);
+      }
     }
+
+
+
+
 
     // Points animation
     let startTimestamp = null;
